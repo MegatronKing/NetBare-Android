@@ -1,0 +1,1 @@
+include ':netbare-core', ':netbare-injector', ':netbare-sample'
