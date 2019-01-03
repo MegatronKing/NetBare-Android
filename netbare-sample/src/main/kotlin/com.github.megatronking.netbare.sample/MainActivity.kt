@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity(), NetBareListener {
     }
 
     private fun interceptorFactories() : List<HttpInterceptorFactory> {
-        // 拦截器反例1：打印请求url
+        // 拦截器范例1：打印请求url
         val interceptor1 = HttpUrlPrintInterceptor.createFactory()
         // 注入器范例1：替换百度首页logo
         val injector1 = HttpInjectInterceptor.createFactory(BaiduLogoInjector())
