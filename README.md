@@ -124,7 +124,7 @@ val httpGatewayFactory = HttpVirtualGatewayFactory(jks, interceptors)
 // 通过NetBareConfig.Builder来配置httpGatewayFactory
 ...
 ```
-Http虚拟网关拦截器，继承HttpInterceptor。同样的Interceptor也使用工厂模式，由HttpInterceptorFactory来构造。
+Http虚拟网关拦截器，继承HttpInterceptor。同样的HttpInterceptor也使用工厂模式，由HttpInterceptorFactory来构造。
 
 ```kotlin
 class TestHttpIntercepter : HttpInterceptor() {
