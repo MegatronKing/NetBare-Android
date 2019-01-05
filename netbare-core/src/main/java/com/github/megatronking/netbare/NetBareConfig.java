@@ -88,7 +88,7 @@ public final class NetBareConfig {
     public static NetBareConfig defaultConfig() {
         return new NetBareConfig.Builder()
                 .dumpUid(false)
-                .setMtu(2048)
+                .setMtu(4096)
                 .setAddress(new IpAddress("10.1.10.1", 32))
                 .setSession("NetBare")
                 .addRoute(new IpAddress("0.0.0.0", 0))
