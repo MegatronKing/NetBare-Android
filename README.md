@@ -55,7 +55,7 @@ NetBare.get().stop()
 ## NetBareConfig配置
 
 NetBareConfig需要使用NetBareConfig.Builder进行构造，解释下以下几个重要的配置方法。
-- setMtu 最大传输单元，必要，建议2048。
+- setMtu 最大传输单元，必要，建议大于2048。
 - setAddress 本地代理服务器IP地址，必要，建议用A类IP地址，防止冲突。
 - addRoute 设置经过VPN的目标IP包，必要，建议使用0.0.0.0，所有IP全部经过VPN。
 - dumpUid 是否dump网络包所属的uid，可选，耗电方法，建议false
