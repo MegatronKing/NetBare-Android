@@ -57,7 +57,7 @@ import javax.net.ssl.SSLHandshakeException;
  */
 /* package */ class TcpProxyServer extends BaseProxyServer implements Runnable {
 
-    private static final int SELECTOR_WAIT_TIME = 15;
+    private static final int SELECTOR_WAIT_TIME = 10;
 
     private final VpnService mVpnService;
 
@@ -144,7 +144,7 @@ import javax.net.ssl.SSLHandshakeException;
                                     callback.onWrite();
                                 }
                             } catch (IOException e) {
-                                NioTunnel tunnel = (NioTunnel) callback.getTunnel();
+                                NioTunnel tunnel = callback.getTunnel();
                                 if (!tunnel.isClosed()) {
                                     handleException(e);
                                 }
