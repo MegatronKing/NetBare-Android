@@ -17,6 +17,8 @@ package com.github.megatronking.netbare.ssl;
 
 import android.support.annotation.NonNull;
 
+import com.github.megatronking.netbare.NetBareLog;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Queue;
@@ -204,6 +206,7 @@ public abstract class SSLCodec {
                 if (input.hasRemaining()) {
                     callback.onPending(input);
                 }
+                NetBareLog.i("SSL handshake finished!");
             } else if (status == SSLEngineResult.HandshakeStatus.NEED_WRAP) {
                 status = handshakeWrap(engine, callback).getHandshakeStatus();
             } else if (status == SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
