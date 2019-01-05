@@ -201,6 +201,9 @@ public abstract class SSLCodec {
                 throw new IOException("Handshake failed: Invalid handshake status: " + status);
             } else if (status == SSLEngineResult.HandshakeStatus.FINISHED) {
                 mHandshakeFinished = true;
+                if (input.hasRemaining()) {
+                    callback.onPending(input);
+                }
             } else if (status == SSLEngineResult.HandshakeStatus.NEED_WRAP) {
                 status = handshakeWrap(engine, callback).getHandshakeStatus();
             } else if (status == SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
