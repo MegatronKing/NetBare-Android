@@ -21,7 +21,7 @@ import java.util.zip.InflaterInputStream
  *
  * 启动NetBare服务后，打开朋友圈发状态->所在位置，会发现POI都变成被修改地点附近的。
  *
- * @author Sundy
+ * @author Megatron King
  * @since 2019/1/2 22:17
  */
 class WechatLocationInjector : SimpleHttpInjector() {
