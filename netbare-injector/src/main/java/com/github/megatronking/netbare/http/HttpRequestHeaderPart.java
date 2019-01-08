@@ -216,7 +216,7 @@ public final class HttpRequestHeaderPart extends HttpHeaderPart {
         builder.append(" ");
         builder.append(path());
         builder.append(" ");
-        builder.append(protocol().toString().toUpperCase());
+        builder.append(protocol().toString());
         builder.append(NetBareUtils.LINE_END);
         for (Map.Entry<String, List<String>> entry : headers().entrySet()) {
             for (String value : entry.getValue()) {

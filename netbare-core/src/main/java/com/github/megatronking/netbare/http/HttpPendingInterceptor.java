@@ -28,7 +28,7 @@ import java.util.List;
  * @author Megatron King
  * @since 2018-12-09 12:07
  */
-public abstract class HttpPendingInterceptor extends HttpInterceptor {
+public abstract class HttpPendingInterceptor extends HttpIndexInterceptor {
 
     private List<ByteBuffer> mRequestPendingBuffers;
     private List<ByteBuffer> mResponsePendingBuffers;

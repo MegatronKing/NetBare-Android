@@ -218,7 +218,7 @@ public final class HttpResponseHeaderPart extends HttpHeaderPart {
     @Override
     public ByteBuffer toBuffer() {
         StringBuilder builder = new StringBuilder();
-        builder.append(protocol().toString().toUpperCase());
+        builder.append(protocol().toString());
         builder.append(" ");
         builder.append(code());
         builder.append(" ");

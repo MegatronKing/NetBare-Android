@@ -33,7 +33,7 @@ public enum HttpProtocol {
     /**
      * An obsolete plaintext framing that does not use persistent sockets by default.
      */
-    HTTP_1_0("http/1.0"),
+    HTTP_1_0("HTTP/1.0"),
 
     /**
      * A plaintext framing that includes persistent connections.
@@ -41,7 +41,7 @@ public enum HttpProtocol {
      * <p>This version of OkHttp implements <a href="https://tools.ietf.org/html/rfc7230">RFC
      * 7230</a>, and tracks revisions to that spec.
      */
-    HTTP_1_1("http/1.1"),
+    HTTP_1_1("HTTP/1.1"),
 
     /**
      * Chromium's binary-framed protocol that includes header compression, multiplexing multiple
@@ -85,18 +85,17 @@ public enum HttpProtocol {
      */
     @NonNull
     public static HttpProtocol parse(@NonNull String protocol) {
-        protocol = protocol.toLowerCase();
-        if (protocol.equals(HTTP_1_0.protocol)) {
+        if (protocol.equalsIgnoreCase(HTTP_1_0.protocol)) {
             return HTTP_1_0;
-        } else if (protocol.equals(HTTP_1_1.protocol)) {
+        } else if (protocol.equalsIgnoreCase(HTTP_1_1.protocol)) {
             return HTTP_1_1;
-        } else if (protocol.equals(H2_PRIOR_KNOWLEDGE.protocol)) {
+        } else if (protocol.equalsIgnoreCase(H2_PRIOR_KNOWLEDGE.protocol)) {
             return H2_PRIOR_KNOWLEDGE;
-        } else if (protocol.equals(HTTP_2.protocol)) {
+        } else if (protocol.equalsIgnoreCase(HTTP_2.protocol)) {
             return HTTP_2;
-        } else if (protocol.equals(SPDY_3.protocol)) {
+        } else if (protocol.equalsIgnoreCase(SPDY_3.protocol)) {
             return SPDY_3;
-        } else if (protocol.equals(QUIC.protocol)) {
+        } else if (protocol.equalsIgnoreCase(QUIC.protocol)) {
             return QUIC;
         } else {
             return UNKNOWN;

@@ -16,6 +16,7 @@
 package com.github.megatronking.netbare.http;
 
 import com.github.megatronking.netbare.gateway.Request;
+import com.github.megatronking.netbare.http2.Http2Settings;
 import com.github.megatronking.netbare.ip.Protocol;
 
 import java.io.IOException;
@@ -36,6 +37,10 @@ public class HttpRequest extends Request {
 
     private HttpId mHttpId;
     private HttpSession mSession;
+
+    /* package */ HttpRequest(Request request, HttpSession session) {
+        this(request, null, session);
+    }
 
     /* package */ HttpRequest(Request request, HttpId httpId, HttpSession session) {
         this.mRequest = request;
@@ -160,6 +165,33 @@ public class HttpRequest extends Request {
      */
     public int requestBodyOffset() {
         return mSession.reqBodyOffset;
+    }
+
+    /**
+     * Returns the HTTP/2 stream id.
+     *
+     * @return A stream id.
+     */
+    public int streamId() {
+        return mHttpId != null ? mHttpId.streamId : -1;
+    }
+
+    /**
+     * Returns the HTTP/2 client settings.
+     *
+     * @return Client settings.
+     */
+    public Http2Settings clientHttp2Settings() {
+        return mSession.clientHttp2Settings;
+    }
+
+    /**
+     * Returns the HTTP/2 peer settings.
+     *
+     * @return Client settings.
+     */
+    public Http2Settings peerHttp2Settings() {
+        return mSession.peerHttp2Settings;
     }
 
 }

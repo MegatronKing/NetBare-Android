@@ -31,16 +31,20 @@ import java.util.List;
  */
 public class HttpRequestChain extends InterceptorChain<HttpRequest, HttpInterceptor> {
 
-    private HttpRequest mRequest;
+    private HttpZygoteRequest mZygoteRequest;
 
-    /* package */ HttpRequestChain(HttpRequest request, List<HttpInterceptor> interceptors) {
-        super(request, interceptors);
-        mRequest = request;
+    /* package */ HttpRequestChain(HttpZygoteRequest request, List<HttpInterceptor> interceptors) {
+        this(request, interceptors, 0);
     }
 
-    private HttpRequestChain(HttpRequest request, List<HttpInterceptor> interceptors, int index) {
+    /* package */ HttpRequestChain(HttpZygoteRequest request, List<HttpInterceptor> interceptors,
+                                   int index) {
         super(request, interceptors, index);
-        mRequest = request;
+        this.mZygoteRequest = request;
+    }
+
+    HttpZygoteRequest zygoteRequest() {
+        return mZygoteRequest;
     }
 
     @Override
@@ -48,18 +52,14 @@ public class HttpRequestChain extends InterceptorChain<HttpRequest, HttpIntercep
                                List<HttpInterceptor> interceptors, int index) throws IOException {
         HttpInterceptor interceptor = interceptors.get(index);
         if (interceptor != null) {
-            // Use the field member, it would be changed anytime.
-            interceptor.intercept(new HttpRequestChain(mRequest, interceptors, ++index), buffer);
+            interceptor.intercept(new HttpRequestChain(mZygoteRequest, interceptors, ++index), buffer);
         }
     }
 
     @NonNull
     public HttpRequest request() {
-        return mRequest;
-    }
-
-    /* package */ void updateRequest(HttpRequest request) {
-        this.mRequest = request;
+        HttpRequest active = mZygoteRequest.getActive();
+        return active != null ? active : mZygoteRequest;
     }
 
 }

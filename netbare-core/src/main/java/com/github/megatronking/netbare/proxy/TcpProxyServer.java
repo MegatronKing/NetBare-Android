@@ -105,11 +105,11 @@ import javax.net.ssl.SSLHandshakeException;
 
     @Override
     public void run() {
-        NetBareLog.i("[TCP]Server start running.");
+        NetBareLog.i("[TCP]Server starts running.");
         super.run();
         NetBareUtils.closeQuietly(mSelector);
         NetBareUtils.closeQuietly(mServerSocketChannel);
-        NetBareLog.i("[TCP]Server stop running.");
+        NetBareLog.i("[TCP]Server stops running.");
     }
 
     @Override

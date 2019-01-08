@@ -16,6 +16,7 @@
 package com.github.megatronking.netbare.http;
 
 import com.github.megatronking.netbare.gateway.Response;
+import com.github.megatronking.netbare.http2.Http2Settings;
 import com.github.megatronking.netbare.ip.Protocol;
 
 import java.io.IOException;
@@ -36,6 +37,10 @@ public class HttpResponse extends Response {
 
     private HttpId mHttpId;
     private HttpSession mSession;
+
+    /* package */ HttpResponse(Response response, HttpSession session) {
+        this(response, null, session);
+    }
 
     /* package */ HttpResponse(Response response, HttpId httpId, HttpSession session) {
         this.mResponse = response;
@@ -206,6 +211,33 @@ public class HttpResponse extends Response {
      */
     public int responseBodyOffset() {
         return mSession.resBodyOffset;
+    }
+
+    /**
+     * Returns the HTTP2 stream id.
+     *
+     * @return A stream id.
+     */
+    public int streamId() {
+        return mHttpId != null ? mHttpId.streamId : -1;
+    }
+
+    /**
+     * Returns the HTTP/2 client settings.
+     *
+     * @return Client settings.
+     */
+    public Http2Settings clientHttp2Settings() {
+        return mSession.clientHttp2Settings;
+    }
+
+    /**
+     * Returns the HTTP/2 peer settings.
+     *
+     * @return Client settings.
+     */
+    public Http2Settings peerHttp2Settings() {
+        return mSession.peerHttp2Settings;
     }
 
 }

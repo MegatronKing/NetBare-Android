@@ -117,10 +117,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
     @Override
     public void run() {
-        NetBareLog.i("[UDP]Server start running.");
+        NetBareLog.i("[UDP]Server starts running.");
         super.run();
         NetBareUtils.closeQuietly(mSelector);
-        NetBareLog.i("[UDP]Server stop running.");
+        NetBareLog.i("[UDP]Server stops running.");
     }
 
     @Override

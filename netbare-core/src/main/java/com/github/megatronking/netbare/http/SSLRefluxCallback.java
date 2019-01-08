@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-11-15 14:35
  */
-/* package */ interface SSLRefluxCallback {
+public interface SSLRefluxCallback {
 
     void onRequest(HttpRequest request, ByteBuffer buffer) throws IOException;
 

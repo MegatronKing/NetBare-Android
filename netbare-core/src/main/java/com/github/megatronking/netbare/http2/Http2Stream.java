@@ -13,30 +13,21 @@
  *  You should have received a copy of the GNU General Public License along with NetBare.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.megatronking.netbare.http;
-
-import java.util.UUID;
+package com.github.megatronking.netbare.http2;
 
 /**
- * Regenerated http unique id for multi-sessions in one connection.
+ * A "stream" is an independent, bidirectional sequence of frames exchanged between the client and
+ * server within an HTTP/2 connection.
  *
  * @author Megatron King
- * @since 2018-12-19 16:35
+ * @since 2019/1/5 23:16
  */
-public class HttpId {
+/* package */ class Http2Stream {
 
-    public String id;
-    public long time;
-    public int streamId;
+    public int id;
 
-    public HttpId() {
-        this(-1);
-    }
-
-    public HttpId(int streamId) {
-        this.id = UUID.randomUUID().toString();
-        this.time = System.currentTimeMillis();
-        this.streamId = streamId;
+    /* package */ Http2Stream() {
+        this.id = -1;
     }
 
 }

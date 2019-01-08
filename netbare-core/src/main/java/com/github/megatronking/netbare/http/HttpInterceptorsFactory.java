@@ -15,28 +15,25 @@
  */
 package com.github.megatronking.netbare.http;
 
-import java.util.UUID;
+import android.support.annotation.NonNull;
+
+import java.util.List;
 
 /**
- * Regenerated http unique id for multi-sessions in one connection.
+ * Factory creates a collection {@link HttpInterceptor}s.
  *
  * @author Megatron King
- * @since 2018-12-19 16:35
+ * @since 2018-11-15 21:58
  */
-public class HttpId {
+/* package */ interface HttpInterceptorsFactory {
 
-    public String id;
-    public long time;
-    public int streamId;
-
-    public HttpId() {
-        this(-1);
-    }
-
-    public HttpId(int streamId) {
-        this.id = UUID.randomUUID().toString();
-        this.time = System.currentTimeMillis();
-        this.streamId = streamId;
-    }
+    /**
+     * Creates a collection of http interceptor instances and immediately returns it,
+     * it must not be null.
+     *
+     * @return A http interceptor list.
+     */
+    @NonNull
+    List<HttpInterceptor> create();
 
 }

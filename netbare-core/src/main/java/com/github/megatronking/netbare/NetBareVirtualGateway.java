@@ -96,6 +96,7 @@ public final class NetBareVirtualGateway extends VirtualGateway {
 
     @Override
     public void sendRequestFinished() {
+        mLog.i("Gateway request finished!");
         if (mPolicy == POLICY_ALLOWED) {
             mGateway.sendRequestFinished();
         } else if (mPolicy == POLICY_DISALLOWED) {
@@ -105,6 +106,7 @@ public final class NetBareVirtualGateway extends VirtualGateway {
 
     @Override
     public void sendResponseFinished() {
+        mLog.i("Gateway response finished!");
         if (mPolicy == POLICY_ALLOWED) {
             mGateway.sendResponseFinished();
         } else if (mPolicy == POLICY_DISALLOWED) {

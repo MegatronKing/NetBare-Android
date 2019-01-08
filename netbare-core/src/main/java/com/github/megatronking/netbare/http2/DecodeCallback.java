@@ -13,30 +13,23 @@
  *  You should have received a copy of the GNU General Public License along with NetBare.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.megatronking.netbare.http;
+package com.github.megatronking.netbare.http2;
 
-import java.util.UUID;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
- * Regenerated http unique id for multi-sessions in one connection.
+ * A callback for HTTP2 header and data decodes.
  *
  * @author Megatron King
- * @since 2018-12-19 16:35
+ * @since 2019/1/5 20:36
  */
-public class HttpId {
+/* package */ interface DecodeCallback {
 
-    public String id;
-    public long time;
-    public int streamId;
+    void onPending(ByteBuffer buffer);
 
-    public HttpId() {
-        this(-1);
-    }
+    void onResult(ByteBuffer buffer) throws IOException;
 
-    public HttpId(int streamId) {
-        this.id = UUID.randomUUID().toString();
-        this.time = System.currentTimeMillis();
-        this.streamId = streamId;
-    }
+    void onSkip(ByteBuffer buffer) throws IOException;
 
 }

@@ -31,16 +31,20 @@ import java.util.List;
  */
 public class HttpResponseChain extends InterceptorChain<HttpResponse, HttpInterceptor> {
 
-    private HttpResponse mResponse;
+    private HttpZygoteResponse mZygoteResponse;
 
-    /* package */ HttpResponseChain(HttpResponse response, List<HttpInterceptor> interceptors) {
-        super(response, interceptors);
-        mResponse = response;
+    /* package */ HttpResponseChain(HttpZygoteResponse response, List<HttpInterceptor> interceptors) {
+        this(response, interceptors, 0);
     }
 
-    private HttpResponseChain(HttpResponse response, List<HttpInterceptor> interceptors, int index) {
+    /* package */ HttpResponseChain(HttpZygoteResponse response, List<HttpInterceptor> interceptors,
+                                    int index) {
         super(response, interceptors, index);
-        mResponse = response;
+        this.mZygoteResponse = response;
+    }
+
+    HttpZygoteResponse zygoteResponse() {
+        return mZygoteResponse;
     }
 
     @Override
@@ -48,13 +52,14 @@ public class HttpResponseChain extends InterceptorChain<HttpResponse, HttpInterc
                                List<HttpInterceptor> interceptors, int index) throws IOException {
         HttpInterceptor interceptor = interceptors.get(index);
         if (interceptor != null) {
-            interceptor.intercept(new HttpResponseChain(response, interceptors, ++index), buffer);
+            interceptor.intercept(new HttpResponseChain(mZygoteResponse, interceptors, ++index), buffer);
         }
     }
 
     @NonNull
     public HttpResponse response() {
-        return mResponse;
+        HttpResponse active = mZygoteResponse.getActive();
+        return active != null ? active : mZygoteResponse;
     }
 
 }

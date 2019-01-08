@@ -15,6 +15,8 @@
  */
 package com.github.megatronking.netbare.http;
 
+import com.github.megatronking.netbare.http2.Http2Settings;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,5 +39,7 @@ import java.util.Map;
     String message;
     int reqBodyOffset;
     int resBodyOffset;
+    Http2Settings clientHttp2Settings;
+    Http2Settings peerHttp2Settings;
 
 }

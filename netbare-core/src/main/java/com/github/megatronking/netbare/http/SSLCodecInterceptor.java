@@ -18,13 +18,13 @@ package com.github.megatronking.netbare.http;
 import android.support.annotation.NonNull;
 
 import com.github.megatronking.netbare.NetBareLog;
+import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.gateway.Request;
 import com.github.megatronking.netbare.gateway.Response;
+import com.github.megatronking.netbare.ip.Protocol;
 import com.github.megatronking.netbare.ssl.JKS;
 import com.github.megatronking.netbare.ssl.SSLCodec;
 import com.github.megatronking.netbare.ssl.SSLEngineFactory;
-import com.github.megatronking.netbare.ssl.SSLRequestCodec;
-import com.github.megatronking.netbare.ssl.SSLResponseCodec;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -45,8 +45,12 @@ import java.security.GeneralSecurityException;
 
     private JKS mJKS;
 
-    private SSLRequestCodec mRequestCodec;
-    private SSLResponseCodec mResponseCodec;
+    private SSLHttpRequestCodec mRequestCodec;
+    private SSLHttpResponseCodec mResponseCodec;
+
+    private NetBareXLog mLog;
+
+    private int mRequestIndex = -1;
 
     /* package */ SSLCodecInterceptor(JKS jks, Request request, Response response) {
         this.mJKS = jks;
@@ -61,88 +65,75 @@ import java.security.GeneralSecurityException;
             }
         }
 
-        mRequestCodec = new SSLRequestCodec(sEngineFactory);
-        mResponseCodec = new SSLResponseCodec(sEngineFactory);
+        mRequestCodec = new SSLHttpRequestCodec(sEngineFactory);
+        mResponseCodec = new SSLHttpResponseCodec(sEngineFactory);
+
+        mLog = new NetBareXLog(Protocol.TCP, request.ip(), request.port());
     }
 
     @Override
-    protected void intercept(@NonNull final HttpRequestChain chain, @NonNull ByteBuffer buffer)
-            throws IOException {
+    protected void intercept(@NonNull final HttpRequestChain chain, @NonNull final ByteBuffer buffer,
+                             int index) throws IOException {
+        mRequestIndex++;
         if (!chain.request().isHttps()) {
             chain.process(buffer);
         } else if (!mJKS.isInstalled()) {
             // Skip all interceptors
             chain.processFinal(buffer);
-            NetBareLog.w("JSK not installed, skip all interceptors!");
+            mLog.w("JSK not installed, skip all interceptors!");
         } else {
-            mRequestCodec.setRequest(chain.request());
-            // Merge buffers
-            mRequestCodec.decode(mergeRequestBuffer(buffer),
-                    new SSLCodec.CodecCallback() {
-                @Override
-                public void onPending(ByteBuffer buffer) {
-                    buffer.slice();
-                    pendRequestBuffer(buffer);
-                }
+            if (mRequestIndex == 0) {
+                mRequestCodec.setRequest(chain.request());
+                // Start handshake with remote server
+                mResponseCodec.setRequest(chain.request());
+                mResponseCodec.prepareHandshake(new SSLHttpResponseCodec.AlpnResolvedCallback() {
+                    @Override
+                    public void onResult(String selectedAlpnProtocol) throws IOException {
+                        if (selectedAlpnProtocol != null) {
+                            HttpProtocol protocol = HttpProtocol.parse(selectedAlpnProtocol);
+                            // Only accept Http1.1 and Http2.0
+                            if (protocol == HttpProtocol.HTTP_1_1 || protocol == HttpProtocol.HTTP_2) {
+                                mRequestCodec.setSelectedAlpnProtocol(protocol);
+                                mLog.i("Server selected ALPN protocol: " + protocol.toString());
+                            } else {
+                                mLog.w("Unexpected server ALPN protocol: " + protocol.toString());
+                            }
+                        }
+                        mRequestCodec.setSelectedAlpnResolved();
+                        // Continue request.
+                        decodeRequest(chain, ByteBuffer.allocate(0));
+                    }
+                });
+            }
+            // Hold the request buffer until the server ALPN configuration resolved.
+            if (!mRequestCodec.selectedAlpnResolved()) {
+                pendRequestBuffer(buffer);
+                return;
+            }
 
-                @Override
-                public void onProcess(ByteBuffer buffer) throws IOException {
-                    chain.processFinal(buffer);
-                }
-
-                @Override
-                public void onEncrypt(ByteBuffer buffer) throws IOException {
-                    mResponse.process(buffer);
-                }
-
-                @Override
-                public void onDecrypt(ByteBuffer buffer) throws IOException {
-                    chain.process(buffer);
-                }
-            });
-
-            // Prepare handshake with remote server
-            mResponseCodec.setRequest(chain.request());
-            mResponseCodec.prepareHandshake();
+            decodeRequest(chain, buffer);
         }
     }
 
     @Override
-    protected void intercept(@NonNull final HttpResponseChain chain, @NonNull ByteBuffer buffer)
-            throws IOException {
+    protected void intercept(@NonNull final HttpResponseChain chain, @NonNull ByteBuffer buffer,
+                             int index) throws IOException {
         if (!chain.response().isHttps()) {
             chain.process(buffer);
         } else if (!mJKS.isInstalled()) {
             // Skip all interceptors
             chain.processFinal(buffer);
-            NetBareLog.w("JSK not installed, skip all interceptors!");
+            mLog.w("JSK not installed, skip all interceptors!");
         } else {
             // Merge buffers
-            mResponseCodec.decode(mergeResponseBuffer(buffer),
-                    new SSLCodec.CodecCallback() {
-                        @Override
-                        public void onPending(ByteBuffer buffer) {
-                            buffer.slice();
-                            pendResponseBuffer(buffer);
-                        }
-
-                        @Override
-                        public void onProcess(ByteBuffer buffer) throws IOException {
-                            chain.processFinal(buffer);
-                        }
-
-                        @Override
-                        public void onEncrypt(ByteBuffer buffer) throws IOException {
-                            mRequest.process(buffer);
-                        }
-
-                        @Override
-                        public void onDecrypt(ByteBuffer buffer) throws IOException {
-                            chain.process(buffer);
-                        }
-
-                    });
+            decodeResponse(chain, buffer);
         }
+    }
+
+    @Override
+    protected void onRequestFinished(@NonNull HttpRequest request) {
+        super.onRequestFinished(request);
+        mRequestIndex = -1;
     }
 
     @Override
@@ -190,6 +181,64 @@ import java.security.GeneralSecurityException;
             public void onDecrypt(ByteBuffer buffer) {
             }
         });
+    }
+
+    private void decodeRequest(final HttpRequestChain chain, ByteBuffer buffer) throws IOException {
+        // Merge buffers
+        mRequestCodec.decode(mergeRequestBuffer(buffer),
+                new SSLCodec.CodecCallback() {
+                    @Override
+                    public void onPending(ByteBuffer buffer) {
+                        buffer.slice();
+                        pendRequestBuffer(buffer);
+                    }
+
+                    @Override
+                    public void onProcess(ByteBuffer buffer) throws IOException {
+                        chain.processFinal(buffer);
+                    }
+
+                    @Override
+                    public void onEncrypt(ByteBuffer buffer) throws IOException {
+                        mResponse.process(buffer);
+                    }
+
+                    @Override
+                    public void onDecrypt(ByteBuffer buffer) throws IOException {
+//                        NetBareLog.i("request: " + new String(buffer.array(), buffer.position(), buffer.remaining()));
+                        chain.process(buffer);
+                    }
+                });
+    }
+
+
+    private void decodeResponse(final HttpResponseChain chain, ByteBuffer buffer) throws IOException {
+        // Merge buffers
+        mResponseCodec.decode(mergeResponseBuffer(buffer),
+                new SSLCodec.CodecCallback() {
+                    @Override
+                    public void onPending(ByteBuffer buffer) {
+                        buffer.slice();
+                        pendResponseBuffer(buffer);
+                    }
+
+                    @Override
+                    public void onProcess(ByteBuffer buffer) throws IOException {
+                        chain.processFinal(buffer);
+                    }
+
+                    @Override
+                    public void onEncrypt(ByteBuffer buffer) throws IOException {
+                        mRequest.process(buffer);
+                    }
+
+                    @Override
+                    public void onDecrypt(ByteBuffer buffer) throws IOException {
+//                        NetBareLog.i("response: " + new String(buffer.array(), buffer.position(), buffer.remaining()));
+                        chain.process(buffer);
+                    }
+
+                });
     }
 
 }

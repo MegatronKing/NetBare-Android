@@ -15,28 +15,32 @@
  */
 package com.github.megatronking.netbare.http;
 
-import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Regenerated http unique id for multi-sessions in one connection.
+ * A factory creates {@link HttpSession} instance by id.
  *
  * @author Megatron King
- * @since 2018-12-19 16:35
+ * @since 2019/1/6 19:42
  */
-public class HttpId {
+/* package */ class HttpSessionFactory {
 
-    public String id;
-    public long time;
-    public int streamId;
+    private final Map<String, HttpSession> mHttpSession;
 
-    public HttpId() {
-        this(-1);
+    /* package */ HttpSessionFactory() {
+        mHttpSession = new HashMap<>(1);
     }
 
-    public HttpId(int streamId) {
-        this.id = UUID.randomUUID().toString();
-        this.time = System.currentTimeMillis();
-        this.streamId = streamId;
+    HttpSession create(String id) {
+        HttpSession httpSession;
+        if (mHttpSession.containsKey(id)) {
+            httpSession = mHttpSession.get(id);
+        } else {
+            httpSession = new HttpSession();
+            mHttpSession.put(id, httpSession);
+        }
+        return httpSession;
     }
 
 }
