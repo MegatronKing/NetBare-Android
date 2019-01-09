@@ -706,6 +706,11 @@ import java.util.Map;
             return 32 + name.getBytes().length + value.getBytes().length;
         }
 
+        @Override
+        public String toString() {
+            return name + ": " + value;
+        }
+
     }
 
 }
