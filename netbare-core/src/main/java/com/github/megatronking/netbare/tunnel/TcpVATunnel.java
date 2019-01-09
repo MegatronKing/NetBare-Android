@@ -16,17 +16,15 @@
 package com.github.megatronking.netbare.tunnel;
 
 import com.github.megatronking.netbare.NetBareUtils;
-import com.github.megatronking.netbare.gateway.VirtualGateway;
 import com.github.megatronking.netbare.NetBareVirtualGateway;
 import com.github.megatronking.netbare.gateway.Request;
 import com.github.megatronking.netbare.gateway.Response;
+import com.github.megatronking.netbare.gateway.VirtualGateway;
 import com.github.megatronking.netbare.net.Session;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * TCP protocol virtual gateway tunnel wraps {@link TcpProxyTunnel} and {@link TcpRemoteTunnel} as
@@ -43,12 +41,6 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
 
     private final int mMtu;
 
-    private final List<ByteBuffer> mProxyBuffers;
-    private final List<ByteBuffer> mRemoteBuffers;
-
-    private boolean isProxyWritable;
-    private boolean isRemoteWritable;
-
     public TcpVATunnel(Session session, NioTunnel proxyServerTunnel, NioTunnel remoteServerTunnel, int mtu) {
         this.mProxyTunnel = proxyServerTunnel;
         this.mRemoteTunnel = remoteServerTunnel;
@@ -56,9 +48,6 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
                 new Response(mProxyTunnel));
 
         this.mMtu = mtu;
-
-        this.mProxyBuffers = new ArrayList<>();
-        this.mRemoteBuffers = new ArrayList<>();
 
         setCallbacks();
     }
@@ -98,20 +87,12 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
                     mGateway.sendResponseFinished();
                     return;
                 }
-                if (isRemoteWritable) {
-                    mGateway.sendRequest(buffer);
-                } else {
-                    mRemoteBuffers.add(buffer);
-                }
+                mGateway.sendRequest(buffer);
             }
 
             @Override
-            public void onWrite() throws IOException {
-                isProxyWritable = true;
-                for(ByteBuffer buffer : mProxyBuffers) {
-                    mGateway.sendResponse(buffer);
-                }
-                mProxyBuffers.clear();
+            public void onWrite() {
+                // Do nothing
             }
 
             @Override
@@ -128,8 +109,8 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
             @Override
             public void onConnected() throws IOException {
                 // Prepare to read data.
-                mRemoteTunnel.prepareReadWrite();
-                mProxyTunnel.prepareReadWrite();
+                mProxyTunnel.prepareRead();
+                mRemoteTunnel.prepareRead();
             }
 
             @Override
@@ -150,20 +131,12 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
                     mGateway.sendRequestFinished();
                     return;
                 }
-                if (isProxyWritable) {
-                    mGateway.sendResponse(buffer);
-                } else {
-                    mProxyBuffers.add(buffer);
-                }
+                mGateway.sendResponse(buffer);
             }
 
             @Override
-            public void onWrite() throws IOException {
-                isRemoteWritable = true;
-                for(ByteBuffer buffer : mRemoteBuffers) {
-                    mGateway.sendRequest(buffer);
-                }
-                mRemoteBuffers.clear();
+            public void onWrite() {
+                // Do nothing
             }
 
             @Override

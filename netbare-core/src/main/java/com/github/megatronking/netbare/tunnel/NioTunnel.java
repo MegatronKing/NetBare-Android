@@ -24,6 +24,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.spi.AbstractSelectableChannel;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * An abstract base nio tunnel class uses nio operations, the sub class should provides IO
@@ -75,12 +77,15 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
     private final Selector mSelector;
     private SelectionKey mSelectionKey;
 
+    private Queue<ByteBuffer> mPendingBuffers;
+
     private NioCallback mCallback;
     private boolean mIsClosed;
 
     NioTunnel(T channel, Selector selector) {
         this.mChannel = channel;
         this.mSelector = selector;
+        this.mPendingBuffers = new ConcurrentLinkedDeque<>();
     }
 
     @Override
@@ -102,6 +107,18 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
         if (mCallback != null) {
             mCallback.onWrite();
         }
+        // Write pending buffers.
+        while (!mPendingBuffers.isEmpty()) {
+            ByteBuffer buffer = mPendingBuffers.poll();
+            int remaining = buffer.remaining();
+            int sent = channelWrite(buffer);
+            if (sent < remaining) {
+                // Should wait next onWrite.
+                mPendingBuffers.offer(buffer);
+                return;
+            }
+        }
+        interestRead();
     }
 
     @Override
@@ -119,6 +136,7 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
     @Override
     public void close() {
         mIsClosed = true;
+        mPendingBuffers.clear();
         NetBareUtils.closeQuietly(mChannel);
     }
 
@@ -127,12 +145,11 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
         if (mIsClosed) {
             return;
         }
-        while (buffer.hasRemaining()) {
-            int sent = channelWrite(buffer);
-            if (sent <= 0) {
-                break;
-            }
+        if (!buffer.hasRemaining()) {
+            return;
         }
+        mPendingBuffers.offer(buffer);
+        interestWrite();
     }
 
     public int read(ByteBuffer buffer) throws IOException {
@@ -152,15 +169,6 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
         this.mCallback = callback;
     }
 
-    /* package */ void prepareReadWrite() throws IOException {
-        if (mChannel.isBlocking()) {
-            mChannel.configureBlocking(false);
-        }
-        mSelector.wakeup();
-        mSelectionKey = mChannel.register(mSelector,
-                SelectionKey.OP_READ | SelectionKey.OP_WRITE, this);
-    }
-
     /* package */ void prepareRead() throws IOException {
         if (mChannel.isBlocking()) {
             mChannel.configureBlocking(false);
@@ -169,24 +177,16 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
         mSelectionKey = mChannel.register(mSelector, SelectionKey.OP_READ, this);
     }
 
-    /* package */ void prepareWrite() throws IOException {
-        if (mChannel.isBlocking()) {
-            mChannel.configureBlocking(false);
-        }
-        mSelector.wakeup();
-        mSelectionKey = mChannel.register(mSelector, SelectionKey.OP_WRITE, this);
-    }
-
-    /* package */ void interestReadWrite() {
-        mSelector.wakeup();
+    private void interestWrite() {
         if (mSelectionKey != null) {
-            mSelectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+            mSelector.wakeup();
+            mSelectionKey.interestOps(SelectionKey.OP_WRITE);
         }
     }
 
-    /* package */ void interestRead() {
-        mSelector.wakeup();
+    private void interestRead() {
         if (mSelectionKey != null) {
+            mSelector.wakeup();
             mSelectionKey.interestOps(SelectionKey.OP_READ);
         }
     }

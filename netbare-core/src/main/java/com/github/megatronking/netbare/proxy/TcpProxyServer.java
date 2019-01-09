@@ -16,7 +16,6 @@
 package com.github.megatronking.netbare.proxy;
 
 import android.net.VpnService;
-import android.os.SystemClock;
 
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.NetBareUtils;
@@ -24,8 +23,8 @@ import com.github.megatronking.netbare.gateway.VirtualGateway;
 import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.net.SessionProvider;
 import com.github.megatronking.netbare.tunnel.ConnectionShutdownException;
-import com.github.megatronking.netbare.tunnel.NioTunnel;
 import com.github.megatronking.netbare.tunnel.NioCallback;
+import com.github.megatronking.netbare.tunnel.NioTunnel;
 import com.github.megatronking.netbare.tunnel.TcpProxyTunnel;
 import com.github.megatronking.netbare.tunnel.TcpRemoteTunnel;
 import com.github.megatronking.netbare.tunnel.TcpTunnel;
@@ -56,8 +55,6 @@ import javax.net.ssl.SSLHandshakeException;
  * @since 2018-10-11 17:35
  */
 /* package */ class TcpProxyServer extends BaseProxyServer implements Runnable {
-
-    private static final int SELECTOR_WAIT_TIME = 10;
 
     private final VpnService mVpnService;
 
@@ -116,8 +113,6 @@ import javax.net.ssl.SSLHandshakeException;
     protected void process() throws IOException {
         int select = mSelector.select();
         if (select == 0) {
-            // To make sure other thread to execute when using wakeup.
-            SystemClock.sleep(SELECTOR_WAIT_TIME);
             return;
         }
         Set<SelectionKey> selectedKeys = mSelector.selectedKeys();

@@ -25,8 +25,8 @@ import com.github.megatronking.netbare.ip.IpHeader;
 import com.github.megatronking.netbare.ip.UdpHeader;
 import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.net.SessionProvider;
-import com.github.megatronking.netbare.tunnel.NioTunnel;
 import com.github.megatronking.netbare.tunnel.NioCallback;
+import com.github.megatronking.netbare.tunnel.NioTunnel;
 import com.github.megatronking.netbare.tunnel.Tunnel;
 import com.github.megatronking.netbare.tunnel.UdpRemoteTunnel;
 import com.github.megatronking.netbare.tunnel.UdpVATunnel;
@@ -54,7 +54,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 /* package */ class UdpProxyServer extends BaseProxyServer {
 
-    private static final int SELECTOR_WAIT_TIME = 15;
+    private static final int SELECTOR_WAIT_TIME = 50;
 
     private final VpnService mVpnService;
 
@@ -127,7 +127,7 @@ import java.util.concurrent.ConcurrentHashMap;
     protected void process() throws IOException {
         int select = mSelector.select();
         if (select == 0) {
-            // To make sure other thread to execute when using wakeup.
+            // Wait a short time to let the selector register or interest.
             SystemClock.sleep(SELECTOR_WAIT_TIME);
             return;
         }

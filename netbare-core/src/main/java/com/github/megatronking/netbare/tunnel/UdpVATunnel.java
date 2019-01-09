@@ -13,23 +13,37 @@
  *  You should have received a copy of the GNU General Public License along with NetBare.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
+/*
+ * Copyright (C) 2013 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.github.megatronking.netbare.tunnel;
 
+import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.NetBareUtils;
-import com.github.megatronking.netbare.gateway.VirtualGateway;
 import com.github.megatronking.netbare.NetBareVirtualGateway;
 import com.github.megatronking.netbare.gateway.Request;
 import com.github.megatronking.netbare.gateway.Response;
-import com.github.megatronking.netbare.net.Session;
+import com.github.megatronking.netbare.gateway.VirtualGateway;
 import com.github.megatronking.netbare.ip.IpHeader;
 import com.github.megatronking.netbare.ip.UdpHeader;
+import com.github.megatronking.netbare.net.Session;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * UDP protocol virtual gateway tunnel wraps {@link UdpRemoteTunnel} and itself as client and
@@ -51,8 +65,6 @@ public class UdpVATunnel extends VirtualGatewayTunnel implements NioCallback,
 
     private UdpHeader mTemplateHeader;
 
-    private Queue<ByteBuffer> mSendWaitingQueue;
-
     public UdpVATunnel(Session session, NioTunnel tunnel, OutputStream output, int mtu) {
         this.mRemoteTunnel = tunnel;
         this.mOutput = output;
@@ -61,8 +73,6 @@ public class UdpVATunnel extends VirtualGatewayTunnel implements NioCallback,
         this.mSession = session;
         this.mGateway = new NetBareVirtualGateway(session,
                 new Request(mRemoteTunnel), new Response(this));
-
-        this.mSendWaitingQueue = new ConcurrentLinkedQueue<>();
 
         this.mRemoteTunnel.setNioCallback(this);
     }
@@ -89,25 +99,21 @@ public class UdpVATunnel extends VirtualGatewayTunnel implements NioCallback,
             return;
         }
         ByteBuffer buffer = ByteBuffer.allocate(mMtu);
-        int len = mRemoteTunnel.read(buffer);
+        int len;
+        try {
+            len = mRemoteTunnel.read(buffer);
+        } catch (IOException e) {
+            throw new ConnectionShutdownException(e.getMessage());
+        }
         if (len < 0) {
-            NetBareUtils.closeQuietly(mRemoteTunnel);
-            mGateway.sendRequestFinished();
-            mGateway.sendResponseFinished();
+            close();
             return;
         }
         mGateway.sendResponse(buffer);
     }
 
     @Override
-    public void onWrite() throws IOException {
-        while (!mSendWaitingQueue.isEmpty()) {
-            ByteBuffer buffer = mSendWaitingQueue.poll();
-            if (buffer != null) {
-                mGateway.sendRequest(buffer);
-            }
-        }
-        mRemoteTunnel.interestRead();
+    public void onWrite() {
     }
 
     @Override
@@ -128,15 +134,20 @@ public class UdpVATunnel extends VirtualGatewayTunnel implements NioCallback,
     }
 
     public void send(UdpHeader header) {
+        if (mRemoteTunnel.isClosed()) {
+            return;
+        }
         // Clone a template by the send data.
         if (mTemplateHeader == null) {
             mTemplateHeader = createTemplate(header);
         }
-        // Add buffer to queue.
-        mSendWaitingQueue.offer(header.data());
 
-        // Notify remote tunnel to read data.
-        mRemoteTunnel.interestReadWrite();
+        try {
+            mGateway.sendRequest(header.data());
+        } catch (IOException e) {
+            NetBareLog.e(e.getMessage());
+            close();
+        }
     }
 
     @Override
