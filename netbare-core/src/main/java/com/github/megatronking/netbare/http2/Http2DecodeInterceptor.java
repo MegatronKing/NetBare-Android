@@ -203,9 +203,10 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
             // Separate multi-frames
             ByteBuffer newBuffer = ByteBuffer.allocate(length + 9);
             newBuffer.put(buffer.array(), buffer.position() - 3, newBuffer.capacity());
+            newBuffer.flip();
             decode(newBuffer, callback, stream, receiver);
             // Process the left data
-            buffer.position(length + 6);
+            buffer.position(buffer.position() + length + 6);
             decode(buffer, callback, stream, receiver);
             return;
         }
@@ -332,6 +333,12 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
             return;
         }
         decodeHeaderBlock(buffer, flags, callback);
+        if ((flags & Http2.FLAG_END_STREAM) != 0) {
+            ByteBuffer endBuffer = ByteBuffer.allocate(NetBareUtils.PART_END_BYTES.length);
+            endBuffer.put(NetBareUtils.PART_END_BYTES);
+            endBuffer.flip();
+            callback.onResult(endBuffer);
+        }
     }
 
     private void decodeHeaderBlock(ByteBuffer buffer, byte flags,

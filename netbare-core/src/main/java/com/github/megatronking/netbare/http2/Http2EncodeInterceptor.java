@@ -51,8 +51,6 @@ public final class Http2EncodeInterceptor extends HttpIndexInterceptor {
                 HttpRequest request = chain.request();
                 mLog = new NetBareXLog(request.protocol(), request.ip(), request.port());
             }
-            mLog.w("request: " + new String(buffer.array(), buffer.position(),
-                    buffer.remaining()));
             if (index == 0) {
                 encodeRequestHeader(chain);
             } else {
@@ -72,7 +70,6 @@ public final class Http2EncodeInterceptor extends HttpIndexInterceptor {
                 HttpResponse response = chain.response();
                 mLog = new NetBareXLog(response.protocol(), response.ip(), response.port());
             }
-            mLog.w("response: " + new String(buffer.array(), buffer.position(), buffer.remaining()));
             if (index == 0) {
                 encodeResponseHeader(chain);
             } else {
