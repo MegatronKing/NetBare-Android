@@ -334,10 +334,16 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
         }
         decodeHeaderBlock(buffer, flags, callback);
         if ((flags & Http2.FLAG_END_STREAM) != 0) {
-            ByteBuffer endBuffer = ByteBuffer.allocate(NetBareUtils.PART_END_BYTES.length);
-            endBuffer.put(NetBareUtils.PART_END_BYTES);
+            // Use an empty data frame to end the stream.
+            ByteBuffer endBuffer = ByteBuffer.allocate(Http2.FRAME_HEADER_LENGTH);
+            endBuffer.put((byte) 0);
+            endBuffer.put((byte) 0);
+            endBuffer.put((byte) 0);
+            endBuffer.put((byte) (FrameType.DATA.get() & 0xff));
+            endBuffer.put((byte) (Http2.FLAG_END_STREAM & 0xff));
+            endBuffer.putInt(streamId & 0x7fffffff);
             endBuffer.flip();
-            callback.onResult(endBuffer);
+            callback.onSkip(endBuffer);
         }
     }
 
