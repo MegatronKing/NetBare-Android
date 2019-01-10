@@ -16,8 +16,11 @@
 package com.github.megatronking.netbare.ssl;
 
 import com.github.megatronking.netbare.NetBareLog;
+import com.github.megatronking.netbare.http.HttpProtocol;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A SSL utils class.
@@ -145,12 +148,104 @@ public final class SSLUtils {
         return PACKET_SSL;
     }
 
+    public static HttpProtocol[] parseClientHelloAlpn(ByteBuffer clienthelloMessage) {
+        byte[] buffer = clienthelloMessage.array();
+        int offset = clienthelloMessage.position();
+        int size = clienthelloMessage.remaining();
+        int limit = offset + size;
+        // Client Hello
+        if (size <= 43 || buffer[offset] != 0x16) {
+            return null;
+        }
+        // Skip 43 byte header
+        offset += 43;
+        // Read sessionID
+        if (offset + 1 > limit) {
+            return null;
+        }
+        int sessionIDLength = buffer[offset++] & 0xFF;
+        offset += sessionIDLength;
+
+        // Read cipher suites
+        if (offset + 2 > limit) {
+            return null;
+        }
+
+        int cipherSuitesLength = readShort(buffer, offset) & 0xFFFF;
+        offset += 2;
+        offset += cipherSuitesLength;
+
+        // Read Compression method.
+        if (offset + 1 > limit) {
+            return null;
+        }
+        int compressionMethodLength = buffer[offset++] & 0xFF;
+        offset += compressionMethodLength;
+
+        // Read Extensions
+        if (offset + 2 > limit) {
+            return null;
+        }
+        int extensionsLength = readShort(buffer, offset) & 0xFFFF;
+        offset += 2;
+
+        if (offset + extensionsLength > limit) {
+            return null;
+        }
+
+        while (offset + 4 <= limit) {
+            int type = readShort(buffer, offset) & 0xFFFF;
+            offset += 2;
+            int length = readShort(buffer, offset) & 0xFFFF;
+            offset += 2;
+            // TYPE_APPLICATION_LAYER_PROTOCOL_NEGOTIATION = 16
+            if (type == 16) {
+                int protocolCount = readShort(buffer, offset) & 0xFFFF;
+                offset += 2;
+                length -= 2;
+                if (offset + length > limit) {
+                    return null;
+                }
+                List<HttpProtocol> httpProtocols = new ArrayList<>();
+                int read = 0;
+                while (read <= protocolCount) {
+                    int protocolLength = buffer[offset + read];
+                    read += 1;
+                    HttpProtocol protocol = HttpProtocol.parse(new String(buffer, offset + read,
+                            protocolLength));
+                    if (protocol == HttpProtocol.HTTP_1_1 || protocol == HttpProtocol.HTTP_2) {
+                        httpProtocols.add(protocol);
+                    }
+                    read += protocolLength;
+                }
+                if (httpProtocols.isEmpty()) {
+                    return null;
+                } else {
+                    HttpProtocol[] protocols = new HttpProtocol[httpProtocols.size()];
+                    for (int i = 0; i < protocols.length; i++) {
+                        protocols[i] = httpProtocols.get(i);
+                    }
+                    return protocols;
+                }
+            } else {
+                offset += length;
+            }
+
+        }
+        return null;
+    }
+
     private static int unsignedByte(ByteBuffer buffer, int index) {
         return buffer.get(index) & 0x0FF;
     }
 
     private static int unsignedShort(ByteBuffer buffer, int index) {
         return buffer.getShort(index) & 0x0FFFF;
+    }
+
+    private static short readShort(byte[] data, int offset) {
+        int r = ((data[offset] & 0xFF) << 8) | (data[offset + 1] & 0xFF);
+        return (short) r;
     }
 
 }

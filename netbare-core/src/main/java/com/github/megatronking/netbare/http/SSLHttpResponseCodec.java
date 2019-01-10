@@ -46,6 +46,8 @@ import javax.net.ssl.SSLEngine;
 
     private boolean mAlpnEnabled;
     private boolean mSelectedAlpnResolved;
+
+    private HttpProtocol[] mClientAlpns;
     private AlpnResolvedCallback mAlpnCallback;
 
     /* package */ SSLHttpResponseCodec(SSLEngineFactory factory) {
@@ -56,7 +58,7 @@ import javax.net.ssl.SSLEngine;
     protected SSLEngine createEngine(SSLEngineFactory factory) {
         if (mSSLEngine == null) {
             mSSLEngine = super.createEngine(factory);
-            if (mSSLEngine != null) {
+            if (mSSLEngine != null && mClientAlpns != null) {
                 enableAlpn();
             }
         }
@@ -68,13 +70,19 @@ import javax.net.ssl.SSLEngine;
         super.decode(buffer, callback);
         // ALPN is put in ServerHello, once we receive the remote server packet, the ALPN must be
         // resolved.
-        if (mAlpnCallback != null && !mSelectedAlpnResolved) {
+        if (!mSelectedAlpnResolved) {
             mAlpnCallback.onResult(getAlpnSelectedProtocol());
         }
         mSelectedAlpnResolved = true;
     }
 
-    public void prepareHandshake(AlpnResolvedCallback callback) throws IOException {
+    public void setSelectedAlpnResolved() {
+        mSelectedAlpnResolved = true;
+    }
+
+    public void prepareHandshake(HttpProtocol[] protocols, AlpnResolvedCallback callback)
+            throws IOException {
+        this.mClientAlpns = protocols;
         this.mAlpnCallback = callback;
         super.prepareHandshake();
     }
@@ -98,7 +106,10 @@ import javax.net.ssl.SSLEngine;
         Method setApplicationProtocolsMethod = mSSLEngine.getClass().getDeclaredMethod(
                 "setApplicationProtocols", String[].class);
         setApplicationProtocolsMethod.setAccessible(true);
-        String[] protocols = {HttpProtocol.HTTP_1_1.toString(), HttpProtocol.HTTP_2.toString()};
+        String[] protocols = new String[mClientAlpns.length];
+        for (int i = 0; i < protocols.length; i++) {
+            protocols[i] = mClientAlpns[i].toString();
+        }
         setApplicationProtocolsMethod.invoke(mSSLEngine, new Object[]{protocols});
 
         Method setUseSessionTicketsMethod = mSSLEngine.getClass().getDeclaredMethod(
@@ -122,8 +133,7 @@ import javax.net.ssl.SSLEngine;
         useSniField.set(sslParameters, true);
         Field alpnProtocolsField = sslParameters.getClass().getDeclaredField("alpnProtocols");
         alpnProtocolsField.setAccessible(true);
-        alpnProtocolsField.set(sslParameters, concatLengthPrefixed(HttpProtocol.HTTP_1_1,
-                HttpProtocol.HTTP_2));
+        alpnProtocolsField.set(sslParameters, concatLengthPrefixed(mClientAlpns));
     }
 
     private byte[] concatLengthPrefixed(HttpProtocol ... protocols) {

@@ -25,6 +25,7 @@ import com.github.megatronking.netbare.ip.Protocol;
 import com.github.megatronking.netbare.ssl.JKS;
 import com.github.megatronking.netbare.ssl.SSLCodec;
 import com.github.megatronking.netbare.ssl.SSLEngineFactory;
+import com.github.megatronking.netbare.ssl.SSLUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -50,7 +51,7 @@ import java.security.GeneralSecurityException;
 
     private NetBareXLog mLog;
 
-    private int mRequestIndex = -1;
+    private boolean mClientAlpnResolved;
 
     /* package */ SSLCodecInterceptor(JKS jks, Request request, Response response) {
         this.mJKS = jks;
@@ -72,9 +73,8 @@ import java.security.GeneralSecurityException;
     }
 
     @Override
-    protected void intercept(@NonNull final HttpRequestChain chain, @NonNull final ByteBuffer buffer,
+    protected void intercept(@NonNull final HttpRequestChain chain, @NonNull ByteBuffer buffer,
                              int index) throws IOException {
-        mRequestIndex++;
         if (!chain.request().isHttps()) {
             chain.process(buffer);
         } else if (!mJKS.isInstalled()) {
@@ -82,29 +82,51 @@ import java.security.GeneralSecurityException;
             chain.processFinal(buffer);
             mLog.w("JSK not installed, skip all interceptors!");
         } else {
-            if (mRequestIndex == 0) {
+            if (!mClientAlpnResolved) {
+                buffer = mergeRequestBuffer(buffer);
+                int verifyResult = SSLUtils.verifyPacket(buffer);
+                if (verifyResult == SSLUtils.PACKET_NOT_ENCRYPTED) {
+                    throw new IOException("SSL packet is not encrypt.");
+                }
+                if (verifyResult == SSLUtils.PACKET_NOT_ENOUGH) {
+                    pendRequestBuffer(buffer);
+                    return;
+                }
+
                 mRequestCodec.setRequest(chain.request());
                 // Start handshake with remote server
                 mResponseCodec.setRequest(chain.request());
-                mResponseCodec.prepareHandshake(new SSLHttpResponseCodec.AlpnResolvedCallback() {
-                    @Override
-                    public void onResult(String selectedAlpnProtocol) throws IOException {
-                        if (selectedAlpnProtocol != null) {
-                            HttpProtocol protocol = HttpProtocol.parse(selectedAlpnProtocol);
-                            // Only accept Http1.1 and Http2.0
-                            if (protocol == HttpProtocol.HTTP_1_1 || protocol == HttpProtocol.HTTP_2) {
-                                mRequestCodec.setSelectedAlpnProtocol(protocol);
-                                chain.request().session().protocol = protocol;
-                                mLog.i("Server selected ALPN protocol: " + protocol.toString());
-                            } else {
-                                mLog.w("Unexpected server ALPN protocol: " + protocol.toString());
+
+                // Parse the ALPN protocol of client.
+                HttpProtocol[] protocols = SSLUtils.parseClientHelloAlpn(buffer);
+                mClientAlpnResolved = true;
+
+                if (protocols == null || protocols.length == 0) {
+                    mRequestCodec.setSelectedAlpnResolved();
+                    mResponseCodec.setSelectedAlpnResolved();
+                    mResponseCodec.prepareHandshake();
+                } else {
+                    // Detect remote server's ALPN and then continue request.
+                    mResponseCodec.prepareHandshake(protocols, new SSLHttpResponseCodec.AlpnResolvedCallback() {
+                        @Override
+                        public void onResult(String selectedAlpnProtocol) throws IOException {
+                            if (selectedAlpnProtocol != null) {
+                                HttpProtocol protocol = HttpProtocol.parse(selectedAlpnProtocol);
+                                // Only accept Http1.1 and Http2.0
+                                if (protocol == HttpProtocol.HTTP_1_1 || protocol == HttpProtocol.HTTP_2) {
+                                    mRequestCodec.setSelectedAlpnProtocol(protocol);
+                                    chain.request().session().protocol = protocol;
+                                    mLog.i("Server selected ALPN protocol: " + protocol.toString());
+                                } else {
+                                    mLog.w("Unexpected server ALPN protocol: " + protocol.toString());
+                                }
                             }
+                            mRequestCodec.setSelectedAlpnResolved();
+                            // Continue request.
+                            decodeRequest(chain, ByteBuffer.allocate(0));
                         }
-                        mRequestCodec.setSelectedAlpnResolved();
-                        // Continue request.
-                        decodeRequest(chain, ByteBuffer.allocate(0));
-                    }
-                });
+                    });
+                }
             }
             // Hold the request buffer until the server ALPN configuration resolved.
             if (!mRequestCodec.selectedAlpnResolved()) {
@@ -129,12 +151,6 @@ import java.security.GeneralSecurityException;
             // Merge buffers
             decodeResponse(chain, buffer);
         }
-    }
-
-    @Override
-    protected void onRequestFinished(@NonNull HttpRequest request) {
-        super.onRequestFinished(request);
-        mRequestIndex = -1;
     }
 
     @Override
@@ -206,7 +222,6 @@ import java.security.GeneralSecurityException;
 
                     @Override
                     public void onDecrypt(ByteBuffer buffer) throws IOException {
-//                        NetBareLog.i("request: " + new String(buffer.array(), buffer.position(), buffer.remaining()));
                         chain.process(buffer);
                     }
                 });
@@ -235,7 +250,6 @@ import java.security.GeneralSecurityException;
 
                     @Override
                     public void onDecrypt(ByteBuffer buffer) throws IOException {
-//                        NetBareLog.i("response: " + new String(buffer.array(), buffer.position(), buffer.remaining()));
                         chain.process(buffer);
                     }
 
