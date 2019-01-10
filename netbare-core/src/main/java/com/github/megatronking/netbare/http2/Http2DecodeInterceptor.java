@@ -17,7 +17,6 @@ package com.github.megatronking.netbare.http2;
 
 import android.support.annotation.NonNull;
 
-import com.github.megatronking.netbare.NetBareUtils;
 import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.http.HttpId;
 import com.github.megatronking.netbare.http.HttpPendingInterceptor;
@@ -331,22 +330,13 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
             buffer.position(buffer.position() + 5);
         }
         length = lengthWithoutPadding(length, flags, padding);
-        if (length <= 0) {
-            return;
+        if (length > 0) {
+            decodeHeaderBlock(buffer, flags, callback);
         }
-        decodeHeaderBlock(buffer, flags, callback);
         if ((flags & Http2.FLAG_END_STREAM) != 0) {
             mLog.i("End the http2 stream with no body : " + streamId);
             // Use an empty data frame to end the stream.
-            ByteBuffer endBuffer = ByteBuffer.allocate(Http2.FRAME_HEADER_LENGTH);
-            endBuffer.put((byte) 0);
-            endBuffer.put((byte) 0);
-            endBuffer.put((byte) 0);
-            endBuffer.put((byte) (FrameType.DATA.get() & 0xff));
-            endBuffer.put((byte) (Http2.FLAG_END_STREAM & 0xff));
-            endBuffer.putInt(streamId & 0x7fffffff);
-            endBuffer.flip();
-            callback.onSkip(endBuffer);
+            callback.onSkip(endStream(FrameType.DATA, streamId));
         }
     }
 
@@ -367,23 +357,21 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
         if (streamId == 0) {
             throw new IOException("Http2 PROTOCOL_ERROR: TYPE_DATA streamId == 0");
         }
-        boolean inFinished = (flags & Http2.FLAG_END_STREAM) != 0;
         boolean gzipped = (flags & Http2.FLAG_COMPRESSED) != 0;
         if (gzipped) {
             throw new IOException("Http2 PROTOCOL_ERROR: FLAG_COMPRESSED without SETTINGS_COMPRESS_DATA");
         }
         short padding = (flags & Http2.FLAG_PADDED) != 0 ? (short) (buffer.get() & 0xff) : 0;
         length = lengthWithoutPadding(length, flags, padding);
-        if (length < 0) {
-            return;
+        if (length > 0) {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            os.write(buffer.array(), buffer.position(), length);
+            callback.onResult(ByteBuffer.wrap(os.toByteArray()));
         }
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        os.write(buffer.array(), buffer.position(), length);
-        if (inFinished) {
+        if ((flags & Http2.FLAG_END_STREAM) != 0) {
             mLog.i("End the http2 stream : " + streamId);
-            os.write(NetBareUtils.PART_END_BYTES);
+            callback.onSkip(endStream(FrameType.DATA, streamId));
         }
-        callback.onResult(ByteBuffer.wrap(os.toByteArray()));
     }
 
     private int lengthWithoutPadding(int length, byte flags, short padding) throws IOException {
@@ -394,6 +382,18 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
             throw new IOException("Http2 PROTOCOL_ERROR padding " + padding + " > remaining length " + length);
         }
         return (short) (length - padding);
+    }
+
+    private ByteBuffer endStream(FrameType frameType, int streamId) {
+        ByteBuffer endBuffer = ByteBuffer.allocate(Http2.FRAME_HEADER_LENGTH);
+        endBuffer.put((byte) 0);
+        endBuffer.put((byte) 0);
+        endBuffer.put((byte) 0);
+        endBuffer.put((byte) (frameType.get() & 0xff));
+        endBuffer.put((byte) (Http2.FLAG_END_STREAM & 0xff));
+        endBuffer.putInt(streamId & 0x7fffffff);
+        endBuffer.flip();
+        return endBuffer;
     }
 
 }

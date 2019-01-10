@@ -17,21 +17,21 @@ package com.github.megatronking.netbare.http2;
 
 import android.support.annotation.NonNull;
 
-import com.github.megatronking.netbare.NetBareUtils;
 import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.gateway.InterceptorChain;
-import com.github.megatronking.netbare.http.HttpIndexInterceptor;
+import com.github.megatronking.netbare.http.HttpInterceptor;
 import com.github.megatronking.netbare.http.HttpProtocol;
 import com.github.megatronking.netbare.http.HttpRequest;
 import com.github.megatronking.netbare.http.HttpRequestChain;
 import com.github.megatronking.netbare.http.HttpResponse;
 import com.github.megatronking.netbare.http.HttpResponseChain;
-import com.google.common.primitives.Bytes;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Encodes HTTP2 request and response packets.
@@ -39,20 +39,37 @@ import java.util.Arrays;
  * @author Megatron King
  * @since 2019/1/5 14:24
  */
-public final class Http2EncodeInterceptor extends HttpIndexInterceptor {
+public final class Http2EncodeInterceptor extends HttpInterceptor {
+
+    private final Map<Integer, Integer> mStreamRequestIndexes;
+    private final Map<Integer, Integer> mStreamResponseIndexes;
 
     private NetBareXLog mLog;
 
     private Hpack.Writer mHpackWriter;
 
+    public Http2EncodeInterceptor() {
+        mStreamRequestIndexes = new ConcurrentHashMap<>();
+        mStreamResponseIndexes = new ConcurrentHashMap<>();
+    }
+
     @Override
-    protected void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer, int index)
+    protected void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer)
             throws IOException {
         if (chain.request().httpProtocol() == HttpProtocol.HTTP_2) {
             if (mLog == null) {
                 HttpRequest request = chain.request();
                 mLog = new NetBareXLog(request.protocol(), request.ip(), request.port());
             }
+            int index;
+            int streamId = chain.request().streamId();
+            if (mStreamRequestIndexes.containsKey(streamId)) {
+                index = mStreamRequestIndexes.get(streamId);
+                index++;
+            } else {
+                index = 0;
+            }
+            mStreamRequestIndexes.put(streamId, index);
             if (index == 0) {
                 encodeRequestHeader(chain);
             } else {
@@ -65,13 +82,22 @@ public final class Http2EncodeInterceptor extends HttpIndexInterceptor {
     }
 
     @Override
-    protected void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer, int index)
+    protected void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer)
             throws IOException {
         if (chain.response().httpProtocol() == HttpProtocol.HTTP_2) {
             if (mLog == null) {
                 HttpResponse response = chain.response();
                 mLog = new NetBareXLog(response.protocol(), response.ip(), response.port());
             }
+            int index;
+            int streamId = chain.response().streamId();
+            if (mStreamResponseIndexes.containsKey(streamId)) {
+                index = mStreamResponseIndexes.get(streamId);
+                index++;
+            } else {
+                index = 0;
+            }
+            mStreamResponseIndexes.put(streamId, index);
             if (index == 0) {
                 encodeResponseHeader(chain);
             } else {
@@ -163,32 +189,19 @@ public final class Http2EncodeInterceptor extends HttpIndexInterceptor {
 
     private void sendDataFrame(InterceptorChain chain, byte[] data, Http2Settings http2Settings,
                                int streamId) throws IOException {
-        boolean isFinished = false;
-        int endLineIndex = Bytes.indexOf(data, NetBareUtils.PART_END_BYTES);
-        if (endLineIndex != -1) {
-            byte[] newData = new byte[data.length - (endLineIndex + NetBareUtils.PART_END_BYTES.length)];
-            System.arraycopy(data, 0, newData, 0, newData.length);
-            data = newData;
-            isFinished = true;
-        }
         int maxFrameSize = http2Settings == null ? Http2.INITIAL_MAX_FRAME_SIZE :
                 http2Settings.getMaxFrameSize(Http2.INITIAL_MAX_FRAME_SIZE);
         int byteCount = data.length;
         byte type = FrameType.DATA.get();
-        byte flags = isFinished ? Http2.FLAG_END_STREAM : 0;
         int offset = 0;
-        if (byteCount == 0) {
-            chain.process(ByteBuffer.wrap(frameHeader(streamId, 0, type, flags)));
-        } else {
-            while (byteCount > 0) {
-                int length = Math.min(maxFrameSize, byteCount);
-                byteCount -= length;
-                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                os.write(frameHeader(streamId, length, type, byteCount <= 0 ? flags : 0));
-                os.write(data, offset, length);
-                offset += length;
-                chain.process(ByteBuffer.wrap(os.toByteArray()));
-            }
+        while (byteCount > 0) {
+            int length = Math.min(maxFrameSize, byteCount);
+            byteCount -= length;
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            os.write(frameHeader(streamId, length, type, (byte) 0));
+            os.write(data, offset, length);
+            offset += length;
+            chain.process(ByteBuffer.wrap(os.toByteArray()));
         }
     }
 
