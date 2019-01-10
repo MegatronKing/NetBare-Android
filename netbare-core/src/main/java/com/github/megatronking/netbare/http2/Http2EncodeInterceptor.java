@@ -43,6 +43,8 @@ public final class Http2EncodeInterceptor extends HttpIndexInterceptor {
 
     private NetBareXLog mLog;
 
+    private Hpack.Writer mHpackWriter;
+
     @Override
     protected void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer, int index)
             throws IOException {
@@ -82,30 +84,34 @@ public final class Http2EncodeInterceptor extends HttpIndexInterceptor {
 
     private void encodeRequestHeader(HttpRequestChain chain) throws IOException {
         HttpRequest request = chain.request();
-        Hpack.Writer writer = new Hpack.Writer();
         Http2Settings peerHttp2Settings = request.peerHttp2Settings();
-        if (peerHttp2Settings != null) {
-            int headerTableSize = peerHttp2Settings.getHeaderTableSize();
-            if (headerTableSize != -1) {
-                writer.setHeaderTableSizeSetting(headerTableSize);
+        if (mHpackWriter == null) {
+            mHpackWriter = new Hpack.Writer();
+            if (peerHttp2Settings != null) {
+                int headerTableSize = peerHttp2Settings.getHeaderTableSize();
+                if (headerTableSize != -1) {
+                    mHpackWriter.setHeaderTableSizeSetting(headerTableSize);
+                }
             }
         }
-        byte[] headerBlock = writer.writeRequestHeaders(request.method(), request.path(), request.host(),
+        byte[] headerBlock = mHpackWriter.writeRequestHeaders(request.method(), request.path(), request.host(),
                 request.requestHeaders());
         sendHeaderBlockFrame(chain, headerBlock, peerHttp2Settings, request.streamId());
     }
 
     private void encodeResponseHeader(HttpResponseChain chain) throws IOException {
         HttpResponse response = chain.response();
-        Hpack.Writer writer = new Hpack.Writer();
         Http2Settings clientHttp2Settings = response.clientHttp2Settings();
-        if (clientHttp2Settings != null) {
-            int headerTableSize = clientHttp2Settings.getHeaderTableSize();
-            if (headerTableSize != -1) {
-                writer.setHeaderTableSizeSetting(headerTableSize);
+        if (mHpackWriter == null) {
+            mHpackWriter = new Hpack.Writer();
+            if (clientHttp2Settings != null) {
+                int headerTableSize = clientHttp2Settings.getHeaderTableSize();
+                if (headerTableSize != -1) {
+                    mHpackWriter.setHeaderTableSizeSetting(headerTableSize);
+                }
             }
         }
-        byte[] headerBlock = writer.writeResponseHeaders(response.code(), response.message(),
+        byte[] headerBlock = mHpackWriter.writeResponseHeaders(response.code(), response.message(),
                 response.responseHeaders());
         sendHeaderBlockFrame(chain, headerBlock, clientHttp2Settings, response.streamId());
     }

@@ -171,6 +171,7 @@ import java.util.Map;
 
         void readHeaders(ByteBuffer buffer, boolean end, DecodeCallback callback) throws IOException,
                 IndexOutOfBoundsException {
+            mHeaders.clear();
             while (buffer.hasRemaining()) {
                 int b = buffer.get() & 0xff;
                 if (b == 0x80) { // 10000000
@@ -464,11 +465,11 @@ import java.util.Map;
             this.mSmallestHeaderTableSizeSetting = Integer.MAX_VALUE;
             this.mHeaderTableSizeSetting = DEFAULT_HEADER_TABLE_SIZE_SETTING;
             this.mMaxDynamicTableByteCount = DEFAULT_HEADER_TABLE_SIZE_SETTING;
-            this.mOut = new ByteArrayOutputStream();
         }
 
         byte[] writeRequestHeaders(HttpMethod method, String path, String host,
                                 Map<String, List<String>> headers) throws IOException {
+            mOut = new ByteArrayOutputStream();
             List<Header> hpackHeaders = new ArrayList<>();
             hpackHeaders.add(new Header(Header.TARGET_METHOD, method.name()));
             hpackHeaders.add(new Header(Header.TARGET_PATH, path));
@@ -487,6 +488,7 @@ import java.util.Map;
 
         byte[] writeResponseHeaders(int code, String message, Map<String, List<String>> headers)
                 throws IOException {
+            mOut = new ByteArrayOutputStream();
             List<Header> hpackHeaders = new ArrayList<>();
             hpackHeaders.add(new Header(Header.RESPONSE_STATUS, TextUtils.isEmpty(message) ? String.valueOf(code) :
                     code + " " + message));

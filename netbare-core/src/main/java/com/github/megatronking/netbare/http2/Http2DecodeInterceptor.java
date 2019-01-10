@@ -51,8 +51,10 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
 
     private final Map<Integer, HttpId> mHttpIds;
 
-    private Http2Stream mRequestStream;
-    private Http2Stream mResponseStream;
+    private final Http2Stream mRequestStream;
+    private final Http2Stream mResponseStream;
+
+    private Hpack.Reader mHpackReader;
 
     public Http2DecodeInterceptor(SSLRefluxCallback refluxCallback, HttpZygoteRequest zygoteRequest,
                                   HttpZygoteResponse zygoteResponse) {
@@ -334,6 +336,7 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
         }
         decodeHeaderBlock(buffer, flags, callback);
         if ((flags & Http2.FLAG_END_STREAM) != 0) {
+            mLog.i("End the http2 stream with no body : " + streamId);
             // Use an empty data frame to end the stream.
             ByteBuffer endBuffer = ByteBuffer.allocate(Http2.FRAME_HEADER_LENGTH);
             endBuffer.put((byte) 0);
@@ -349,9 +352,11 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
 
     private void decodeHeaderBlock(ByteBuffer buffer, byte flags,
                                    DecodeCallback callback) throws IOException {
-        Hpack.Reader reader = new Hpack.Reader();
+        if (mHpackReader == null) {
+            mHpackReader = new Hpack.Reader();
+        }
         try {
-            reader.readHeaders(buffer, (flags & Http2.FLAG_END_HEADERS) != 0, callback);
+            mHpackReader.readHeaders(buffer, (flags & Http2.FLAG_END_HEADERS) != 0, callback);
         } catch (IndexOutOfBoundsException e) {
             throw new IOException("Http2 decode header block failed.");
         }
@@ -375,6 +380,7 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         os.write(buffer.array(), buffer.position(), length);
         if (inFinished) {
+            mLog.i("End the http2 stream : " + streamId);
             os.write(NetBareUtils.PART_END_BYTES);
         }
         callback.onResult(ByteBuffer.wrap(os.toByteArray()));
