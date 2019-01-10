@@ -94,6 +94,7 @@ import java.security.GeneralSecurityException;
                             // Only accept Http1.1 and Http2.0
                             if (protocol == HttpProtocol.HTTP_1_1 || protocol == HttpProtocol.HTTP_2) {
                                 mRequestCodec.setSelectedAlpnProtocol(protocol);
+                                chain.request().session().protocol = protocol;
                                 mLog.i("Server selected ALPN protocol: " + protocol.toString());
                             } else {
                                 mLog.w("Unexpected server ALPN protocol: " + protocol.toString());

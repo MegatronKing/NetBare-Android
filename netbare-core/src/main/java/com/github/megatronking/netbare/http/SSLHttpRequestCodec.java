@@ -21,6 +21,8 @@ import com.github.megatronking.netbare.ssl.SSLRequestCodec;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 
 import javax.net.ssl.SSLEngine;
@@ -73,19 +75,40 @@ import javax.net.ssl.SSLEngine;
             return sslEngine;
         }
         try {
-            Field sslParametersField = sslEngine.getClass().getDeclaredField("sslParameters");
-            sslParametersField.setAccessible(true);
-            Object sslParameters = sslParametersField.get(sslEngine);
-            if (sslParameters != null) {
-                Field alpnProtocolsField = sslParameters.getClass().getDeclaredField("alpnProtocols");
-                alpnProtocolsField.setAccessible(true);
-                alpnProtocolsField.set(sslParameters, concatLengthPrefixed());
+            if (sslEngine.getClass().getSimpleName().equals("Java8EngineWrapper")) {
+                enableJava8EngineWrapperAlpn(sslEngine);
+            } else {
+                enableOpenSSLEngineImplAlpn(sslEngine);
             }
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            NetBareLog.e(e.getMessage());
+        } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException |
+                InvocationTargetException e) {
+            NetBareLog.wtf(e);
         }
         return sslEngine;
     }
+
+    private void enableJava8EngineWrapperAlpn(SSLEngine sslEngine) throws NoSuchMethodException,
+            IllegalAccessException,
+            InvocationTargetException {
+        Method setApplicationProtocolsMethod = sslEngine.getClass().getDeclaredMethod(
+                "setApplicationProtocols", String[].class);
+        setApplicationProtocolsMethod.setAccessible(true);
+        String[] protocols = {mSelectedAlpnProtocol.toString()};
+        setApplicationProtocolsMethod.invoke(sslEngine, new Object[]{protocols});
+    }
+
+    private void enableOpenSSLEngineImplAlpn(SSLEngine sslEngine) throws NoSuchFieldException,
+            IllegalAccessException {
+        Field sslParametersField = sslEngine.getClass().getDeclaredField("sslParameters");
+        sslParametersField.setAccessible(true);
+        Object sslParameters = sslParametersField.get(sslEngine);
+        if (sslParameters != null) {
+            Field alpnProtocolsField = sslParameters.getClass().getDeclaredField("alpnProtocols");
+            alpnProtocolsField.setAccessible(true);
+            alpnProtocolsField.set(sslParameters, concatLengthPrefixed());
+        }
+    }
+
 
     private byte[] concatLengthPrefixed() {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -94,5 +117,6 @@ import javax.net.ssl.SSLEngine;
         os.write(protocolStr.getBytes(Charset.forName("UTF-8")), 0, protocolStr.length());
         return os.toByteArray();
     }
+
 
 }

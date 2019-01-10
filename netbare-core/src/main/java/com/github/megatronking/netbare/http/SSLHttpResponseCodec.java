@@ -79,50 +79,51 @@ import javax.net.ssl.SSLEngine;
         super.prepareHandshake();
     }
 
-    @SuppressLint("PrivateApi")
-    private String getAlpnSelectedProtocol() {
-        if (!mAlpnEnabled) {
-            return null;
-        }
-        byte[] alpnResult = null;
-        try {
-            Class<?> nativeCryptoClass = Class.forName("com.android.org.conscrypt.NativeCrypto");
-            Method SSL_get0_alpn_selectedMethod = nativeCryptoClass.getDeclaredMethod(
-                    "SSL_get0_alpn_selected", long.class);
-            SSL_get0_alpn_selectedMethod.setAccessible(true);
-
-            Field sslNativePointerField = mSSLEngine.getClass().getDeclaredField("sslNativePointer");
-            sslNativePointerField.setAccessible(true);
-            long sslNativePointer = (long) sslNativePointerField.get(mSSLEngine);
-            alpnResult = (byte[]) SSL_get0_alpn_selectedMethod.invoke(null, sslNativePointer);
-        } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException
-                | IllegalAccessException | InvocationTargetException e) {
-            NetBareLog.e(e.getMessage());
-        }
-        return alpnResult != null ? new String(alpnResult, Charset.forName("UTF-8")) : null;
-    }
-
     private void enableAlpn() {
         try {
-            Field sslParametersField = mSSLEngine.getClass().getDeclaredField("sslParameters");
-            sslParametersField.setAccessible(true);
-            Object sslParameters = sslParametersField.get(mSSLEngine);
-            if (sslParameters != null) {
-                Field useSessionTicketsField = sslParameters.getClass().getDeclaredField("useSessionTickets");
-                useSessionTicketsField.setAccessible(true);
-                useSessionTicketsField.set(sslParameters, true);
-                Field useSniField = sslParameters.getClass().getDeclaredField("useSni");
-                useSniField.setAccessible(true);
-                useSniField.set(sslParameters, true);
-                Field alpnProtocolsField = sslParameters.getClass().getDeclaredField("alpnProtocols");
-                alpnProtocolsField.setAccessible(true);
-                alpnProtocolsField.set(sslParameters, concatLengthPrefixed(HttpProtocol.HTTP_1_1,
-                        HttpProtocol.HTTP_2));
-                mAlpnEnabled = true;
+            if (mSSLEngine.getClass().getSimpleName().equals("Java8EngineWrapper")) {
+                enableJava8EngineWrapperAlpn();
+            } else {
+                enableOpenSSLEngineImplAlpn();
             }
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            NetBareLog.e(e.getMessage());
+            mAlpnEnabled = true;
+        } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException |
+                InvocationTargetException e) {
+            NetBareLog.wtf(e);
         }
+    }
+
+    private void enableJava8EngineWrapperAlpn() throws NoSuchMethodException, IllegalAccessException,
+            InvocationTargetException {
+        Method setApplicationProtocolsMethod = mSSLEngine.getClass().getDeclaredMethod(
+                "setApplicationProtocols", String[].class);
+        setApplicationProtocolsMethod.setAccessible(true);
+        String[] protocols = {HttpProtocol.HTTP_1_1.toString(), HttpProtocol.HTTP_2.toString()};
+        setApplicationProtocolsMethod.invoke(mSSLEngine, new Object[]{protocols});
+
+        Method setUseSessionTicketsMethod = mSSLEngine.getClass().getDeclaredMethod(
+                "setUseSessionTickets", boolean.class);
+        setUseSessionTicketsMethod.setAccessible(true);
+        setUseSessionTicketsMethod.invoke(mSSLEngine, true);
+    }
+
+    private void enableOpenSSLEngineImplAlpn() throws NoSuchFieldException, IllegalAccessException {
+        Field sslParametersField = mSSLEngine.getClass().getDeclaredField("sslParameters");
+        sslParametersField.setAccessible(true);
+        Object sslParameters = sslParametersField.get(mSSLEngine);
+        if (sslParameters == null) {
+            throw new IllegalAccessException("sslParameters value is null");
+        }
+        Field useSessionTicketsField = sslParameters.getClass().getDeclaredField("useSessionTickets");
+        useSessionTicketsField.setAccessible(true);
+        useSessionTicketsField.set(sslParameters, true);
+        Field useSniField = sslParameters.getClass().getDeclaredField("useSni");
+        useSniField.setAccessible(true);
+        useSniField.set(sslParameters, true);
+        Field alpnProtocolsField = sslParameters.getClass().getDeclaredField("alpnProtocols");
+        alpnProtocolsField.setAccessible(true);
+        alpnProtocolsField.set(sslParameters, concatLengthPrefixed(HttpProtocol.HTTP_1_1,
+                HttpProtocol.HTTP_2));
     }
 
     private byte[] concatLengthPrefixed(HttpProtocol ... protocols) {
@@ -133,6 +134,48 @@ import javax.net.ssl.SSLEngine;
             os.write(protocolStr.getBytes(Charset.forName("UTF-8")), 0, protocolStr.length());
         }
         return os.toByteArray();
+    }
+
+
+    @SuppressLint("PrivateApi")
+    private String getAlpnSelectedProtocol() {
+        if (!mAlpnEnabled) {
+            return null;
+        }
+        String alpnResult = null;
+        try {
+            if (mSSLEngine.getClass().getSimpleName().equals("Java8EngineWrapper")) {
+                alpnResult = getJava8EngineWrapperAlpn();
+            } else {
+                alpnResult = getOpenSSLEngineImplAlpn();
+            }
+        } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException
+                | IllegalAccessException | InvocationTargetException e) {
+            NetBareLog.e(e.getMessage());
+        }
+        return alpnResult;
+    }
+
+    private String getJava8EngineWrapperAlpn() throws NoSuchMethodException, IllegalAccessException,
+            InvocationTargetException {
+        Method getApplicationProtocolMethod = mSSLEngine.getClass().getDeclaredMethod(
+                "getApplicationProtocol");
+        getApplicationProtocolMethod.setAccessible(true);
+        return (String) getApplicationProtocolMethod.invoke(mSSLEngine);
+    }
+
+    private String getOpenSSLEngineImplAlpn() throws ClassNotFoundException, NoSuchMethodException,
+            NoSuchFieldException, IllegalAccessException, InvocationTargetException {
+        Class<?> nativeCryptoClass = Class.forName("com.android.org.conscrypt.NativeCrypto");
+        Method SSL_get0_alpn_selectedMethod = nativeCryptoClass.getDeclaredMethod(
+                "SSL_get0_alpn_selected", long.class);
+        SSL_get0_alpn_selectedMethod.setAccessible(true);
+
+        Field sslNativePointerField = mSSLEngine.getClass().getDeclaredField("sslNativePointer");
+        sslNativePointerField.setAccessible(true);
+        long sslNativePointer = (long) sslNativePointerField.get(mSSLEngine);
+        byte[] alpnResult = (byte[]) SSL_get0_alpn_selectedMethod.invoke(null, sslNativePointer);
+        return alpnResult != null ? new String(alpnResult, Charset.forName("UTF-8")) : null;
     }
 
     interface AlpnResolvedCallback {
