@@ -31,6 +31,12 @@ import java.nio.ByteBuffer;
  */
 /* package */ class Http2SniffInterceptor extends HttpIndexInterceptor {
 
+    /* package */ private SSLRefluxCallback mCallback;
+
+    /* package */ Http2SniffInterceptor(SSLRefluxCallback callback) {
+        this.mCallback = callback;
+    }
+
     @Override
     protected void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer, int index) throws IOException {
         if (index == 0) {
@@ -40,7 +46,8 @@ import java.nio.ByteBuffer;
                         Http2.CONNECTION_PREFACE) == buffer.position()) {
                     chain.request().session().protocol = HttpProtocol.HTTP_2;
                     // Skip preface frame data.
-                    buffer.position(buffer.position() + Http2.CONNECTION_PREFACE.length);
+                    mCallback.onRequest(chain.request(), buffer);
+                    return;
                 }
             }
         }

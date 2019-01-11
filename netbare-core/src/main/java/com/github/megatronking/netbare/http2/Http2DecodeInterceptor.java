@@ -78,13 +78,6 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
                 HttpRequest request = chain.request();
                 mLog = new NetBareXLog(request.protocol(), request.ip(), request.port());
             }
-            if (index == 0) {
-                // Send connection preface to peer.
-                ByteBuffer preface = ByteBuffer.allocate(Http2.CONNECTION_PREFACE.length);
-                preface.put(Http2.CONNECTION_PREFACE);
-                preface.flip();
-                mRefluxCallback.onRequest(chain.request(), preface);
-            }
             if (!buffer.hasRemaining()) {
                 return;
             }

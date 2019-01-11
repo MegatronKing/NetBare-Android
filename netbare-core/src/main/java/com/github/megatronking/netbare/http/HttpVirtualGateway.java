@@ -62,7 +62,7 @@ import java.util.List;
 
         mInterceptors.add(new HttpSniffInterceptor(sessionFactory.create(session.id)));
         mInterceptors.add(codecInterceptor);
-        mInterceptors.add(new Http2SniffInterceptor());
+        mInterceptors.add(new Http2SniffInterceptor(codecInterceptor));
         mInterceptors.add(new Http2DecodeInterceptor(codecInterceptor, mHttpZygoteRequest, mHttpZygoteResponse));
         mInterceptors.add(new HttpMultiplexInterceptor(mHttpZygoteRequest, mHttpZygoteResponse));
         mInterceptors.add(new ContainerHttpInterceptor(new HttpInterceptorsFactory() {
