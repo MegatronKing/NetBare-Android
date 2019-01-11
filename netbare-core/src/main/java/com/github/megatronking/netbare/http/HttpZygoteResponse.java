@@ -51,6 +51,7 @@ public class HttpZygoteResponse extends HttpResponse implements Http2SettingsRec
             HttpSession session = mSessionFactory.create(id.id);
             session.isHttps = originSession.isHttps;
             session.protocol = originSession.protocol;
+            session.clientHttp2Settings = originSession.clientHttp2Settings;
             session.peerHttp2Settings = originSession.peerHttp2Settings;
             HttpResponse response = new HttpResponse(mResponse, id, session);
             mCachedResponses.put(id.id, response);

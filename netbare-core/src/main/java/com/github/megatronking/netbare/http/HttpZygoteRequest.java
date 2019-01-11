@@ -52,6 +52,7 @@ public class HttpZygoteRequest extends HttpRequest implements Http2SettingsRecei
             session.isHttps = originSession.isHttps;
             session.protocol = originSession.protocol;
             session.clientHttp2Settings = originSession.clientHttp2Settings;
+            session.peerHttp2Settings = originSession.peerHttp2Settings;
             HttpRequest request = new HttpRequest(mRequest, id, session);
             mCachedRequests.put(id.id, request);
             mActiveRequest = request;
