@@ -203,10 +203,10 @@ public abstract class SSLCodec {
                 throw new IOException("Handshake failed: Invalid handshake status: " + status);
             } else if (status == SSLEngineResult.HandshakeStatus.FINISHED) {
                 mHandshakeFinished = true;
-                if (input.hasRemaining()) {
-                    callback.onPending(input);
-                }
                 NetBareLog.i("SSL handshake finished!");
+                if (input.hasRemaining()) {
+                    decode(engine, input, callback);
+                }
             } else if (status == SSLEngineResult.HandshakeStatus.NEED_WRAP) {
                 status = handshakeWrap(engine, callback).getHandshakeStatus();
             } else if (status == SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
