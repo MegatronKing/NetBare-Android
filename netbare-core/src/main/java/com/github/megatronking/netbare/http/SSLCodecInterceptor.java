@@ -178,7 +178,6 @@ import java.security.GeneralSecurityException;
 
     @Override
     public void onResponse(HttpResponse response, ByteBuffer buffer) throws IOException {
-        buffer.slice();
         mRequestCodec.encode(buffer, new SSLCodec.CodecCallback() {
             @Override
             public void onPending(ByteBuffer buffer) {
