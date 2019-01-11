@@ -55,6 +55,8 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
 
     private Hpack.Reader mHpackReader;
 
+    private NetBareXLog mLog;
+
     public Http2DecodeInterceptor(SSLRefluxCallback refluxCallback, HttpZygoteRequest zygoteRequest,
                                   HttpZygoteResponse zygoteResponse) {
         this.mRefluxCallback = refluxCallback;
@@ -67,8 +69,6 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
         this.mRequestStream = new Http2Stream();
         this.mResponseStream = new Http2Stream();
     }
-
-    private NetBareXLog mLog;
 
     @Override
     protected void intercept(@NonNull final HttpRequestChain chain, @NonNull ByteBuffer buffer,

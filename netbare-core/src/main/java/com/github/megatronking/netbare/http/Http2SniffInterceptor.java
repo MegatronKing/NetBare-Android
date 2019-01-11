@@ -17,6 +17,7 @@ package com.github.megatronking.netbare.http;
 
 import android.support.annotation.NonNull;
 
+import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.http2.Http2;
 import com.google.common.primitives.Bytes;
 
@@ -31,22 +32,29 @@ import java.nio.ByteBuffer;
  */
 /* package */ class Http2SniffInterceptor extends HttpIndexInterceptor {
 
-    /* package */ private SSLRefluxCallback mCallback;
+    private SSLRefluxCallback mCallback;
+    private NetBareXLog mLog;
 
     /* package */ Http2SniffInterceptor(SSLRefluxCallback callback) {
         this.mCallback = callback;
     }
 
     @Override
-    protected void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer, int index) throws IOException {
+    protected void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer,
+                             int index) throws IOException {
         if (index == 0) {
+            HttpRequest request = chain.request();
+            if (mLog == null) {
+                mLog = new NetBareXLog(request.protocol(), request.ip(), request.port());
+            }
             // HTTP2 is forces to use SSL connection.
-            if (chain.request().isHttps()) {
+            if (request.isHttps()) {
                 if (buffer.hasRemaining() && Bytes.indexOf(buffer.array(),
                         Http2.CONNECTION_PREFACE) == buffer.position()) {
-                    chain.request().session().protocol = HttpProtocol.HTTP_2;
+                    mLog.i("Send a connection preface to remote server.");
+                    request.session().protocol = HttpProtocol.HTTP_2;
                     // Skip preface frame data.
-                    mCallback.onRequest(chain.request(), buffer);
+                    mCallback.onRequest(request, buffer);
                     return;
                 }
             }
@@ -57,8 +65,28 @@ import java.nio.ByteBuffer;
     }
 
     @Override
-    protected void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer, int index) throws IOException {
-        chain.process(buffer);
+    protected void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer,
+                             int index) throws IOException {
+        if (index == 0) {
+            HttpResponse response = chain.response();
+            if (mLog == null) {
+                mLog = new NetBareXLog(response.protocol(), response.ip(), response.port());
+            }
+            // HTTP2 is forces to use SSL connection.
+            if (response.isHttps()) {
+                if (buffer.hasRemaining() && Bytes.indexOf(buffer.array(),
+                        Http2.CONNECTION_PREFACE) == buffer.position()) {
+                    mLog.i("Receive a connection preface from remote server.");
+                    response.session().protocol = HttpProtocol.HTTP_2;
+                    // Skip preface frame data.
+                    mCallback.onResponse(response, buffer);
+                    return;
+                }
+            }
+        }
+        if (buffer.hasRemaining()) {
+            chain.process(buffer);
+        }
     }
 
 }
