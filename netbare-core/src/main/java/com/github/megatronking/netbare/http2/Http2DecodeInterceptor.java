@@ -225,20 +225,25 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
         switch (frameType) {
             case DATA:
                 decodeData(buffer, length, flags, streamId, callback);
-                break;
+                return;
             case HEADERS:
             case CONTINUATION:
                 decodeHeaders(buffer, length, flags, streamId, callback);
-                break;
+                return;
             case SETTINGS:
                 decodeSettings(buffer, length, flags, streamId, receiver);
-                // Do not break this.
+                // No return
+                break;
+            case GOAWAY:
+                decodeGoAway(buffer, length, flags, streamId);
+                // No return
+                break;
             default:
-                // Encrypt and send it to remote server directly.
-                buffer.position(buffer.position() - Http2.FRAME_HEADER_LENGTH);
-                callback.onSkip(buffer);
                 break;
         }
+        // Encrypt and send it to remote server directly.
+        buffer.position(buffer.position() - Http2.FRAME_HEADER_LENGTH);
+        callback.onSkip(buffer);
     }
 
     private int readMedium(ByteBuffer buffer) {
@@ -365,6 +370,31 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
             mLog.i("End the http2 stream : " + streamId);
             callback.onSkip(endStream(FrameType.DATA, streamId));
         }
+    }
+
+    private void decodeGoAway(ByteBuffer buffer, int length, byte flags, int streamId)
+            throws IOException {
+        if (length < 8) {
+            throw new IOException("Http2 TYPE_GOAWAY length < 8: " + length);
+        }
+        if (streamId != 0) {
+            throw new IOException("Http2 TYPE_GOAWAY streamId != 0");
+        }
+        int initPosition = buffer.position();
+        int lastStreamId = buffer.getInt();
+        int errorCodeInt = buffer.getInt();
+        int opaqueDataLength = length - 8;
+        ErrorCode errorCode = ErrorCode.fromHttp2(errorCodeInt);
+        if (errorCode == null) {
+            throw new IOException("Http2 TYPE_GOAWAY unexpected error code: " + errorCodeInt);
+        }
+        mLog.e("Http2 TYPE_GOAWAY error code: " + errorCode + " last stream: " + lastStreamId);
+        if (opaqueDataLength > 0) { // Must read debug data in order to not corrupt the connection.
+            byte[] debugData = new byte[opaqueDataLength];
+            buffer.get(debugData);
+            mLog.e("Http2 TYPE_GOAWAY debug data: " + new String(debugData));
+        }
+        buffer.position(initPosition);
     }
 
     private int lengthWithoutPadding(int length, byte flags, short padding) throws IOException {
