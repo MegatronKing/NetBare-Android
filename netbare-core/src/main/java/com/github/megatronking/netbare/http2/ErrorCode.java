@@ -34,7 +34,7 @@ package com.github.megatronking.netbare.http2;
  * http://tools.ietf.org/html/draft-ietf-httpbis-http2-17#section-7
  *
  * @author Megatron King
- * @since 2019/1/5 15:30
+ * @since 2019/1/11 23:10
  */
 /* package */ enum ErrorCode {
 
