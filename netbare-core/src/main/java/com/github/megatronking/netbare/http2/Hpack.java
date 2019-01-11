@@ -673,12 +673,14 @@ import java.util.Map;
             }
         }
 
-        void setHeaderTableSizeSetting(int mHeaderTableSizeSetting) {
-            this.mHeaderTableSizeSetting = mHeaderTableSizeSetting;
-            int effectiveHeaderTableSize = Math.min(mHeaderTableSizeSetting,
+        void setHeaderTableSizeSetting(int headerTableSizeSetting) {
+            this.mHeaderTableSizeSetting = headerTableSizeSetting;
+            int effectiveHeaderTableSize = Math.min(headerTableSizeSetting,
                     SETTINGS_HEADER_TABLE_SIZE_LIMIT);
 
-            if (mMaxDynamicTableByteCount == effectiveHeaderTableSize) return; // No change.
+            if (mMaxDynamicTableByteCount == effectiveHeaderTableSize) {
+                return; // No change.
+            }
 
             if (effectiveHeaderTableSize < mMaxDynamicTableByteCount) {
                 mSmallestHeaderTableSizeSetting = Math.min(mSmallestHeaderTableSizeSetting,

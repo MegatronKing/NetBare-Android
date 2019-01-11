@@ -149,4 +149,17 @@ public final class Http2Settings {
         return (bit & set) != 0 ? values[INITIAL_WINDOW_SIZE] : DEFAULT_INITIAL_WINDOW_SIZE;
     }
 
+    /**
+     * Writes {@code other} into this. If any setting is populated by this and {@code other}, the
+     * value and flags from {@code other} will be kept.
+     */
+    public void merge(Http2Settings other) {
+        for (int i = 0; i < COUNT; i++) {
+            if (!other.isSet(i)) {
+                continue;
+            }
+            set(i, other.get(i));
+        }
+    }
+
 }

@@ -53,7 +53,8 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
     private final Http2Stream mRequestStream;
     private final Http2Stream mResponseStream;
 
-    private Hpack.Reader mHpackReader;
+    private Hpack.Reader mHpackRequestReader;
+    private Hpack.Reader mHpackResponseReader;
 
     private NetBareXLog mLog;
 
@@ -74,14 +75,17 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
     protected void intercept(@NonNull final HttpRequestChain chain, @NonNull ByteBuffer buffer,
                              int index) throws IOException {
         if (chain.request().httpProtocol() == HttpProtocol.HTTP_2) {
+            if (!buffer.hasRemaining()) {
+                return;
+            }
             if (mLog == null) {
                 HttpRequest request = chain.request();
                 mLog = new NetBareXLog(request.protocol(), request.ip(), request.port());
             }
-            if (!buffer.hasRemaining()) {
-                return;
+            if (mHpackRequestReader == null) {
+                mHpackRequestReader = new Hpack.Reader();
             }
-            decode(mergeRequestBuffer(buffer), new DecodeCallback() {
+            decode(mergeRequestBuffer(buffer), mHpackRequestReader, new DecodeCallback() {
 
                 @Override
                 public void onPending(ByteBuffer buffer) {
@@ -118,14 +122,17 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
                              int index)
             throws IOException {
         if (chain.response().httpProtocol() == HttpProtocol.HTTP_2) {
+            if (!buffer.hasRemaining()) {
+                return;
+            }
             if (mLog == null) {
                 HttpResponse response = chain.response();
                 mLog = new NetBareXLog(response.protocol(), response.ip(), response.port());
             }
-            if (!buffer.hasRemaining()) {
-                return;
+            if (mHpackResponseReader == null) {
+                mHpackResponseReader = new Hpack.Reader();
             }
-            decode(mergeResponseBuffer(buffer), new DecodeCallback() {
+            decode(mergeResponseBuffer(buffer), mHpackResponseReader, new DecodeCallback() {
 
                 @Override
                 public void onPending(ByteBuffer buffer) {
@@ -157,8 +164,8 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
         }
     }
 
-    private void decode(ByteBuffer buffer, DecodeCallback callback, Http2Stream stream,
-                        Http2SettingsReceiver receiver)
+    private void decode(ByteBuffer buffer, Hpack.Reader reader, DecodeCallback callback,
+                        Http2Stream stream, Http2SettingsReceiver receiver)
             throws IOException {
         // HTTP2 frame structure
         //  0                   1                   2                   3
@@ -198,10 +205,10 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
             ByteBuffer newBuffer = ByteBuffer.allocate(length + 9);
             newBuffer.put(buffer.array(), buffer.position() - 3, newBuffer.capacity());
             newBuffer.flip();
-            decode(newBuffer, callback, stream, receiver);
+            decode(newBuffer, reader, callback, stream, receiver);
             // Process the left data
             buffer.position(buffer.position() + length + 6);
-            decode(buffer, callback, stream, receiver);
+            decode(buffer, reader, callback, stream, receiver);
             return;
         }
 
@@ -228,7 +235,7 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
                 return;
             case HEADERS:
             case CONTINUATION:
-                decodeHeaders(buffer, length, flags, streamId, callback);
+                decodeHeaders(buffer, reader, length, flags, streamId, callback);
                 return;
             case SETTINGS:
                 decodeSettings(buffer, length, flags, streamId, receiver);
@@ -274,6 +281,7 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
             int value = buffer.getInt();
             switch (id) {
                 case 1: // SETTINGS_HEADER_TABLE_SIZE
+                    mLog.i("Http2 SETTINGS_HEADER_TABLE_SIZE: " + value);
                     break;
                 case 2: // SETTINGS_ENABLE_PUSH
                     if (value != 0 && value != 1) {
@@ -282,6 +290,7 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
                     break;
                 case 3: // SETTINGS_MAX_CONCURRENT_STREAMS
                     id = 4; // Renumbered in draft 10.
+                    mLog.i("Http2 SETTINGS_MAX_CONCURRENT_STREAMS: " + value);
                     break;
                 case 4: // SETTINGS_INITIAL_WINDOW_SIZE
                     id = 7; // Renumbered in draft 10.
@@ -306,8 +315,8 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
         receiver.onSettingsUpdate(settings);
     }
 
-    private void decodeHeaders(ByteBuffer buffer, int length, byte flags, int streamId,
-                               DecodeCallback callback) throws IOException {
+    private void decodeHeaders(ByteBuffer buffer, Hpack.Reader reader, int length, byte flags,
+                               int streamId, DecodeCallback callback) throws IOException {
         // +---------------+
         // |Pad Length? (8)|
         // +-+-------------+-----------------------------------------------+
@@ -329,7 +338,7 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
         }
         length = lengthWithoutPadding(length, flags, padding);
         if (length > 0) {
-            decodeHeaderBlock(buffer, flags, callback);
+            decodeHeaderBlock(buffer, reader, flags, callback);
         }
         if ((flags & Http2.FLAG_END_STREAM) != 0) {
             mLog.i("End the http2 stream with no body : " + streamId);
@@ -338,13 +347,10 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
         }
     }
 
-    private void decodeHeaderBlock(ByteBuffer buffer, byte flags,
+    private void decodeHeaderBlock(ByteBuffer buffer, Hpack.Reader reader, byte flags,
                                    DecodeCallback callback) throws IOException {
-        if (mHpackReader == null) {
-            mHpackReader = new Hpack.Reader();
-        }
         try {
-            mHpackReader.readHeaders(buffer, (flags & Http2.FLAG_END_HEADERS) != 0, callback);
+            reader.readHeaders(buffer, (flags & Http2.FLAG_END_HEADERS) != 0, callback);
         } catch (IndexOutOfBoundsException e) {
             throw new IOException("Http2 decode header block failed.");
         }

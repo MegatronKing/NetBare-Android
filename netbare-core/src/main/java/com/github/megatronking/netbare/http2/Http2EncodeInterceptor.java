@@ -46,7 +46,8 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
 
     private NetBareXLog mLog;
 
-    private Hpack.Writer mHpackWriter;
+    private Hpack.Writer mHpackRequestWriter;
+    private Hpack.Writer mHpackResponseWriter;
 
     public Http2EncodeInterceptor() {
         mStreamRequestIndexes = new ConcurrentHashMap<>();
@@ -60,6 +61,9 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
             if (mLog == null) {
                 HttpRequest request = chain.request();
                 mLog = new NetBareXLog(request.protocol(), request.ip(), request.port());
+            }
+            if (mHpackRequestWriter == null) {
+                mHpackRequestWriter = new Hpack.Writer();
             }
             int index;
             int streamId = chain.request().streamId();
@@ -89,6 +93,9 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
                 HttpResponse response = chain.response();
                 mLog = new NetBareXLog(response.protocol(), response.ip(), response.port());
             }
+            if (mHpackResponseWriter == null) {
+                mHpackResponseWriter = new Hpack.Writer();
+            }
             int index;
             int streamId = chain.response().streamId();
             if (mStreamResponseIndexes.containsKey(streamId)) {
@@ -110,36 +117,30 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
 
     private void encodeRequestHeader(HttpRequestChain chain) throws IOException {
         HttpRequest request = chain.request();
-        Http2Settings peerHttp2Settings = request.peerHttp2Settings();
-        if (mHpackWriter == null) {
-            mHpackWriter = new Hpack.Writer();
-            if (peerHttp2Settings != null) {
-                int headerTableSize = peerHttp2Settings.getHeaderTableSize();
-                if (headerTableSize != -1) {
-                    mHpackWriter.setHeaderTableSizeSetting(headerTableSize);
-                }
+        Http2Settings clientHttp2Settings = request.clientHttp2Settings();
+        if (clientHttp2Settings != null) {
+            int headerTableSize = clientHttp2Settings.getHeaderTableSize();
+            if (headerTableSize != -1) {
+                mHpackRequestWriter.setHeaderTableSizeSetting(headerTableSize);
             }
         }
-        byte[] headerBlock = mHpackWriter.writeRequestHeaders(request.method(), request.path(), request.host(),
+        byte[] headerBlock = mHpackRequestWriter.writeRequestHeaders(request.method(), request.path(), request.host(),
                 request.requestHeaders());
-        sendHeaderBlockFrame(chain, headerBlock, peerHttp2Settings, request.streamId());
+        sendHeaderBlockFrame(chain, headerBlock, clientHttp2Settings, request.streamId());
     }
 
     private void encodeResponseHeader(HttpResponseChain chain) throws IOException {
         HttpResponse response = chain.response();
-        Http2Settings clientHttp2Settings = response.clientHttp2Settings();
-        if (mHpackWriter == null) {
-            mHpackWriter = new Hpack.Writer();
-            if (clientHttp2Settings != null) {
-                int headerTableSize = clientHttp2Settings.getHeaderTableSize();
-                if (headerTableSize != -1) {
-                    mHpackWriter.setHeaderTableSizeSetting(headerTableSize);
-                }
+        Http2Settings peerHttp2Settings = response.peerHttp2Settings();
+        if (peerHttp2Settings != null) {
+            int headerTableSize = peerHttp2Settings.getHeaderTableSize();
+            if (headerTableSize != -1) {
+                mHpackResponseWriter.setHeaderTableSizeSetting(headerTableSize);
             }
         }
-        byte[] headerBlock = mHpackWriter.writeResponseHeaders(response.code(), response.message(),
+        byte[] headerBlock = mHpackResponseWriter.writeResponseHeaders(response.code(), response.message(),
                 response.responseHeaders());
-        sendHeaderBlockFrame(chain, headerBlock, clientHttp2Settings, response.streamId());
+        sendHeaderBlockFrame(chain, headerBlock, peerHttp2Settings, response.streamId());
     }
 
     private void encodeRequestData(HttpRequestChain chain, ByteBuffer buffer) throws IOException {
