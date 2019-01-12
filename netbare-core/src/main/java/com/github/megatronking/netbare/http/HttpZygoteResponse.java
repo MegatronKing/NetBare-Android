@@ -62,9 +62,6 @@ public class HttpZygoteResponse extends HttpResponse implements Http2SettingsRec
     @Override
     public void onSettingsUpdate(Http2Settings http2Settings) {
         session().peerHttp2Settings = http2Settings;
-        if (session().clientHttp2Settings != null) {
-            session().clientHttp2Settings.merge(http2Settings);
-        }
     }
 
     HttpResponse getActive() {
