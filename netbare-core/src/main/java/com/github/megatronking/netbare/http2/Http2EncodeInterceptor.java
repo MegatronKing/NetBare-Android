@@ -124,9 +124,10 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
                 mHpackRequestWriter.setHeaderTableSizeSetting(headerTableSize);
             }
         }
-        byte[] headerBlock = mHpackRequestWriter.writeRequestHeaders(request.method(), request.path(), request.host(),
-                request.requestHeaders());
-        sendHeaderBlockFrame(chain, headerBlock, peerHttp2Settings, request.streamId());
+        byte[] headerBlock = mHpackRequestWriter.writeRequestHeaders(request.method(),
+                request.path(), request.host(), request.requestHeaders());
+        sendHeaderBlockFrame(chain, headerBlock, peerHttp2Settings, request.streamId(),
+                request.requestStreamEnd());
     }
 
     private void encodeResponseHeader(HttpResponseChain chain) throws IOException {
@@ -138,50 +139,67 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
                 mHpackResponseWriter.setHeaderTableSizeSetting(headerTableSize);
             }
         }
-        byte[] headerBlock = mHpackResponseWriter.writeResponseHeaders(response.code(), response.message(),
-                response.responseHeaders());
-        sendHeaderBlockFrame(chain, headerBlock, clientHttp2Settings, response.streamId());
+        byte[] headerBlock = mHpackResponseWriter.writeResponseHeaders(response.code(),
+                response.message(), response.responseHeaders());
+        sendHeaderBlockFrame(chain, headerBlock, clientHttp2Settings, response.streamId(),
+                response.responseStreamEnd());
     }
 
     private void encodeRequestData(HttpRequestChain chain, ByteBuffer buffer) throws IOException {
         byte[] data = Arrays.copyOfRange(buffer.array(), buffer.position(), buffer.limit());
         HttpRequest request = chain.request();
-        sendDataFrame(chain, data, request.peerHttp2Settings(), request.streamId());
+        sendDataFrame(chain, data, request.peerHttp2Settings(), request.streamId(),
+                request.requestStreamEnd());
     }
 
     private void encodeResponseData(HttpResponseChain chain, ByteBuffer buffer) throws IOException {
         byte[] data = Arrays.copyOfRange(buffer.array(), buffer.position(), buffer.limit());
         HttpResponse response = chain.response();
-        sendDataFrame(chain, data, response.clientHttp2Settings(), response.streamId());
+        sendDataFrame(chain, data, response.clientHttp2Settings(), response.streamId(),
+                response.responseStreamEnd());
     }
 
     private void sendHeaderBlockFrame(InterceptorChain chain, byte[] headerBlock, Http2Settings http2Settings,
-                                      int streamId) throws IOException  {
+                                      int streamId, boolean endStream) throws IOException  {
         int maxFrameSize = http2Settings == null ? Http2.INITIAL_MAX_FRAME_SIZE :
                 http2Settings.getMaxFrameSize(Http2.INITIAL_MAX_FRAME_SIZE);
         int byteCount = headerBlock.length;
         int length = Math.min(maxFrameSize, byteCount);
         byte type = FrameType.HEADERS.get();
-        byte flags = byteCount == length ? Http2.FLAG_END_HEADERS : 0;
+        byte flags = 0;
+        if (byteCount == length) {
+            flags |= Http2.FLAG_END_HEADERS;
+            if (endStream) {
+                flags |= Http2.FLAG_END_STREAM;
+            }
+        }
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         os.write(frameHeader(streamId, length, type, flags));
         os.write(headerBlock, 0, length);
         chain.process(ByteBuffer.wrap(os.toByteArray()));
         if (byteCount > length) {
             byte[] left = Arrays.copyOfRange(headerBlock, length, byteCount);
-            sendContinuationFrame(chain, left, streamId, maxFrameSize, byteCount - length);
+            sendContinuationFrame(chain, left, streamId, maxFrameSize, byteCount - length,
+                    endStream);
         }
     }
 
     private void sendContinuationFrame(InterceptorChain chain, byte[] headerBlock, int streamId,
-                                       int maxFrameSize, long byteCount) throws IOException {
+                                       int maxFrameSize, long byteCount, boolean endStream) throws IOException {
         int offset = 0;
         while (byteCount > 0) {
             int length = (int) Math.min(maxFrameSize, byteCount);
             byteCount -= length;
             ByteArrayOutputStream os = new ByteArrayOutputStream();
-            os.write(frameHeader(streamId, length, FrameType.CONTINUATION.get(), byteCount == 0 ?
-                    Http2.FLAG_END_HEADERS : 0));
+            byte flags = 0;
+            if (byteCount == 0) {
+                flags |= Http2.FLAG_END_HEADERS;
+                if (endStream) {
+                    mLog.i("Http2 stream end: " + streamId);
+                    flags |= Http2.FLAG_END_STREAM;
+                }
+            }
+            os.write(frameHeader(streamId, length, FrameType.CONTINUATION.get(), flags));
             os.write(headerBlock, offset, length);
             offset += length;
             chain.process(ByteBuffer.wrap(os.toByteArray()));
@@ -189,7 +207,7 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
     }
 
     private void sendDataFrame(InterceptorChain chain, byte[] data, Http2Settings http2Settings,
-                               int streamId) throws IOException {
+                               int streamId, boolean endStream) throws IOException {
         int maxFrameSize = http2Settings == null ? Http2.INITIAL_MAX_FRAME_SIZE :
                 http2Settings.getMaxFrameSize(Http2.INITIAL_MAX_FRAME_SIZE);
         int byteCount = data.length;
@@ -199,7 +217,12 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
             int length = Math.min(maxFrameSize, byteCount);
             byteCount -= length;
             ByteArrayOutputStream os = new ByteArrayOutputStream();
-            os.write(frameHeader(streamId, length, type, (byte) 0));
+            byte flags = 0;
+            if (byteCount == 0 && endStream) {
+                mLog.i("Http2 stream end: " + streamId);
+                flags |= Http2.FLAG_END_STREAM;
+            }
+            os.write(frameHeader(streamId, length, type, flags));
             os.write(data, offset, length);
             offset += length;
             chain.process(ByteBuffer.wrap(os.toByteArray()));

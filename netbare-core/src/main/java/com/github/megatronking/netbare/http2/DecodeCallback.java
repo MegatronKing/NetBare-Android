@@ -28,7 +28,7 @@ import java.nio.ByteBuffer;
 
     void onPending(ByteBuffer buffer);
 
-    void onResult(ByteBuffer buffer) throws IOException;
+    void onResult(ByteBuffer buffer, boolean isFinished) throws IOException;
 
     void onSkip(ByteBuffer buffer) throws IOException;
 

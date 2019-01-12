@@ -240,4 +240,13 @@ public class HttpResponse extends Response {
         return mSession.peerHttp2Settings;
     }
 
+    /**
+     * Whether the current HTTP2 response stream is end.
+     *
+     * @return End is true.
+     */
+    public boolean responseStreamEnd() {
+        return mSession.responseStreamEnd;
+    }
+
 }

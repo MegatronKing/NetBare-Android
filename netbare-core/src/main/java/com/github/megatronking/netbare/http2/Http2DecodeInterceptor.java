@@ -93,15 +93,22 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
                 }
 
                 @Override
-                public void onResult(ByteBuffer buffer) throws IOException {
+                public void onResult(ByteBuffer buffer, boolean isFinished) throws IOException {
                     int streamId = mRequestStream.id;
-                    if (streamId >= 0) {
-                        HttpId id = mHttpIds.get(streamId);
-                        if (id == null) {
-                            id = new HttpId(streamId);
-                            mHttpIds.put(streamId, id);
-                        }
-                        mZygoteRequest.zygote(id);
+                    if (streamId < 0) {
+                        throw new IOException("Http2 stream id is < 0");
+                    }
+                    HttpId id = mHttpIds.get(streamId);
+                    if (id == null) {
+                        id = new HttpId(streamId);
+                        mHttpIds.put(streamId, id);
+                    }
+                    mZygoteRequest.zygote(id);
+                    if (isFinished) {
+                        mZygoteRequest.onStreamFinished();
+                    }
+                    if (!buffer.hasRemaining()) {
+                        return;
                     }
                     chain.process(buffer);
                 }
@@ -140,15 +147,22 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
                 }
 
                 @Override
-                public void onResult(ByteBuffer buffer) throws IOException {
+                public void onResult(ByteBuffer buffer, boolean isFinished) throws IOException {
                     int streamId = mResponseStream.id;
-                    if (streamId >= 0) {
-                        HttpId id = mHttpIds.get(streamId);
-                        if (id == null) {
-                            id = new HttpId(streamId);
-                            mHttpIds.put(streamId, id);
-                        }
-                        mZygoteResponse.zygote(id);
+                    if (streamId < 0) {
+                        throw new IOException("Http2 stream id is < 0");
+                    }
+                    HttpId id = mHttpIds.get(streamId);
+                    if (id == null) {
+                        id = new HttpId(streamId);
+                        mHttpIds.put(streamId, id);
+                    }
+                    mZygoteResponse.zygote(id);
+                    if (isFinished) {
+                        mZygoteResponse.onStreamFinished();
+                    }
+                    if (!buffer.hasRemaining()) {
+                        return;
                     }
                     chain.process(buffer);
                 }
@@ -165,7 +179,7 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
     }
 
     private void decode(ByteBuffer buffer, Hpack.Reader reader, DecodeCallback callback,
-                        Http2Stream stream, Http2SettingsReceiver receiver)
+                        Http2Stream stream, Http2Updater updater)
             throws IOException {
         // HTTP2 frame structure
         //  0                   1                   2                   3
@@ -205,10 +219,10 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
             ByteBuffer newBuffer = ByteBuffer.allocate(length + 9);
             newBuffer.put(buffer.array(), buffer.position() - 3, newBuffer.capacity());
             newBuffer.flip();
-            decode(newBuffer, reader, callback, stream, receiver);
+            decode(newBuffer, reader, callback, stream, updater);
             // Process the left data
             buffer.position(buffer.position() + length + 6);
-            decode(buffer, reader, callback, stream, receiver);
+            decode(buffer, reader, callback, stream, updater);
             return;
         }
 
@@ -238,7 +252,7 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
                 decodeHeaders(buffer, reader, length, flags, streamId, callback);
                 return;
             case SETTINGS:
-                decodeSettings(buffer, length, flags, streamId, receiver);
+                decodeSettings(buffer, length, flags, streamId, updater);
                 // No return
                 break;
             case GOAWAY:
@@ -260,7 +274,7 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
     }
 
     private void decodeSettings(ByteBuffer buffer, int length, byte flags, int streamId,
-                                Http2SettingsReceiver receiver)
+                                Http2Updater receiver)
             throws IOException {
         if (streamId != 0) {
             throw new IOException("Http2 TYPE_SETTINGS streamId != 0");
@@ -269,6 +283,7 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
             if (length != 0) {
                 throw new IOException("Http2 FRAME_SIZE_ERROR ack frame should be empty!");
             }
+            mLog.i("Http2 ack the settings");
             return;
         }
         if (length % 6 != 0) {
@@ -297,11 +312,13 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
                     if (value < 0) {
                         throw new IOException("Http2 PROTOCOL_ERROR SETTINGS_INITIAL_WINDOW_SIZE > 2^31 - 1");
                     }
+                    mLog.i("Http2 SETTINGS_INITIAL_WINDOW_SIZE: " + value);
                     break;
                 case 5: // SETTINGS_MAX_FRAME_SIZE
                     if (value < Http2.INITIAL_MAX_FRAME_SIZE || value > 16777215) {
                         throw new IOException("Http2 PROTOCOL_ERROR SETTINGS_MAX_FRAME_SIZE: " + value);
                     }
+                    mLog.i("Http2 INITIAL_MAX_FRAME_SIZE: " + value);
                     break;
                 case 6: // SETTINGS_MAX_HEADER_LIST_SIZE
                     break; // Advisory only, so ignored.
@@ -337,20 +354,22 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
             buffer.position(buffer.position() + 5);
         }
         length = lengthWithoutPadding(length, flags, padding);
+        boolean endStream = (flags & Http2.FLAG_END_STREAM) != 0;
         if (length > 0) {
             decodeHeaderBlock(buffer, reader, flags, callback);
-        }
-        if ((flags & Http2.FLAG_END_STREAM) != 0) {
-            mLog.i("End the http2 stream with no body : " + streamId);
-            // Use an empty data frame to end the stream.
-            callback.onSkip(endStream(FrameType.DATA, streamId));
+        } else {
+            // Notify stream is end
+            callback.onResult(ByteBuffer.allocate(0), endStream);
+            if (endStream) {
+                callback.onSkip(endStream(FrameType.HEADERS, streamId));
+            }
         }
     }
 
     private void decodeHeaderBlock(ByteBuffer buffer, Hpack.Reader reader, byte flags,
                                    DecodeCallback callback) throws IOException {
         try {
-            reader.readHeaders(buffer, (flags & Http2.FLAG_END_HEADERS) != 0, callback);
+            reader.readHeaders(buffer, flags, callback);
         } catch (IndexOutOfBoundsException e) {
             throw new IOException("Http2 decode header block failed.");
         }
@@ -367,14 +386,17 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
         }
         short padding = (flags & Http2.FLAG_PADDED) != 0 ? (short) (buffer.get() & 0xff) : 0;
         length = lengthWithoutPadding(length, flags, padding);
+        boolean endStream = (flags & Http2.FLAG_END_STREAM) != 0;
         if (length > 0) {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             os.write(buffer.array(), buffer.position(), length);
-            callback.onResult(ByteBuffer.wrap(os.toByteArray()));
-        }
-        if ((flags & Http2.FLAG_END_STREAM) != 0) {
-            mLog.i("End the http2 stream : " + streamId);
-            callback.onSkip(endStream(FrameType.DATA, streamId));
+            callback.onResult(ByteBuffer.wrap(os.toByteArray()), endStream);
+        } else {
+            // Notify stream is end
+            callback.onResult(ByteBuffer.allocate(0), endStream);
+            if (endStream) {
+                callback.onSkip(endStream(FrameType.DATA, streamId));
+            }
         }
     }
 

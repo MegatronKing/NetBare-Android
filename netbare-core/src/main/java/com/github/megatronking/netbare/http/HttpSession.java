@@ -39,7 +39,10 @@ import java.util.Map;
     String message;
     int reqBodyOffset;
     int resBodyOffset;
+    // Belows is for HTTP2
     Http2Settings clientHttp2Settings;
     Http2Settings peerHttp2Settings;
+    boolean requestStreamEnd;
+    boolean responseStreamEnd;
 
 }

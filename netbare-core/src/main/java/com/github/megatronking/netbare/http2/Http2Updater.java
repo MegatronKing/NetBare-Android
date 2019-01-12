@@ -16,13 +16,15 @@
 package com.github.megatronking.netbare.http2;
 
 /**
- * A receiver observes HTTP2 settings update.
+ * A updater observes changes of HTTP2 session.
  *
  * @author Megatron King
  * @since 2019/1/6 23:23
  */
-public interface Http2SettingsReceiver {
+public interface Http2Updater {
 
     void onSettingsUpdate(Http2Settings http2Settings);
+
+    void onStreamFinished();
 
 }

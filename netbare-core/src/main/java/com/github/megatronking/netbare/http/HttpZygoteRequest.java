@@ -17,7 +17,7 @@ package com.github.megatronking.netbare.http;
 
 import com.github.megatronking.netbare.gateway.Request;
 import com.github.megatronking.netbare.http2.Http2Settings;
-import com.github.megatronking.netbare.http2.Http2SettingsReceiver;
+import com.github.megatronking.netbare.http2.Http2Updater;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +28,7 @@ import java.util.Map;
  * @author Megatron King
  * @since 2019/1/6 17:00
  */
-public class HttpZygoteRequest extends HttpRequest implements Http2SettingsReceiver {
+public class HttpZygoteRequest extends HttpRequest implements Http2Updater {
 
     private final Request mRequest;
     private final HttpSessionFactory mSessionFactory;
@@ -62,6 +62,14 @@ public class HttpZygoteRequest extends HttpRequest implements Http2SettingsRecei
     @Override
     public void onSettingsUpdate(Http2Settings http2Settings) {
         session().clientHttp2Settings = http2Settings;
+    }
+
+    @Override
+    public void onStreamFinished() {
+        HttpRequest request = getActive();
+        if (request != null) {
+            request.session().requestStreamEnd = true;
+        }
     }
 
     HttpRequest getActive() {

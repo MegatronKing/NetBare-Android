@@ -184,7 +184,7 @@ import java.util.Map;
             this.mHeaderTableSizeSetting = DEFAULT_HEADER_TABLE_SIZE_SETTING;
         }
 
-        void readHeaders(ByteBuffer buffer, boolean end, DecodeCallback callback) throws IOException,
+        void readHeaders(ByteBuffer buffer, byte flags, DecodeCallback callback) throws IOException,
                 IndexOutOfBoundsException {
             mHeaders.clear();
             while (buffer.hasRemaining()) {
@@ -257,10 +257,11 @@ import java.util.Map;
                 }
                 sb.append(NetBareUtils.LINE_END);
             }
-            if (end) {
+            if ((flags & Http2.FLAG_END_HEADERS) != 0) {
                 sb.append(NetBareUtils.LINE_END);
             }
-            callback.onResult(ByteBuffer.wrap(sb.toString().getBytes()));
+            callback.onResult(ByteBuffer.wrap(sb.toString().getBytes()),
+                    (flags & Http2.FLAG_END_STREAM) != 0);
         }
 
         private int readInt(ByteBuffer buffer, int firstByte, int prefixMask) {

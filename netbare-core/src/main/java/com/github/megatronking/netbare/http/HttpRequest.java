@@ -194,4 +194,13 @@ public class HttpRequest extends Request {
         return mSession.peerHttp2Settings;
     }
 
+    /**
+     * Whether the current HTTP2 request stream is end.
+     *
+     * @return End is true.
+     */
+    public boolean requestStreamEnd() {
+        return mSession.requestStreamEnd;
+    }
+
 }
