@@ -245,7 +245,7 @@ import java.util.Map;
                 sb.append(NetBareUtils.LINE_END);
             }
             if (host != null) {
-                headers.add(0, new Header("host", host));
+                headers.add(0, new Header("Host", host));
             }
             for (Header header : headers) {
                 if (header.name.equals(Header.TARGET_SCHEME)) {
