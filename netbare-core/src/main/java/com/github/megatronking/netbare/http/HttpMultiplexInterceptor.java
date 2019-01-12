@@ -57,6 +57,7 @@ import java.nio.ByteBuffer;
             if (mLog == null) {
                 mLog = new NetBareXLog(Protocol.TCP, chain.request().ip(), chain.request().port());
             }
+            mResponseIndex = 0;
             mLog.w("Multiplex is found in one connection.");
             // Multiplex sessions.
             HttpId newId = new HttpId();
@@ -71,6 +72,12 @@ import java.nio.ByteBuffer;
                              int index) throws IOException {
         mResponseIndex = index;
         chain.process(buffer);
+    }
+
+    @Override
+    protected void onResponseFinished(@NonNull HttpResponse response) {
+        mResponseIndex = 0;
+        super.onResponseFinished(response);
     }
 
 }
