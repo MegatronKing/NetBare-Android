@@ -117,30 +117,30 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
 
     private void encodeRequestHeader(HttpRequestChain chain) throws IOException {
         HttpRequest request = chain.request();
-        Http2Settings clientHttp2Settings = request.clientHttp2Settings();
-        if (clientHttp2Settings != null) {
-            int headerTableSize = clientHttp2Settings.getHeaderTableSize();
+        Http2Settings peerHttp2Settings = request.peerHttp2Settings();
+        if (peerHttp2Settings != null) {
+            int headerTableSize = peerHttp2Settings.getHeaderTableSize();
             if (headerTableSize != -1) {
                 mHpackRequestWriter.setHeaderTableSizeSetting(headerTableSize);
             }
         }
         byte[] headerBlock = mHpackRequestWriter.writeRequestHeaders(request.method(), request.path(), request.host(),
                 request.requestHeaders());
-        sendHeaderBlockFrame(chain, headerBlock, clientHttp2Settings, request.streamId());
+        sendHeaderBlockFrame(chain, headerBlock, peerHttp2Settings, request.streamId());
     }
 
     private void encodeResponseHeader(HttpResponseChain chain) throws IOException {
         HttpResponse response = chain.response();
-        Http2Settings peerHttp2Settings = response.peerHttp2Settings();
-        if (peerHttp2Settings != null) {
-            int headerTableSize = peerHttp2Settings.getHeaderTableSize();
+        Http2Settings clientHttp2Settings = response.clientHttp2Settings();
+        if (clientHttp2Settings != null) {
+            int headerTableSize = clientHttp2Settings.getHeaderTableSize();
             if (headerTableSize != -1) {
                 mHpackResponseWriter.setHeaderTableSizeSetting(headerTableSize);
             }
         }
         byte[] headerBlock = mHpackResponseWriter.writeResponseHeaders(response.code(), response.message(),
                 response.responseHeaders());
-        sendHeaderBlockFrame(chain, headerBlock, peerHttp2Settings, response.streamId());
+        sendHeaderBlockFrame(chain, headerBlock, clientHttp2Settings, response.streamId());
     }
 
     private void encodeRequestData(HttpRequestChain chain, ByteBuffer buffer) throws IOException {
@@ -156,7 +156,7 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
     }
 
     private void sendHeaderBlockFrame(InterceptorChain chain, byte[] headerBlock, Http2Settings http2Settings,
-                                 int streamId) throws IOException  {
+                                      int streamId) throws IOException  {
         int maxFrameSize = http2Settings == null ? Http2.INITIAL_MAX_FRAME_SIZE :
                 http2Settings.getMaxFrameSize(Http2.INITIAL_MAX_FRAME_SIZE);
         int byteCount = headerBlock.length;
