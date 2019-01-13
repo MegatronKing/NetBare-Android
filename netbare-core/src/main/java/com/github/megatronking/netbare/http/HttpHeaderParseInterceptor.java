@@ -47,8 +47,7 @@ import java.util.List;
         if (mLog == null) {
             mLog = new NetBareXLog(Protocol.TCP, chain.request().ip(), chain.request().port());
         }
-        parseRequestHeader(chain.request().session(), new String(buffer.array(),
-                buffer.position(), buffer.remaining()));
+        parseRequestHeader(chain.request().session(), buffer);
         chain.process(buffer);
     }
 
@@ -62,13 +61,13 @@ import java.util.List;
         if (mLog == null) {
             mLog = new NetBareXLog(Protocol.TCP, chain.response().ip(), chain.response().port());
         }
-        parseResponseHeader(chain.response().session(), new String(buffer.array(),
-                buffer.position(), buffer.remaining()));
+        parseResponseHeader(chain.response().session(), buffer);
         chain.process(buffer);
     }
 
-    private void parseRequestHeader(HttpSession session, String headerString) {
-        session.reqBodyOffset = headerString.length();
+    private void parseRequestHeader(HttpSession session, ByteBuffer buffer) {
+        session.reqBodyOffset = buffer.remaining();
+        String headerString = new String(buffer.array(), buffer.position(), buffer.remaining());
         String[] headers = headerString.split(NetBareUtils.LINE_END_REGEX);
         String[] requestLine = headers[0].split(" ");
         if (requestLine.length != 3) {
@@ -119,8 +118,9 @@ import java.util.List;
         }
     }
 
-    private void parseResponseHeader(HttpSession session, String headerString) {
-        session.resBodyOffset = headerString.length();
+    private void parseResponseHeader(HttpSession session, ByteBuffer buffer) {
+        session.resBodyOffset = buffer.remaining();
+        String headerString = new String(buffer.array(), buffer.position(), buffer.remaining());
         // In some condition, no request but has response, we set the method to unknown.
         if (session.method == null) {
             session.method = HttpMethod.UNKNOWN;
