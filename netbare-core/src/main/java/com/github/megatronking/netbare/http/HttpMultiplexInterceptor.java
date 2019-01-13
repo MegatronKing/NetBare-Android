@@ -70,7 +70,7 @@ import java.nio.ByteBuffer;
     @Override
     protected void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer,
                              int index) throws IOException {
-        mResponseIndex = index;
+        mResponseIndex++;
         chain.process(buffer);
     }
 
