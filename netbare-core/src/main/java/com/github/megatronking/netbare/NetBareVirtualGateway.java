@@ -58,6 +58,9 @@ public final class NetBareVirtualGateway extends VirtualGateway {
 
     private int mPolicy;
 
+    private boolean mRequestFinished;
+    private boolean mResponseFinished;
+
     public NetBareVirtualGateway(Session session, Request request, Response response) {
         super(session, request, response);
         mGateway = NetBare.get().getGatewayFactory().create(session, request, response);
@@ -76,6 +79,10 @@ public final class NetBareVirtualGateway extends VirtualGateway {
 
     @Override
     public void sendRequest(ByteBuffer buffer) throws IOException {
+        if (mRequestFinished) {
+            mLog.w("Drop a buffer due to request has finished.");
+            return;
+        }
         resolvePolicyIfNecessary(buffer);
         if (mPolicy == POLICY_ALLOWED) {
             mGateway.sendRequest(buffer);
@@ -86,6 +93,10 @@ public final class NetBareVirtualGateway extends VirtualGateway {
 
     @Override
     public void sendResponse(ByteBuffer buffer) throws IOException {
+        if (mResponseFinished) {
+            mLog.w("Drop a buffer due to response has finished.");
+            return;
+        }
         resolvePolicyIfNecessary(buffer);
         if (mPolicy == POLICY_ALLOWED) {
             mGateway.sendResponse(buffer);
@@ -97,6 +108,7 @@ public final class NetBareVirtualGateway extends VirtualGateway {
     @Override
     public void sendRequestFinished() {
         mLog.i("Gateway request finished!");
+        mRequestFinished = true;
         if (mPolicy == POLICY_ALLOWED) {
             mGateway.sendRequestFinished();
         } else if (mPolicy == POLICY_DISALLOWED) {
@@ -107,6 +119,7 @@ public final class NetBareVirtualGateway extends VirtualGateway {
     @Override
     public void sendResponseFinished() {
         mLog.i("Gateway response finished!");
+        mResponseFinished = true;
         if (mPolicy == POLICY_ALLOWED) {
             mGateway.sendResponseFinished();
         } else if (mPolicy == POLICY_DISALLOWED) {
