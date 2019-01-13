@@ -53,9 +53,18 @@ import java.nio.ByteBuffer;
                         Http2.CONNECTION_PREFACE) == buffer.position()) {
                     mLog.i("Send a connection preface to remote server.");
                     request.session().protocol = HttpProtocol.HTTP_2;
-                    // Skip preface frame data.
-                    mCallback.onRequest(request, buffer);
-                    return;
+                    if (buffer.remaining() == Http2.CONNECTION_PREFACE.length) {
+                        // Skip preface frame data.
+                        mCallback.onRequest(request, buffer);
+                        return;
+                    } else {
+                        ByteBuffer prefaceBuffer = ByteBuffer.allocate(Http2.CONNECTION_PREFACE.length);
+                        prefaceBuffer.put(Http2.CONNECTION_PREFACE);
+                        prefaceBuffer.flip();
+                        mCallback.onRequest(request, prefaceBuffer);
+                        // The remaining data continues.
+                        buffer.position(buffer.position() + Http2.CONNECTION_PREFACE.length);
+                    }
                 }
             }
         }
@@ -78,9 +87,18 @@ import java.nio.ByteBuffer;
                         Http2.CONNECTION_PREFACE) == buffer.position()) {
                     mLog.i("Receive a connection preface from remote server.");
                     response.session().protocol = HttpProtocol.HTTP_2;
-                    // Skip preface frame data.
-                    mCallback.onResponse(response, buffer);
-                    return;
+                    if (buffer.remaining() == Http2.CONNECTION_PREFACE.length) {
+                        // Skip preface frame data.
+                        mCallback.onResponse(response, buffer);
+                        return;
+                    } else {
+                        ByteBuffer prefaceBuffer = ByteBuffer.allocate(Http2.CONNECTION_PREFACE.length);
+                        prefaceBuffer.put(Http2.CONNECTION_PREFACE);
+                        prefaceBuffer.flip();
+                        mCallback.onResponse(response, prefaceBuffer);
+                        // The remaining data continues.
+                        buffer.position(buffer.position() + Http2.CONNECTION_PREFACE.length);
+                    }
                 }
             }
         }
