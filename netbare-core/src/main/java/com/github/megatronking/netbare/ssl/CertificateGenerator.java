@@ -105,7 +105,7 @@ public final class CertificateGenerator {
      *
      * Hundred years in the future from starting the proxy should be enough.
      */
-    private static final Date NOT_AFTER = new Date(System.currentTimeMillis() + ONE_DAY * 365 * 100);
+    private static final Date NOT_AFTER = new Date(System.currentTimeMillis() + ONE_DAY * 365 * 10);
 
     /**
      * Generate a root keystore by a given {@link JKS}.
