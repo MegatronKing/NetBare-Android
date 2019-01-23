@@ -184,8 +184,8 @@ import javax.net.ssl.SSLEngine;
         Field sslNativePointerField = mSSLEngine.getClass().getDeclaredField("sslNativePointer");
         sslNativePointerField.setAccessible(true);
         long sslNativePointer = (long) sslNativePointerField.get(mSSLEngine);
-        byte[] alpnResult = (byte[]) SSL_get0_alpn_selectedMethod.invoke(null, sslNativePointer);
-        return alpnResult != null ? new String(alpnResult, Charset.forName("UTF-8")) : null;
+        byte[] selectedProtocol = (byte[]) SSL_get0_alpn_selectedMethod.invoke(null, sslNativePointer);
+        return selectedProtocol != null ? new String(selectedProtocol, Charset.forName("UTF-8")) : null;
     }
 
     interface AlpnResolvedCallback {
