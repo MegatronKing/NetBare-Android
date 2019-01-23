@@ -40,6 +40,8 @@ import java.nio.ByteBuffer;
     private int mResponseIndex;
     private NetBareXLog mLog;
 
+    private boolean mWebSocket;
+
     /* package */ HttpMultiplexInterceptor(HttpZygoteRequest zygoteRequest,
                                            HttpZygoteResponse zygoteResponse) {
         this.mZygoteRequest = zygoteRequest;
@@ -53,7 +55,11 @@ import java.nio.ByteBuffer;
             chain.process(buffer);
             return;
         }
-        if (mResponseIndex > 0) {
+        // Check the protocol is web socket
+        if (!mWebSocket) {
+            mWebSocket = mZygoteResponse.isWebSocket();
+        }
+        if (mResponseIndex > 0 && !mWebSocket) {
             if (mLog == null) {
                 mLog = new NetBareXLog(Protocol.TCP, chain.request().ip(), chain.request().port());
             }

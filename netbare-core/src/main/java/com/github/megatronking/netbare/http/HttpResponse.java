@@ -130,6 +130,32 @@ public class HttpResponse extends Response {
     }
 
     /**
+     * Whether the request is a web socket protocol.
+     *
+     * @return Web socket protocol returns true.
+     */
+    public boolean isWebSocket() {
+        if (mSession.code != 101) {
+            return false;
+        }
+        List<String> upgradeHeaderValues = null;
+        for (Map.Entry<String, List<String>> entry : mSession.responseHeaders.entrySet()) {
+            if ("upgrade".equalsIgnoreCase(entry.getKey())) {
+                upgradeHeaderValues = entry.getValue();
+            }
+        }
+        if (upgradeHeaderValues == null || upgradeHeaderValues.isEmpty()) {
+            return false;
+        }
+        for (String value : upgradeHeaderValues) {
+            if ("websocket".equalsIgnoreCase(value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Returns this request's URL.
      *
      * @return The request URL.
