@@ -23,6 +23,7 @@ import com.github.megatronking.netbare.http.HttpInterceptorFactory;
 import com.github.megatronking.netbare.http.HttpVirtualGatewayFactory;
 import com.github.megatronking.netbare.ip.IpAddress;
 import com.github.megatronking.netbare.net.Session;
+import com.github.megatronking.netbare.net.UidProvider;
 import com.github.megatronking.netbare.ssl.JKS;
 
 import java.net.InetAddress;
@@ -49,6 +50,7 @@ public final class NetBareConfig {
     Set<String> allowedHosts;
     Set<String> disallowedHosts;
     VirtualGatewayFactory gatewayFactory;
+    UidProvider uidProvider;
     boolean dumpUid;
     boolean excludeSelf;
 
@@ -86,7 +88,7 @@ public final class NetBareConfig {
      * @return A NetBare config instance.
      */
     public static NetBareConfig defaultConfig() {
-        return new NetBareConfig.Builder()
+        return new Builder()
                 .dumpUid(false)
                 .setMtu(4096)
                 .setAddress(new IpAddress("10.1.10.1", 32))
@@ -277,6 +279,17 @@ public final class NetBareConfig {
          */
         public Builder excludeSelf(boolean excludeSelf) {
             mConfig.excludeSelf = excludeSelf;
+            return this;
+        }
+
+        /**
+         * Sets an uid provider.
+         *
+         * @param provider This interface provides a known uid for a session.
+         * @return this {@link Builder} object to facilitate chaining method calls.
+         */
+        public Builder setUidProvider(UidProvider provider) {
+            mConfig.uidProvider = provider;
             return this;
         }
 

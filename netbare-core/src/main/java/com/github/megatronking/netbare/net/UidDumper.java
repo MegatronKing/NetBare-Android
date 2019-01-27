@@ -68,6 +68,8 @@ public final class UidDumper implements DumpCallback {
     private final Cache<Integer, Net> mNetCaches;
     private final Cache<Integer, Session> mWaitingSessions;
 
+    private final UidProvider mUidProvider;
+
     private final NetDumper dumper1;
     private final NetDumper dumper2;
     private final NetDumper dumper3;
@@ -81,7 +83,8 @@ public final class UidDumper implements DumpCallback {
         THREAD_POOL_EXECUTOR = threadPoolExecutor;
     }
 
-    public UidDumper(String localIp) {
+    public UidDumper(String localIp, UidProvider provider) {
+        this.mUidProvider = provider;
         this.mNetCaches = CacheBuilder.newBuilder()
                 .expireAfterAccess(NET_ALIVE_SECONDS, TimeUnit.SECONDS)
                 .concurrencyLevel(NET_CONCURRENCY_LEVEL)
@@ -128,10 +131,20 @@ public final class UidDumper implements DumpCallback {
     }
 
     public void request(Session session) {
+        if (mUidProvider != null) {
+            int uid = mUidProvider.uid(session);
+            if (uid != UidProvider.UID_UNKNOWN) {
+                session.uid = uid;
+                return;
+            }
+        }
         int port = NetBareUtils.convertPort(session.localPort);
         Map<Integer, Net> caches = mNetCaches.asMap();
         if (caches.containsKey(port)) {
-            session.uid = caches.get(port).uid;
+            Net net = caches.get(port);
+            if (net != null) {
+                session.uid = net.uid;
+            }
         } else {
             // Find net by remote ip from cache
             for (Net net : caches.values()) {

@@ -169,7 +169,7 @@ import java.util.Map;
         private PacketsTransfer(VpnService service, NetBareConfig config) throws IOException {
             int mtu = config.mtu;
             String localIp = config.address.address;
-            this.mUidDumper = config.dumpUid ? new UidDumper(localIp) : null;
+            this.mUidDumper = config.dumpUid ? new UidDumper(localIp, config.uidProvider) : null;
             // Register all supported protocols here.
             this.mForwarderRegistry = new LinkedHashMap<>(3);
             // TCP
