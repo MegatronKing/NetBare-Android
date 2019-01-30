@@ -15,6 +15,7 @@
  */
 package com.github.megatronking.netbare.ssl;
 
+import android.os.Build;
 import android.support.annotation.NonNull;
 
 import com.github.megatronking.netbare.NetBareLog;
@@ -356,7 +357,33 @@ public abstract class SSLCodec {
     private SSLEngineResult engineUnwrap(SSLEngine engine, ByteBuffer input, ByteBuffer output)
             throws SSLException {
         int position = input.position();
-        SSLEngineResult result = engine.unwrap(input, output);
+        SSLEngineResult result;
+        // Fixed issue #4
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O_MR1) {
+            // In Android 8.1, the BUFFER_OVERFLOW in the unwrap method will throw an
+            // SSLException-EOFException. We catch this error and increase the output buffer
+            // capacity.
+            while (true) {
+                try {
+                    result = engine.unwrap(input, output);
+                    break;
+                } catch (SSLException e) {
+                    if (!output.hasRemaining()) {
+                        // Copy
+                        ByteBuffer outputTemp = ByteBuffer.allocate(output.capacity() * 2);
+                        output.flip();
+                        outputTemp.put(output);
+                        output = outputTemp;
+                    } else {
+                        // Maybe is some other issues.
+                        throw e;
+                    }
+                }
+            }
+        } else {
+            result = engine.unwrap(input, output);
+        }
+
         // This is a workaround for a bug in Android 5.0. Android 5.0 does not correctly update
         // the SSLEngineResult.bytesConsumed() in some cases and just return 0.
         //
