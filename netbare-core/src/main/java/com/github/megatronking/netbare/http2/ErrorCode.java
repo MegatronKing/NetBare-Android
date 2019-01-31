@@ -49,6 +49,12 @@ package com.github.megatronking.netbare.http2;
 
     FLOW_CONTROL_ERROR(3),
 
+    SETTINGS_TIMEOUT(4),
+
+    STREAM_CLOSED(5),
+
+    FRAME_SIZE_ERROR(6),
+
     REFUSED_STREAM(7),
 
     CANCEL(8),
