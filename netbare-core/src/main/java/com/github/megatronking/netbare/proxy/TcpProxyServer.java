@@ -30,6 +30,7 @@ import com.github.megatronking.netbare.tunnel.TcpRemoteTunnel;
 import com.github.megatronking.netbare.tunnel.TcpTunnel;
 import com.github.megatronking.netbare.tunnel.TcpVATunnel;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
@@ -41,6 +42,7 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 
 /**
@@ -202,6 +204,9 @@ import javax.net.ssl.SSLHandshakeException;
             NetBareLog.e(e.getMessage());
         } else if (e instanceof ConnectException) {
             // Connection timeout
+            NetBareLog.e(e.getMessage());
+        } else if (e instanceof SSLException && (e.getCause() instanceof EOFException)) {
+            // Connection shutdown manually
             NetBareLog.e(e.getMessage());
         } else {
             NetBareLog.wtf(e);
