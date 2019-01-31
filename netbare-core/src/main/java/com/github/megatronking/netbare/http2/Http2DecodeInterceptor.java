@@ -118,7 +118,23 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
                     mRefluxCallback.onRequest(chain.request(), buffer);
                 }
 
-            }, mRequestStream, mZygoteRequest);
+            }, mRequestStream, new Http2Updater() {
+                @Override
+                public void onSettingsUpdate(Http2Settings http2Settings) {
+                    mZygoteRequest.onSettingsUpdate(http2Settings);
+                    if (http2Settings.getHeaderTableSize() > 0) {
+                        if (mHpackResponseReader == null) {
+                            mHpackResponseReader = new Hpack.Reader();
+                        }
+                        mHpackResponseReader.setHeaderTableSizeSetting(http2Settings.getHeaderTableSize());
+                    }
+                }
+
+                @Override
+                public void onStreamFinished() {
+                    mZygoteRequest.onStreamFinished();
+                }
+            });
         } else {
             chain.process(buffer);
         }
@@ -172,7 +188,23 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
                     mRefluxCallback.onResponse(chain.response(), buffer);
                 }
 
-            }, mResponseStream, mZygoteResponse);
+            }, mResponseStream, new Http2Updater() {
+                @Override
+                public void onSettingsUpdate(Http2Settings http2Settings) {
+                    mZygoteResponse.onSettingsUpdate(http2Settings);
+                    if (http2Settings.getHeaderTableSize() > 0) {
+                        if (mHpackRequestReader == null) {
+                            mHpackRequestReader = new Hpack.Reader();
+                        }
+                        mHpackRequestReader.setHeaderTableSizeSetting(http2Settings.getHeaderTableSize());
+                    }
+                }
+
+                @Override
+                public void onStreamFinished() {
+                    mZygoteResponse.onStreamFinished();
+                }
+            });
         } else {
             chain.process(buffer);
         }

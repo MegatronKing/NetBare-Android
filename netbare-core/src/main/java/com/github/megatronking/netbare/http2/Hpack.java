@@ -162,6 +162,7 @@ import java.util.Map;
     }
 
     private static final int DEFAULT_HEADER_TABLE_SIZE_SETTING = 4096;
+    private static final int SETTINGS_HEADER_TABLE_SIZE_LIMIT = 16384;
 
     static final class Reader {
 
@@ -182,6 +183,21 @@ import java.util.Map;
             this.mNextHeaderIndex = mDynamicTable.length - 1;
             this.mMaxDynamicTableByteCount = DEFAULT_HEADER_TABLE_SIZE_SETTING;
             this.mHeaderTableSizeSetting = DEFAULT_HEADER_TABLE_SIZE_SETTING;
+        }
+
+        void setHeaderTableSizeSetting(int headerTableSizeSetting) {
+            if (mHeaderTableSizeSetting == headerTableSizeSetting) {
+                return;
+            }
+            this.mHeaderTableSizeSetting = headerTableSizeSetting;
+            int effectiveHeaderTableSize = Math.min(headerTableSizeSetting,
+                    SETTINGS_HEADER_TABLE_SIZE_LIMIT);
+
+            if (mMaxDynamicTableByteCount == effectiveHeaderTableSize) {
+                return; // No change.
+            }
+            mMaxDynamicTableByteCount = effectiveHeaderTableSize;
+            adjustDynamicTableByteCount();
         }
 
         void readHeaders(ByteBuffer buffer, byte flags, DecodeCallback callback) throws IOException,
@@ -458,8 +474,6 @@ import java.util.Map;
 
     static final class Writer {
 
-        private static final int SETTINGS_HEADER_TABLE_SIZE_LIMIT = 16384;
-
         private int mSmallestHeaderTableSizeSetting;
         private boolean mEmitDynamicTableSizeUpdate;
 
@@ -675,6 +689,9 @@ import java.util.Map;
         }
 
         void setHeaderTableSizeSetting(int headerTableSizeSetting) {
+            if (mHeaderTableSizeSetting == headerTableSizeSetting) {
+                return;
+            }
             this.mHeaderTableSizeSetting = headerTableSizeSetting;
             int effectiveHeaderTableSize = Math.min(headerTableSizeSetting,
                     SETTINGS_HEADER_TABLE_SIZE_LIMIT);
