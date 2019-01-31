@@ -89,8 +89,11 @@ import javax.net.ssl.SSLEngine;
 
     private void enableAlpn() {
         try {
-            if (mSSLEngine.getClass().getSimpleName().equals("Java8EngineWrapper")) {
+            String sslEngineName = mSSLEngine.getClass().getSimpleName();
+            if (sslEngineName.equals("Java8EngineWrapper")) {
                 enableJava8EngineWrapperAlpn();
+            } else if (sslEngineName.equals("ConscryptEngine")) {
+                enableConscryptEngineAlpn();
             } else {
                 enableOpenSSLEngineImplAlpn();
             }
@@ -111,6 +114,23 @@ import javax.net.ssl.SSLEngine;
             protocols[i] = mClientAlpns[i].toString();
         }
         setApplicationProtocolsMethod.invoke(mSSLEngine, new Object[]{protocols});
+
+        Method setUseSessionTicketsMethod = mSSLEngine.getClass().getDeclaredMethod(
+                "setUseSessionTickets", boolean.class);
+        setUseSessionTicketsMethod.setAccessible(true);
+        setUseSessionTicketsMethod.invoke(mSSLEngine, true);
+    }
+
+    private void enableConscryptEngineAlpn() throws NoSuchMethodException, IllegalAccessException,
+            InvocationTargetException {
+        Method setAlpnProtocolsMethod = mSSLEngine.getClass().getDeclaredMethod(
+                "setAlpnProtocols", String[].class);
+        setAlpnProtocolsMethod.setAccessible(true);
+        String[] protocols = new String[mClientAlpns.length];
+        for (int i = 0; i < protocols.length; i++) {
+            protocols[i] = mClientAlpns[i].toString();
+        }
+        setAlpnProtocolsMethod.invoke(mSSLEngine, new Object[]{protocols});
 
         Method setUseSessionTicketsMethod = mSSLEngine.getClass().getDeclaredMethod(
                 "setUseSessionTickets", boolean.class);
@@ -154,8 +174,11 @@ import javax.net.ssl.SSLEngine;
         }
         String alpnResult = null;
         try {
-            if (mSSLEngine.getClass().getSimpleName().equals("Java8EngineWrapper")) {
+            String sslEngineName = mSSLEngine.getClass().getSimpleName();
+            if (sslEngineName.equals("Java8EngineWrapper")) {
                 alpnResult = getJava8EngineWrapperAlpn();
+            } else if (sslEngineName.equals("ConscryptEngine")){
+                alpnResult = getConscryptEngineAlpn();
             } else {
                 alpnResult = getOpenSSLEngineImplAlpn();
             }
@@ -174,6 +197,16 @@ import javax.net.ssl.SSLEngine;
         return (String) getApplicationProtocolMethod.invoke(mSSLEngine);
     }
 
+    private String getConscryptEngineAlpn() throws NoSuchMethodException, IllegalAccessException,
+            InvocationTargetException {
+        Method getAlpnSelectedProtocolMethod = mSSLEngine.getClass().getDeclaredMethod(
+                "getAlpnSelectedProtocol");
+        getAlpnSelectedProtocolMethod.setAccessible(true);
+        byte[] selectedProtocol = (byte[]) getAlpnSelectedProtocolMethod.invoke(mSSLEngine);
+        return selectedProtocol != null ? new String(selectedProtocol, Charset.forName("UTF-8")) : null;
+    }
+
+    @SuppressLint("PrivateApi")
     private String getOpenSSLEngineImplAlpn() throws ClassNotFoundException, NoSuchMethodException,
             NoSuchFieldException, IllegalAccessException, InvocationTargetException {
         Class<?> nativeCryptoClass = Class.forName("com.android.org.conscrypt.NativeCrypto");

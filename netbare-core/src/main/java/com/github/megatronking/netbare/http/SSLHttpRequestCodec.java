@@ -75,8 +75,11 @@ import javax.net.ssl.SSLEngine;
             return sslEngine;
         }
         try {
-            if (sslEngine.getClass().getSimpleName().equals("Java8EngineWrapper")) {
+            String sslEngineName = sslEngine.getClass().getSimpleName();
+            if (sslEngineName.equals("Java8EngineWrapper")) {
                 enableJava8EngineWrapperAlpn(sslEngine);
+            } else if (sslEngineName.equals("ConscryptEngine")) {
+                enableConscryptEngineAlpn(sslEngine);
             } else {
                 enableOpenSSLEngineImplAlpn(sslEngine);
             }
@@ -95,6 +98,15 @@ import javax.net.ssl.SSLEngine;
         setApplicationProtocolsMethod.setAccessible(true);
         String[] protocols = {mSelectedAlpnProtocol.toString()};
         setApplicationProtocolsMethod.invoke(sslEngine, new Object[]{protocols});
+    }
+
+    private void enableConscryptEngineAlpn(SSLEngine sslEngine) throws NoSuchMethodException, IllegalAccessException,
+            InvocationTargetException {
+        Method setAlpnProtocolsMethod = sslEngine.getClass().getDeclaredMethod(
+                "setAlpnProtocols", String[].class);
+        setAlpnProtocolsMethod.setAccessible(true);
+        String[] protocols = {mSelectedAlpnProtocol.toString()};
+        setAlpnProtocolsMethod.invoke(sslEngine, new Object[]{protocols});
     }
 
     private void enableOpenSSLEngineImplAlpn(SSLEngine sslEngine) throws NoSuchFieldException,
