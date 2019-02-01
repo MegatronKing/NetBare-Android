@@ -42,7 +42,7 @@ class AppService : NetBareService() {
         val pendingIntent = PendingIntent.getActivity(this, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT)
         return NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(getString(R.string.app_name))
                 .setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
