@@ -347,6 +347,9 @@ public abstract class SSLCodec {
                 break;
             }
         }
+        if (!mEngineClosed && input.hasRemaining()) {
+            wrap(engine, input, callback);
+        }
     }
 
     private SSLEngineResult engineWrap(SSLEngine engine, ByteBuffer input, ByteBuffer output)
