@@ -29,9 +29,9 @@ import com.github.megatronking.netbare.http.HttpZygoteRequest;
 import com.github.megatronking.netbare.http.HttpZygoteResponse;
 import com.github.megatronking.netbare.http.SSLRefluxCallback;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -420,9 +420,8 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
         length = lengthWithoutPadding(length, flags, padding);
         boolean endStream = (flags & Http2.FLAG_END_STREAM) != 0;
         if (length > 0) {
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            os.write(buffer.array(), buffer.position(), length);
-            callback.onResult(ByteBuffer.wrap(os.toByteArray()), endStream);
+            callback.onResult(ByteBuffer.wrap(Arrays.copyOfRange(buffer.array(), buffer.position(),
+                    buffer.position() + length)), endStream);
         } else {
             // Notify stream is end
             callback.onResult(ByteBuffer.allocate(0), endStream);
