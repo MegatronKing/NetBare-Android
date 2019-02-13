@@ -67,8 +67,9 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
             }
             int index;
             int streamId = chain.request().streamId();
-            if (mStreamRequestIndexes.containsKey(streamId)) {
-                index = mStreamRequestIndexes.get(streamId);
+            Integer requestIndex = mStreamRequestIndexes.get(streamId);
+            if (requestIndex != null) {
+                index = requestIndex;
                 index++;
             } else {
                 index = 0;
@@ -98,8 +99,9 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
             }
             int index;
             int streamId = chain.response().streamId();
-            if (mStreamResponseIndexes.containsKey(streamId)) {
-                index = mStreamResponseIndexes.get(streamId);
+            Integer responseIndex = mStreamResponseIndexes.get(streamId);
+            if (responseIndex != null) {
+                index = responseIndex;
                 index++;
             } else {
                 index = 0;
