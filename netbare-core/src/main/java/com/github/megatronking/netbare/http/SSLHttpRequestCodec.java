@@ -96,7 +96,7 @@ import javax.net.ssl.SSLEngine;
         Method setApplicationProtocolsMethod = sslEngine.getClass().getDeclaredMethod(
                 "setApplicationProtocols", String[].class);
         setApplicationProtocolsMethod.setAccessible(true);
-        String[] protocols = {mSelectedAlpnProtocol.toString()};
+        String[] protocols = {mSelectedAlpnProtocol.toString().toLowerCase()};
         setApplicationProtocolsMethod.invoke(sslEngine, new Object[]{protocols});
     }
 
@@ -105,7 +105,7 @@ import javax.net.ssl.SSLEngine;
         Method setAlpnProtocolsMethod = sslEngine.getClass().getDeclaredMethod(
                 "setAlpnProtocols", String[].class);
         setAlpnProtocolsMethod.setAccessible(true);
-        String[] protocols = {mSelectedAlpnProtocol.toString()};
+        String[] protocols = {mSelectedAlpnProtocol.toString().toLowerCase()};
         setAlpnProtocolsMethod.invoke(sslEngine, new Object[]{protocols});
     }
 
@@ -124,7 +124,7 @@ import javax.net.ssl.SSLEngine;
 
     private byte[] concatLengthPrefixed() {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        String protocolStr = mSelectedAlpnProtocol.toString();
+        String protocolStr = mSelectedAlpnProtocol.toString().toLowerCase();
         os.write(protocolStr.length());
         os.write(protocolStr.getBytes(Charset.forName("UTF-8")), 0, protocolStr.length());
         return os.toByteArray();
