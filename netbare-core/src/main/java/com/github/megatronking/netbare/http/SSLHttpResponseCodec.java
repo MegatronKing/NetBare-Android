@@ -159,7 +159,7 @@ import javax.net.ssl.SSLEngine;
     private byte[] concatLengthPrefixed(HttpProtocol ... protocols) {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         for (HttpProtocol protocol : protocols) {
-            String protocolStr = protocol.toString();
+            String protocolStr = protocol.toString().toLowerCase();
             os.write(protocolStr.length());
             os.write(protocolStr.getBytes(Charset.forName("UTF-8")), 0, protocolStr.length());
         }

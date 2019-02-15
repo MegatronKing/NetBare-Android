@@ -57,7 +57,7 @@ public class CertificateInstallActivity extends Activity {
             File jsk = new File(getCacheDir(),
                     getIntent().getStringExtra(EXTRA_ALIAS) + JKS.KEY_JKS_FILE_EXTENSION);
             try {
-                if(!jsk.createNewFile()) {
+                if(!jsk.exists() && !jsk.createNewFile()) {
                     throw new IOException("Create jks file failed.");
                 }
             } catch (IOException e) {
