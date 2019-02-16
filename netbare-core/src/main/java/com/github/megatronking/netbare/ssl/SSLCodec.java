@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 
 import com.github.megatronking.netbare.NetBareLog;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Queue;
@@ -367,6 +368,7 @@ public abstract class SSLCodec {
             // SSLException-EOFException. We catch this error and increase the output buffer
             // capacity.
             while (true) {
+                int inputRemaining = input.remaining();
                 try {
                     result = engine.unwrap(input, output);
                     break;
@@ -378,8 +380,18 @@ public abstract class SSLCodec {
                         outputTemp.put(output);
                         output = outputTemp;
                     } else {
-                        // Maybe is some other issues.
-                        throw e;
+                        // java.io.EOFException: Read error is an Android 8.1 system bug,
+                        // it will cause #4 and #11. We swallowed this exception and not throw.
+                        if ((e.getCause() instanceof EOFException && inputRemaining == 31 &&
+                                input.remaining() == 0 && output.remaining() == output.capacity())) {
+                            // Create a new SSLEngineResult.
+                            result = new SSLEngineResult(SSLEngineResult.Status.OK,
+                                    SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING,
+                                    inputRemaining, 0);
+                            break;
+                        } else {
+                            throw e;
+                        }
                     }
                 }
             }
