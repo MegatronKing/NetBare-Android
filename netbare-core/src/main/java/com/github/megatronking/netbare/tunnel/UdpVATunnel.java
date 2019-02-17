@@ -153,18 +153,12 @@ public class UdpVATunnel extends VirtualGatewayTunnel implements NioCallback,
     @Override
     public void write(ByteBuffer buffer) throws IOException {
         // Write to vpn.
-
-        // Append data to ip & udp header's tail.
         UdpHeader header = mTemplateHeader.copy();
         ByteBuffer headerBuffer = header.buffer();
         int headLength = header.getIpHeader().getHeaderLength() + header.getHeaderLength();
-        headerBuffer.limit(headLength);
-        byte[] headerArray = headerBuffer.slice().array();
-        byte[] dataArray = buffer.slice().array();
-
-        byte[] packet = new byte[headerArray.length + dataArray.length];
-        System.arraycopy(headerArray, 0, packet, 0, headerArray.length);
-        System.arraycopy(dataArray, 0, packet, headerArray.length, dataArray.length);
+        byte[] packet = new byte[headLength + buffer.remaining()];
+        headerBuffer.get(packet, 0, headLength);
+        buffer.get(packet, headLength, packet.length - headLength);
 
         IpHeader ipHeader = new IpHeader(packet, 0);
         ipHeader.setTotalLength((short) packet.length);
