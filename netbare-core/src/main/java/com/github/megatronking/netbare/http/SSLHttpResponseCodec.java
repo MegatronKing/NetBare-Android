@@ -111,7 +111,7 @@ import javax.net.ssl.SSLEngine;
         setApplicationProtocolsMethod.setAccessible(true);
         String[] protocols = new String[mClientAlpns.length];
         for (int i = 0; i < protocols.length; i++) {
-            protocols[i] = mClientAlpns[i].toString();
+            protocols[i] = mClientAlpns[i].toString().toLowerCase();
         }
         setApplicationProtocolsMethod.invoke(mSSLEngine, new Object[]{protocols});
 
@@ -128,7 +128,7 @@ import javax.net.ssl.SSLEngine;
         setAlpnProtocolsMethod.setAccessible(true);
         String[] protocols = new String[mClientAlpns.length];
         for (int i = 0; i < protocols.length; i++) {
-            protocols[i] = mClientAlpns[i].toString();
+            protocols[i] = mClientAlpns[i].toString().toLowerCase();
         }
         setAlpnProtocolsMethod.invoke(mSSLEngine, new Object[]{protocols});
 
