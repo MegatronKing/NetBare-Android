@@ -17,10 +17,10 @@ package com.github.megatronking.netbare.http;
 
 import android.support.annotation.NonNull;
 
-import com.github.megatronking.netbare.gateway.VirtualGateway;
-import com.github.megatronking.netbare.gateway.VirtualGatewayFactory;
 import com.github.megatronking.netbare.gateway.Request;
 import com.github.megatronking.netbare.gateway.Response;
+import com.github.megatronking.netbare.gateway.VirtualGateway;
+import com.github.megatronking.netbare.gateway.VirtualGatewayFactory;
 import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.ssl.JKS;
 

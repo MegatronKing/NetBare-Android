@@ -17,8 +17,8 @@ package com.github.megatronking.netbare.http;
 
 import android.support.annotation.NonNull;
 
-import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.NetBareUtils;
+import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.ip.Protocol;
 import com.google.common.primitives.Bytes;
 

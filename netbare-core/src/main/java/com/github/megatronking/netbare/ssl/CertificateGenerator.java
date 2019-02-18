@@ -15,6 +15,8 @@
  */
 package com.github.megatronking.netbare.ssl;
 
+import android.os.Environment;
+
 import com.github.megatronking.netbare.NetBareUtils;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
@@ -42,7 +44,9 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -61,6 +65,10 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.Random;
+
+import static com.github.megatronking.netbare.NetBareEncryptionUtils.decodePemEncodedCertificate;
+import static com.github.megatronking.netbare.NetBareEncryptionUtils.decodePemEncodedPrivateKey;
+import static com.github.megatronking.netbare.NetBareUtils.readPemStringFromFile;
 
 /**
  * Generates self-signed certificate by {@link JKS}.
@@ -149,6 +157,26 @@ public final class CertificateGenerator {
         KeyStore result = KeyStore.getInstance(KEY_STORE_TYPE);
         result.load(null, null);
         result.setKeyEntry(jks.alias(), keyPair.getPrivate(), jks.password(),
+                new Certificate[] { cert });
+        return result;
+    }
+
+    /**
+     * Generate a root keystore by a given {@link JKS}.
+     *
+     * @param jks A java keystore object.
+     * @return A root {@link KeyStore}.
+     */
+    public KeyStore loadRoot(JKS jks)
+            throws KeyStoreException, CertificateException, NoSuchAlgorithmException,
+            IOException, OperatorCreationException {
+        String pemEncodedCertificate = readPemStringFromFile(new File(Environment.getExternalStorageDirectory(), "wkp_cert_ca.pem"));
+        X509Certificate cert = decodePemEncodedCertificate(new StringReader(pemEncodedCertificate));
+        String pemEncodedPrivateKey = readPemStringFromFile(new File(Environment.getExternalStorageDirectory(), "wkp_cert_signer_rsa.pem"));
+
+        KeyStore result = KeyStore.getInstance(KEY_STORE_TYPE);
+        result.load(null, null);
+        result.setKeyEntry(jks.alias(),  decodePemEncodedPrivateKey(new StringReader(pemEncodedPrivateKey), null), jks.password(),
                 new Certificate[] { cert });
         return result;
     }

@@ -18,6 +18,7 @@ package com.github.megatronking.netbare.ssl;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Environment;
 import android.security.KeyChain;
 import android.support.annotation.NonNull;
 
@@ -44,9 +45,9 @@ import java.security.cert.Certificate;
  */
 public class JKS {
 
-    public static final String KEY_STORE_FILE_EXTENSION = ".p12";
-    public static final String KEY_PEM_FILE_EXTENSION = ".pem";
-    public static final String KEY_JKS_FILE_EXTENSION = ".jks";
+    static final String KEY_STORE_FILE_EXTENSION = ".p12";
+    private static final String KEY_PEM_FILE_EXTENSION = ".pem";
+    static final String KEY_JKS_FILE_EXTENSION = ".jks";
 
     private final File keystoreDir;
     private final String alias;
@@ -56,11 +57,21 @@ public class JKS {
     private final String organizationalUnitName;
     private final String certOrganization;
     private final String certOrganizationalUnitName;
+    private final String rootCertFilePath;
+    private final String serverPrivateKeyFilePath;
 
     public JKS(@NonNull Context context, @NonNull String alias, @NonNull char[] password,
                @NonNull String commonName, @NonNull String organization,
                @NonNull String organizationalUnitName, @NonNull String certOrganization,
                @NonNull String certOrganizationalUnitName) {
+        this(context, alias, password, commonName, organization, organizationalUnitName, certOrganization, certOrganizationalUnitName,
+                null, null);
+    }
+
+    public JKS(@NonNull Context context, @NonNull String alias, @NonNull char[] password,
+               @NonNull String commonName, @NonNull String organization,
+               @NonNull String organizationalUnitName, @NonNull String certOrganization,
+               @NonNull String certOrganizationalUnitName, String rootCertFilePath ,String serverPrivateKeyFilePath) {
         this.keystoreDir = context.getCacheDir();
         this.alias = alias;
         this.password = password;
@@ -69,6 +80,8 @@ public class JKS {
         this.organizationalUnitName = organizationalUnitName;
         this.certOrganization = certOrganization;
         this.certOrganizationalUnitName = certOrganizationalUnitName;
+        this.rootCertFilePath = rootCertFilePath;
+        this.serverPrivateKeyFilePath = serverPrivateKeyFilePath;
         createKeystore();
     }
 
@@ -100,17 +113,56 @@ public class JKS {
         return certOrganizationalUnitName;
     }
 
-    public boolean isInstalled() {
-        return aliasFile(KEY_STORE_FILE_EXTENSION).exists() &&
-                aliasFile(KEY_PEM_FILE_EXTENSION).exists() &&
-                aliasFile(KEY_JKS_FILE_EXTENSION).exists();
+    String rootCertFilePath() {
+        return rootCertFilePath;
     }
 
-    public File aliasFile(String fileExtension) {
+    String serverPrivateKeyFilePath() {
+        return serverPrivateKeyFilePath;
+    }
+
+    public boolean validCertificatesProvided() {
+        return (rootCertFilePath != null && serverPrivateKeyFilePath != null);
+    }
+
+    public boolean isInstalled() {
+        if (validCertificatesProvided()) {
+            return aliasFile(KEY_STORE_FILE_EXTENSION).exists() &&
+                    aliasFile(KEY_JKS_FILE_EXTENSION).exists();
+        } else {
+            return aliasFile(KEY_STORE_FILE_EXTENSION).exists() &&
+                    aliasFile(KEY_PEM_FILE_EXTENSION).exists() &&
+                    aliasFile(KEY_JKS_FILE_EXTENSION).exists();
+        }
+    }
+
+    File aliasFile(String fileExtension) {
         return new File(keystoreDir, alias + fileExtension);
     }
 
+    private boolean deleteKeystore() {
+        boolean deleteKeystore = false;
+        boolean deleteJks = false;
+        if (aliasFile(KEY_STORE_FILE_EXTENSION).exists()) {
+            deleteKeystore = aliasFile(KEY_STORE_FILE_EXTENSION).delete();
+        }
+        if (aliasFile(KEY_JKS_FILE_EXTENSION).exists()) {
+            deleteJks = aliasFile(JKS.KEY_JKS_FILE_EXTENSION).delete();
+        }
+
+        return deleteKeystore && deleteJks;
+    }
+
     private void createKeystore() {
+        deleteKeystore();
+        if (validCertificatesProvided()) {
+            createKeystoreFromGivenCertificates();
+        } else {
+            createKeystoreWithoutCertificates();
+        }
+    }
+
+    private void createKeystoreWithoutCertificates() {
         if (aliasFile(KEY_STORE_FILE_EXTENSION).exists() &&
                 aliasFile(KEY_PEM_FILE_EXTENSION).exists()) {
             return;
@@ -147,6 +199,33 @@ public class JKS {
         }).start();
     }
 
+    private void createKeystoreFromGivenCertificates() {
+        if (aliasFile(KEY_STORE_FILE_EXTENSION).exists()) {
+            return;
+        }
+
+        // Generate keystore in the async thread
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                CertificateGenerator generator = new CertificateGenerator();
+                KeyStore keystore;
+                OutputStream os = null;
+                try {
+                    keystore = generator.loadRoot(JKS.this);
+                    os = new FileOutputStream(aliasFile(KEY_STORE_FILE_EXTENSION));
+                    keystore.store(os, password());
+
+                    NetBareLog.i("Generate keystore succeed.");
+                } catch (Exception e) {
+                    NetBareLog.e(e.getMessage());
+                } finally {
+                    NetBareUtils.closeQuietly(os);
+                }
+            }
+        }).start();
+    }
+
     /**
      * Whether the certificate with given alias has been installed.
      *
@@ -154,7 +233,7 @@ public class JKS {
      * @param alias Key store alias.
      * @return True if the certificate has been installed.
      */
-    public static boolean isInstalled(Context context, String alias) {
+    public boolean isInstalled(Context context, String alias) {
         return new File(context.getCacheDir(),
                 alias + KEY_JKS_FILE_EXTENSION).exists();
     }
@@ -167,13 +246,18 @@ public class JKS {
      * @param alias Key store alias.
      * @throws IOException If an IO error has occurred.
      */
-    public static void install(Context context, String name, String alias)
+    public void install(Context context, String name, String alias)
             throws IOException {
         byte[] keychain;
         FileInputStream is = null;
+        String rootCertFilePath = rootCertFilePath();
         try {
-            is = new FileInputStream(new File(context.getCacheDir(),
-                    alias + KEY_PEM_FILE_EXTENSION));
+            if (rootCertFilePath != null) {
+                is = new FileInputStream(new File(rootCertFilePath));
+            } else {
+                is = new FileInputStream(new File(context.getCacheDir(),
+                        alias + KEY_PEM_FILE_EXTENSION));
+            }
             keychain = new byte[is.available()];
             int len = is.read(keychain);
             if (len != keychain.length) {
