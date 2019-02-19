@@ -205,7 +205,6 @@ import java.security.GeneralSecurityException;
                 new SSLCodec.CodecCallback() {
                     @Override
                     public void onPending(ByteBuffer buffer) {
-                        buffer.slice();
                         pendRequestBuffer(buffer);
                     }
 
@@ -233,7 +232,6 @@ import java.security.GeneralSecurityException;
                 new SSLCodec.CodecCallback() {
                     @Override
                     public void onPending(ByteBuffer buffer) {
-                        buffer.slice();
                         pendResponseBuffer(buffer);
                     }
 
