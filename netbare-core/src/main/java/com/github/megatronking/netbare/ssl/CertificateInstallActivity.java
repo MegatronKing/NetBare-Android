@@ -16,6 +16,7 @@
 package com.github.megatronking.netbare.ssl;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
 import android.security.KeyChain;
@@ -47,7 +48,12 @@ public class CertificateInstallActivity extends Activity {
         }
         Intent intent = KeyChain.createInstallIntent();
         intent.putExtras(bundle);
-        startActivityForResult(intent, REQUEST_CODE_INSTALL);
+        try {
+            startActivityForResult(intent, REQUEST_CODE_INSTALL);
+        } catch (ActivityNotFoundException e) {
+            NetBareLog.e("Unable to start certificate installer.");
+            finish();
+        }
     }
 
     @Override
