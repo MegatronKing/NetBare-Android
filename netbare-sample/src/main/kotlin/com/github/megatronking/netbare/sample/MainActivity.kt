@@ -116,29 +116,29 @@ class MainActivity : AppCompatActivity(), NetBareListener {
 
     private fun prepareNetBare() {
         val myJKS = App.getInstance().getJKS()
-        if (!myJKS.validCertificatesProvided() || !isReadExternalPermissionGranted()) {
-            // 安装自签证书
-            if (!myJKS.isInstalled(this, App.JSK_ALIAS)) {
-                try {
-                    myJKS.install(this, App.JSK_ALIAS, App.JSK_ALIAS)
-                } catch (e: IOException) {
-                    // 安装失败
-                    Log.d("TEST", e.toString());
-                }
-                return
-            }
-            // 配置VPN
-            val intent = NetBare.get().prepare()
-            if (intent != null) {
-                startActivityForResult(intent, REQUEST_CODE_PREPARE)
-                return
-            }
-            // 启动NetBare服务
-            mNetBare.start(NetBareConfig.defaultHttpConfig(myJKS,
-                    interceptorFactories()))
-        } else {
-            makePermissionRequest()
+        if (myJKS.validCertificatesProvided() && !isReadExternalPermissionGranted()) {
+                makePermissionRequest()
         }
+
+        // 安装自签证书
+        if (!myJKS.isInstalled(this, App.JSK_ALIAS)) {
+            try {
+                myJKS.install(this, App.JSK_ALIAS, App.JSK_ALIAS)
+            } catch (e: IOException) {
+                // 安装失败
+                Log.d("TEST", e.toString());
+            }
+            return
+        }
+        // 配置VPN
+        val intent = NetBare.get().prepare()
+        if (intent != null) {
+            startActivityForResult(intent, REQUEST_CODE_PREPARE)
+            return
+        }
+        // 启动NetBare服务
+        mNetBare.start(NetBareConfig.defaultHttpConfig(myJKS,
+                interceptorFactories()))
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity(), NetBareListener {
                     if (data != null) {
                         val privateKeyFileUri : Uri = data.data ?: Uri.parse("")
                         mPrivateKeyFilePath = privateKeyFileUri.path ?: ""
-                        App.getInstance().setRootCertificatePath(FileUtils.getPath(this, privateKeyFileUri) ?: "")
+                        App.getInstance().setPrivateKeyPath(FileUtils.getPath(this, privateKeyFileUri) ?: "")
                         // Create keystore if both root certificate and private key have been provided
                         if (!mRootFilePath.isEmpty() && !mPrivateKeyFilePath.isEmpty()) {
                             App.getInstance().createJKS()
@@ -189,7 +189,7 @@ class MainActivity : AppCompatActivity(), NetBareListener {
     private fun isReadExternalPermissionGranted(): Boolean {
         val permission = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE)
-        return permission != PackageManager.PERMISSION_GRANTED
+        return permission == PackageManager.PERMISSION_GRANTED
     }
 
     private fun makePermissionRequest() {
