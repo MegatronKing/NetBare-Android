@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
@@ -147,9 +148,9 @@ class MainActivity : AppCompatActivity(), NetBareListener {
                 REQUEST_CODE_PREPARE -> prepareNetBare()
                 REQUEST_CODE_PICK_ROOT_CERTIFICATE -> {
                     if (data != null) {
-                        mRootFilePath = data.dataString ?: ""
-                        //App.getInstance().setRootCertificatePath(mRootFilePath)
-                        App.getInstance().setRootCertificatePath("/storage/emulated/0/sample_root.pem")
+                        val rootFileUri : Uri = data.data ?: Uri.parse("")
+                        mRootFilePath = rootFileUri.path ?: ""
+                        App.getInstance().setRootCertificatePath(FileUtils.getPath(this, rootFileUri) ?: "")
                         // Create keystore if both root certificate and private key have been provided
                         if (!mRootFilePath.isEmpty() && !mPrivateKeyFilePath.isEmpty()) {
                             App.getInstance().createJKS()
@@ -158,9 +159,9 @@ class MainActivity : AppCompatActivity(), NetBareListener {
                 }
                 REQUEST_CODE_PICK_PRIVATE_KEY -> {
                     if (data != null) {
-                        mPrivateKeyFilePath = data.dataString ?: ""
-                        //App.getInstance().setPrivateKeyPath(mPrivateKeyFilePath)
-                        App.getInstance().setPrivateKeyPath("/storage/emulated/0/sample_rsa.pem")
+                        val privateKeyFileUri : Uri = data.data ?: Uri.parse("")
+                        mPrivateKeyFilePath = privateKeyFileUri.path ?: ""
+                        App.getInstance().setRootCertificatePath(FileUtils.getPath(this, privateKeyFileUri) ?: "")
                         // Create keystore if both root certificate and private key have been provided
                         if (!mRootFilePath.isEmpty() && !mPrivateKeyFilePath.isEmpty()) {
                             App.getInstance().createJKS()
