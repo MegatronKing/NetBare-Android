@@ -7,11 +7,6 @@ package com.github.megatronking.netbare;
  * @since 2019-02-04 15:16
  */
 public class NetBareImportException extends RuntimeException {
-	private static final long serialVersionUID = 584414535648926010L;
-
-	public NetBareImportException() {
-	}
-
 	public NetBareImportException(String message) {
 		super(message);
 	}
