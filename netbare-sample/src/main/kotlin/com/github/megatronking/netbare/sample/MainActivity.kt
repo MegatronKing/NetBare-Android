@@ -49,10 +49,6 @@ class MainActivity : AppCompatActivity(), NetBareListener {
             if (mNetBare.isActive) {
                 mNetBare.stop()
             } else{
-                // TO-DO: Add a check to make sure both certs have been provided
-                /*if (mProvideCertificatesRadio.isChecked) {
-                    App.getInstance().createJKS()
-                }*/
                 prepareNetBare()
             }
         }
@@ -80,12 +76,16 @@ class MainActivity : AppCompatActivity(), NetBareListener {
         mUseRandomCertificatesRadio.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 App.getInstance().createJKS()
+                mActionButton.isEnabled = true
             }
         }
         mProvideCertificatesRadio = findViewById(R.id.radioButton2)
         mProvideCertificatesRadio.setOnCheckedChangeListener { _, isChecked ->
             mRootCertButton.isEnabled = isChecked
             mPrivateKeyButton.isEnabled = isChecked
+            if (isChecked) {
+                mActionButton.isEnabled = false
+            }
         }
 
         // 监听NetBare服务的启动和停止
@@ -154,6 +154,7 @@ class MainActivity : AppCompatActivity(), NetBareListener {
                         // Create keystore if both root certificate and private key have been provided
                         if (!mRootFilePath.isEmpty() && !mPrivateKeyFilePath.isEmpty()) {
                             App.getInstance().createJKS()
+                            mActionButton.isEnabled = true
                         }
                     }
                 }
@@ -165,6 +166,7 @@ class MainActivity : AppCompatActivity(), NetBareListener {
                         // Create keystore if both root certificate and private key have been provided
                         if (!mRootFilePath.isEmpty() && !mPrivateKeyFilePath.isEmpty()) {
                             App.getInstance().createJKS()
+                            mActionButton.isEnabled = true
                         }
                     }
                 }
