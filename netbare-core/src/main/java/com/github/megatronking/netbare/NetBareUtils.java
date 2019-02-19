@@ -17,8 +17,12 @@ package com.github.megatronking.netbare;
 
 import android.text.TextUtils;
 
+import java.io.BufferedInputStream;
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * A collection of assorted utility classes.
@@ -150,4 +154,23 @@ public final class NetBareUtils {
         return result;
     }
 
+    /**
+     * Loads all the content of a file into a java String.
+     *
+     * @param file The file to read.
+     * @return The String containing the file bytes.
+     * @throws IOException If an I/O error has occurred.
+     */
+    public static String readPemStringFromFile(File file) throws IOException {
+        try {
+            int size = (int) file.length();
+            byte[] fileContents = new byte[size];
+            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(file));
+            buf.read(fileContents, 0, fileContents.length);
+            buf.close();
+            return new String(fileContents, StandardCharsets.US_ASCII);
+        } catch (IOException e) {
+            throw new IOException(e.toString());
+        }
+    }
 }

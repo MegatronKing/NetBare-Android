@@ -208,5 +208,4 @@ public final class SSLEngineFactory {
         kmf.init(keyStore, mJKS.password());
         return kmf.getKeyManagers();
     }
-
 }

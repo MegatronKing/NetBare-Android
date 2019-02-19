@@ -15,8 +15,8 @@
  */
 package com.github.megatronking.netbare;
 
-import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.ip.Protocol;
+import com.github.megatronking.netbare.net.Session;
 
 /**
  * A log util using in NetBare, it uses the protocol, ip and port as the prefix.
