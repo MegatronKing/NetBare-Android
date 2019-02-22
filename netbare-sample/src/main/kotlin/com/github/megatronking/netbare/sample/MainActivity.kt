@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Button
 import android.widget.RadioButton
+import android.widget.Toast
 import com.github.megatronking.netbare.NetBare
 import com.github.megatronking.netbare.NetBareConfig
 import com.github.megatronking.netbare.NetBareListener
@@ -81,10 +82,14 @@ class MainActivity : AppCompatActivity(), NetBareListener {
         }
         mProvideCertificatesRadio = findViewById(R.id.radioButton2)
         mProvideCertificatesRadio.setOnCheckedChangeListener { _, isChecked ->
-            mRootCertButton.isEnabled = isChecked
-            mPrivateKeyButton.isEnabled = isChecked
-            if (isChecked) {
-                mActionButton.isEnabled = false
+            if (isChecked && !isReadExternalPermissionGranted()) {
+                makePermissionRequest()
+            } else {
+                mRootCertButton.isEnabled = isChecked
+                mPrivateKeyButton.isEnabled = isChecked
+                if (isChecked) {
+                    mActionButton.isEnabled = false
+                }
             }
         }
 
@@ -116,10 +121,6 @@ class MainActivity : AppCompatActivity(), NetBareListener {
 
     private fun prepareNetBare() {
         val myJKS = App.getInstance().getJKS()
-        if (myJKS.validCertificatesProvided() && !isReadExternalPermissionGranted()) {
-                makePermissionRequest()
-        }
-
         // 安装自签证书
         if (!myJKS.isInstalled(this, App.JSK_ALIAS)) {
             try {
@@ -202,11 +203,15 @@ class MainActivity : AppCompatActivity(), NetBareListener {
                                             permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             REQUEST_READ_EXTERNAL_STORAGE_PERMISSION_CODE -> {
-
                 if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                    // Log.i(TAG, "Permission has been denied by user")
+                    Toast.makeText(this, "Please grant read external storage permission to provide valid certificates",
+                            Toast.LENGTH_LONG).show()
+                    mUseRandomCertificatesRadio.isChecked = true
+                    mProvideCertificatesRadio.isChecked = false
                 } else {
-                    prepareNetBare()
+                    mRootCertButton.isEnabled = true
+                    mPrivateKeyButton.isEnabled = true
+                    mActionButton.isEnabled = false
                 }
             }
         }
