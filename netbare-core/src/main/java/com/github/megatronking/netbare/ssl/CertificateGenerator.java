@@ -170,9 +170,9 @@ public final class CertificateGenerator {
     public KeyStore loadRoot(JKS jks)
             throws KeyStoreException, CertificateException, NoSuchAlgorithmException,
             IOException, OperatorCreationException {
-        String pemEncodedCertificate = readPemStringFromFile(new File(Environment.getExternalStorageDirectory(), "wkp_cert_ca.pem"));
+        String pemEncodedCertificate = readPemStringFromFile(new File(jks.rootCertFilePath()));
         X509Certificate cert = decodePemEncodedCertificate(new StringReader(pemEncodedCertificate));
-        String pemEncodedPrivateKey = readPemStringFromFile(new File(Environment.getExternalStorageDirectory(), "wkp_cert_signer_rsa.pem"));
+        String pemEncodedPrivateKey = readPemStringFromFile(new File(jks.serverPrivateKeyFilePath()));
 
         KeyStore result = KeyStore.getInstance(KEY_STORE_TYPE);
         result.load(null, null);
