@@ -33,6 +33,9 @@ class HttpUrlPrintInterceptor : HttpIndexInterceptor() {
     }
 
     override fun intercept(chain: HttpResponseChain, buffer: ByteBuffer, index: Int) {
+        if (index == 0) {
+            Log.i(TAG, "Response: " + chain.response().url())
+        }
         chain.process(buffer)
     }
 

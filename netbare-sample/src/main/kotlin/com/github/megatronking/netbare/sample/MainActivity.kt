@@ -76,6 +76,10 @@ class MainActivity : AppCompatActivity(), NetBareListener {
         mUseRandomCertificatesRadio = findViewById(R.id.radioButton)
         mUseRandomCertificatesRadio.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
+                App.getInstance().setPrivateKeyPath(null)
+                mPrivateKeyFilePath = ""
+                App.getInstance().setRootCertificatePath(null)
+                mRootFilePath = ""
                 App.getInstance().createJKS()
                 mActionButton.isEnabled = true
             }
