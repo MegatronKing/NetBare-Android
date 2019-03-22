@@ -52,9 +52,10 @@ public final class UidDumper implements DumpCallback {
     private static final int KEEP_ALIVE_SECONDS = 3 * 60;
     private static final int QUEUE_SIZE = 32;
 
-    private static final ThreadFactory sThreadFactory = new ThreadFactory() {
+    private static final ThreadFactory THREAD_FACTORY = new ThreadFactory() {
         private final AtomicInteger mCount = new AtomicInteger(1);
 
+        @Override
         public Thread newThread(@NonNull Runnable r) {
             return new Thread(r, "UidDumper #" + mCount.getAndIncrement());
         }
@@ -78,7 +79,7 @@ public final class UidDumper implements DumpCallback {
     static {
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
                 CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_SECONDS, TimeUnit.SECONDS,
-                new LinkedBlockingDeque<Runnable>(QUEUE_SIZE), sThreadFactory);
+                new LinkedBlockingDeque<Runnable>(QUEUE_SIZE), THREAD_FACTORY);
         threadPoolExecutor.allowCoreThreadTimeOut(true);
         THREAD_POOL_EXECUTOR = threadPoolExecutor;
     }

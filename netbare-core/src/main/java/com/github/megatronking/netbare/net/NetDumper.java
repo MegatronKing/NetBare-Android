@@ -31,6 +31,9 @@ import java.io.InputStreamReader;
  */
 /* package */ class NetDumper implements Runnable {
 
+    private static final String MIN_IP = "0.0.0.0";
+    private static final String MAX_IP = "255.255.255.255";
+
     private final String mArg;
     private final String mLocalIp;
     private final DumpCallback mCallback;
@@ -108,8 +111,8 @@ import java.io.InputStreamReader;
                         continue;
                     }
                     String remoteIp = parseIp(remote[0]);
-                    if (remoteIp == null || remoteIp.equals("0.0.0.0")
-                            || remoteIp.equals("255.255.255.255")) {
+                    if (remoteIp == null || remoteIp.equals(MIN_IP)
+                            || remoteIp.equals(MAX_IP)) {
                         continue;
                     }
                     int localPort = parsePort(local[1]);
