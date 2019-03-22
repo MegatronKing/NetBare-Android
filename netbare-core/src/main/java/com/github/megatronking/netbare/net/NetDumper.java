@@ -73,6 +73,9 @@ import java.io.InputStreamReader;
 
     @Override
     public void run() {
+        if (NetBareUtils.isAndroidQ()) {
+            return;
+        }
         while (mIsRunning) {
             ProcessBuilder builder = new ProcessBuilder("cat", mArg);
             InputStream is = null;

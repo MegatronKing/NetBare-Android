@@ -15,6 +15,7 @@
  */
 package com.github.megatronking.netbare;
 
+import android.os.Build;
 import android.text.TextUtils;
 
 import java.io.Closeable;
@@ -148,6 +149,15 @@ public final class NetBareUtils {
             // parse error
         }
         return result;
+    }
+
+    /**
+     * Whether the OS build version is Android Q.
+     *
+     * @return True means the build android Q.
+     */
+    public static boolean isAndroidQ() {
+        return "Q".equals(Build.VERSION.RELEASE);
     }
 
 }

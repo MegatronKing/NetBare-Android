@@ -262,6 +262,8 @@ public final class NetBareConfig {
          * Dump the uid of the session, you can get the value from {@link Session#uid}. This config
          * will cost much battery.
          *
+         * <p>Android Q removes access to /proc/net, this config doesn't work on Android Q.</p>
+         *
          * @param dumpUid Should dump session's uid from /proc/net/
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
