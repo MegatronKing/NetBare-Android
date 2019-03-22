@@ -49,11 +49,15 @@ class MainActivity : AppCompatActivity(), NetBareListener {
     }
 
     override fun onServiceStarted() {
-        mActionButton.setText(R.string.stop_netbare)
+        runOnUiThread {
+            mActionButton.setText(R.string.stop_netbare)
+        }
     }
 
     override fun onServiceStopped() {
-        mActionButton.setText(R.string.start_netbare)
+        runOnUiThread {
+            mActionButton.setText(R.string.start_netbare)
+        }
     }
 
     private fun prepareNetBare() {
