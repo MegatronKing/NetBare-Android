@@ -20,6 +20,8 @@ import android.support.annotation.NonNull;
 
 import com.github.megatronking.netbare.NetBareUtils;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -55,9 +57,33 @@ public final class HttpRequestHeaderPart extends HttpHeaderPart {
      * @return The request path.
      */
     public String path() {
-        String path = uri().getPath();
-        int pathIndex = uri().toString().indexOf(path);
-        return uri().toString().substring(pathIndex);
+        URL url;
+        try {
+            url = new URL(uri().toString());
+        } catch (MalformedURLException e) {
+            url = null;
+        }
+        if (url != null) {
+            String file = url.getFile();
+            if (file != null) {
+                return file;
+            }
+        }
+        String path = uri().getEncodedPath();
+        if (path != null) {
+            int pathIndex = uri().toString().indexOf(path);
+            if (pathIndex != -1) {
+                return uri().toString().substring(pathIndex);
+            }
+        }
+        path = uri().getPath();
+        if (path != null) {
+            int pathIndex = uri().toString().indexOf(path);
+            if (pathIndex != -1) {
+                return uri().toString().substring(pathIndex);
+            }
+        }
+        return uri().toString().replace(uri().getScheme() + "://" + uri().getAuthority(), "");
     }
 
     @Override
@@ -73,7 +99,7 @@ public final class HttpRequestHeaderPart extends HttpHeaderPart {
         private HttpMethod method;
 
         Builder(HttpProtocol protocol, Uri uri, Map<String, List<String>> headers,
-                       HttpMethod method) {
+                HttpMethod method) {
             super(protocol, uri, headers);
             this.method = method;
         }
