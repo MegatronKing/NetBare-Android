@@ -19,8 +19,6 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Intent;
 import android.net.VpnService;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 
@@ -55,7 +53,6 @@ public final class NetBare {
     }
 
     private final Set<NetBareListener> mListeners;
-    private final Handler mMainThreadHandler;
 
     private Application mApp;
     private NetBareConfig mNetBareConfig;
@@ -68,7 +65,6 @@ public final class NetBare {
 
     private NetBare() {
         mListeners = new LinkedHashSet<>();
-        mMainThreadHandler = new Handler(Looper.getMainLooper());
     }
 
     /**
@@ -166,26 +162,16 @@ public final class NetBare {
 
     /* package */ void notifyServiceStarted() {
         mAlive = true;
-        mMainThreadHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                for (NetBareListener listener : mListeners) {
-                    listener.onServiceStarted();
-                }
-            }
-        });
+        for (NetBareListener listener : mListeners) {
+            listener.onServiceStarted();
+        }
     }
 
     /* package */ void notifyServiceStopped() {
         mAlive = false;
-        mMainThreadHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                for (NetBareListener listener : mListeners) {
-                    listener.onServiceStopped();
-                }
-            }
-        });
+        for (NetBareListener listener : mListeners) {
+            listener.onServiceStopped();
+        }
     }
 
 }
