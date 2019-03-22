@@ -1,8 +1,11 @@
 package com.github.megatronking.netbare.sample
 
 import android.app.Application
+import android.content.Context
 import com.github.megatronking.netbare.NetBare
+import com.github.megatronking.netbare.NetBareUtils
 import com.github.megatronking.netbare.ssl.JKS
+import me.weishu.reflection.Reflection
 
 class App : Application() {
 
@@ -31,6 +34,14 @@ class App : Application() {
 
     fun getJSK(): JKS {
         return mJKS
+    }
+
+    override fun attachBaseContext(base: Context?) {
+        super.attachBaseContext(base)
+        // On android Q, we can't access Java8EngineWrapper with reflect.
+        if (NetBareUtils.isAndroidQ()) {
+            Reflection.unseal(base)
+        }
     }
 
 }
