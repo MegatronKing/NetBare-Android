@@ -70,7 +70,7 @@ import java.util.List;
         String headerString = new String(buffer.array(), buffer.position(), buffer.remaining());
         String[] headers = headerString.split(NetBareUtils.LINE_END_REGEX);
         String[] requestLine = headers[0].split(" ");
-        if (requestLine.length != 3) {
+        if (requestLine.length < 3) {
             mLog.w("Unexpected http request line: " + headers[0]);
             return;
         }
@@ -81,15 +81,18 @@ import java.util.List;
             return;
         }
         session.method = method;
-        // Path
-        session.path = requestLine[1];
         // Http Protocol
-        HttpProtocol protocol = HttpProtocol.parse(requestLine[2]);
+        HttpProtocol protocol = HttpProtocol.parse(requestLine[requestLine.length - 1]);
         if (protocol == HttpProtocol.UNKNOWN) {
-            mLog.w("Unknown http request protocol: " + requestLine[0]);
+            mLog.w("Unknown http request protocol: " + requestLine[requestLine.length - 1]);
             return;
         }
         session.protocol = protocol;
+
+        // Path
+        session.path = headers[0].replace(requestLine[0], "")
+                .replace(requestLine[requestLine.length - 1], "")
+                .trim();
 
         // Http request headers
         if (headers.length <= 1) {
