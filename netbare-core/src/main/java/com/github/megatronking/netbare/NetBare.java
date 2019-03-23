@@ -162,14 +162,14 @@ public final class NetBare {
 
     /* package */ void notifyServiceStarted() {
         mAlive = true;
-        for (NetBareListener listener : mListeners) {
+        for (NetBareListener listener : new LinkedHashSet<>(mListeners)) {
             listener.onServiceStarted();
         }
     }
 
     /* package */ void notifyServiceStopped() {
         mAlive = false;
-        for (NetBareListener listener : mListeners) {
+        for (NetBareListener listener : new LinkedHashSet<>(mListeners)) {
             listener.onServiceStopped();
         }
     }
