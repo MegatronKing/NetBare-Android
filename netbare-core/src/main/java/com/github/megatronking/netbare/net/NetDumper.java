@@ -33,6 +33,7 @@ import java.io.InputStreamReader;
 
     private static final String MIN_IP = "0.0.0.0";
     private static final String MAX_IP = "255.255.255.255";
+    private static final int MAX_RETRY_COUNT = 3;
 
     private final String mArg;
     private final String mLocalIp;
@@ -76,7 +77,8 @@ import java.io.InputStreamReader;
         if (NetBareUtils.isAndroidQ()) {
             return;
         }
-        while (mIsRunning) {
+        int retryCount = 0;
+        while (mIsRunning && retryCount <= MAX_RETRY_COUNT) {
             ProcessBuilder builder = new ProcessBuilder("cat", mArg);
             InputStream is = null;
             BufferedReader reader = null;
@@ -129,6 +131,7 @@ import java.io.InputStreamReader;
                     mCallback.onDump(new Net(uid, localIp, localPort, remoteIp, remotePort));
                 }
             } catch (IOException e) {
+                retryCount++;
                 NetBareLog.wtf(e);
             }
             NetBareUtils.closeQuietly(is);
