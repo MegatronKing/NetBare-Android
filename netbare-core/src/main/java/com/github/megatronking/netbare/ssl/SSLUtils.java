@@ -211,6 +211,9 @@ public final class SSLUtils {
                 while (read <= protocolCount) {
                     int protocolLength = buffer[offset + read];
                     read += 1;
+                    if (protocolLength < 0 || offset + read + protocolLength < buffer.length) {
+                        return null;
+                    }
                     HttpProtocol protocol = HttpProtocol.parse(new String(buffer, offset + read,
                             protocolLength));
                     if (protocol == HttpProtocol.HTTP_1_1 || protocol == HttpProtocol.HTTP_2) {
