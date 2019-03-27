@@ -289,7 +289,7 @@ import java.util.Map;
             // This is a multibyte value. Read 7 bits at a time.
             int result = prefixMask;
             int shift = 0;
-            while (true) {
+            while (buffer.hasRemaining()) {
                 int b = buffer.get();
                 if ((b & 0x80) != 0) { // Equivalent to (b >= 128) since b is in [0..255].
                     result += (b & 0x7f) << shift;
@@ -353,6 +353,9 @@ import java.util.Map;
         }
 
         private String readString(ByteBuffer buffer) throws IOException {
+            if (!buffer.hasRemaining()) {
+                throw new IOException("Hpack read headers failed: data is exhaust");
+            }
             int firstByte = readByte(buffer);
             boolean huffmanDecode = (firstByte & 0x80) == 0x80; // 1NNNNNNN
             int length = readInt(buffer, firstByte, PREFIX_7_BITS);
