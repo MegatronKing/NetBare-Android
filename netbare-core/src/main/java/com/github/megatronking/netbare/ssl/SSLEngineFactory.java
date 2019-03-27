@@ -45,6 +45,7 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
@@ -111,7 +112,8 @@ public final class SSLEngineFactory {
      * @return A server {@link SSLEngine} instance.
      * @throws ExecutionException If an execution error has occurred.
      */
-    public SSLEngine createServerEngine(@NonNull final String host) throws ExecutionException {
+    public SSLEngine createServerEngine(@NonNull final String host) throws ExecutionException,
+            SSLException {
         SSLContext ctx = mServerSSLContexts.get(host, new Callable<SSLContext>() {
             @Override
             public SSLContext call() throws GeneralSecurityException, IOException,
@@ -134,7 +136,7 @@ public final class SSLEngineFactory {
      * @throws KeyManagementException If creates SSLContext fail.
      */
     public SSLEngine createClientEngine(@NonNull final String ip, int port)
-            throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+            throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, SSLException {
         SSLContext sslContext = createSSLContext();
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(
                 TrustManagerFactory.getDefaultAlgorithm());

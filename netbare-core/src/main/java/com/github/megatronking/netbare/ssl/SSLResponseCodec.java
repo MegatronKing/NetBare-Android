@@ -68,7 +68,8 @@ public class SSLResponseCodec extends SSLCodec {
                 String host = mRequest.host() != null ? mRequest.host() : mRequest.ip();
                 mEngine = factory.createClientEngine(host, mRequest.port());
                 mEngine.setUseClientMode(true);
-            } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+            } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException |
+                    SSLException e) {
                 NetBareLog.e("Failed to create client SSLEngine: " + e.getMessage());
             }
         }
