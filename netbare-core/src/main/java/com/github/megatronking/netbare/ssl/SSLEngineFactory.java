@@ -127,7 +127,7 @@ public final class SSLEngineFactory {
     /**
      * Create a client {@link SSLEngine} with the remote server IP and port.
      *
-     * @param ip Remote server IP.
+     * @param host Remote server host.
      * @param port Remote server port.
      * @return A client {@link SSLEngine} instance.
      * @throws NoSuchAlgorithmException if no Provider supports a SSLContextSpi implementation for
@@ -135,7 +135,7 @@ public final class SSLEngineFactory {
      * @throws KeyStoreException If creates KeyManager fail.
      * @throws KeyManagementException If creates SSLContext fail.
      */
-    public SSLEngine createClientEngine(@NonNull final String ip, int port)
+    public SSLEngine createClientEngine(@NonNull final String host, int port)
             throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, SSLException {
         SSLContext sslContext = createSSLContext();
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(
@@ -147,7 +147,7 @@ public final class SSLEngineFactory {
                     + Arrays.toString(trustManagers));
         }
         sslContext.init(null, new TrustManager[] { trustManagers[0] }, null);
-        SSLEngine engine = sslContext.createSSLEngine(ip, port);
+        SSLEngine engine = sslContext.createSSLEngine(host, port);
         List<String> ciphers = new LinkedList<>();
         for (String each : engine.getEnabledCipherSuites()) {
             if (!each.equals("TLS_DHE_RSA_WITH_AES_128_CBC_SHA") &&
