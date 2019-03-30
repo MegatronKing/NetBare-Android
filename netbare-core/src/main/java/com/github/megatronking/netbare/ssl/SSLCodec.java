@@ -173,7 +173,16 @@ public abstract class SSLCodec {
             return;
         }
         if (mHandshakeFinished) {
+            boolean isRenegotiation = input.get(input.position()) ==
+                    SSLUtils.SSL_CONTENT_TYPE_HANDSHAKE;
             unwrap(engine, input, callback);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                // Fixed a SSL renegotiation issue for API 27+
+                // However below API 27, system SSLEngine doesn't support renegotiation.
+                if (isRenegotiation) {
+                    handshakeWrap(engine, callback);
+                }
+            }
         } else {
             handshake(engine, input, callback);
         }
