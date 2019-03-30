@@ -155,7 +155,7 @@ public final class SSLEngineFactory {
                 ciphers.add(each);
             }
         }
-        engine.setEnabledCipherSuites(ciphers.toArray(new String[ciphers.size()]));
+        engine.setEnabledCipherSuites(ciphers.toArray(new String[0]));
         engine.setUseClientMode(true);
         engine.setNeedClientAuth(false);
         return engine;
