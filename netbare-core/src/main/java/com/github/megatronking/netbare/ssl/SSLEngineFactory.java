@@ -34,7 +34,6 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -45,10 +44,7 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 
 /**
  * A factory produces client and server MITM {@link SSLEngine}.
@@ -81,12 +77,37 @@ public final class SSLEngineFactory {
      */
     private static final String SSL_CONTEXT_FALLBACK_PROTOCOL = "TLSv1";
 
+    private static final Cache<String, SSLContext> SERVER_SSL_CONTEXTS;
+    private static final Cache<String, SSLContext> CLIENT_SSL_CONTEXTS;
+
+    private static SSLKeyManagerProvider sKeyManagerProvider;
+    private static SSLTrustManagerProvider sTrustManagerProvider;
+
     private final JKS mJKS;
-    private final Cache<String, SSLContext> mServerSSLContexts;
     private final CertificateGenerator mGenerator;
 
     private Certificate mCaCert;
     private PrivateKey mCaPrivKey;
+
+    static {
+        SERVER_SSL_CONTEXTS = CacheBuilder.newBuilder()
+                .expireAfterAccess(ALIVE_MINUTES, TimeUnit.MINUTES)
+                .concurrencyLevel(CONCURRENCY_LEVEL)
+                .build();
+        CLIENT_SSL_CONTEXTS = CacheBuilder.newBuilder()
+                .expireAfterAccess(ALIVE_MINUTES, TimeUnit.MINUTES)
+                .concurrencyLevel(CONCURRENCY_LEVEL)
+                .build();
+    }
+
+    public static void updateProviders(SSLKeyManagerProvider keyManagerProvider,
+                                       SSLTrustManagerProvider trustManagerProvider) {
+        sKeyManagerProvider = keyManagerProvider;
+        sTrustManagerProvider = trustManagerProvider;
+        // Clean all context caches.
+        SERVER_SSL_CONTEXTS.cleanUp();
+        CLIENT_SSL_CONTEXTS.cleanUp();
+    }
 
     /**
      * Constructs the factory with a self-signed certificate.
@@ -97,10 +118,6 @@ public final class SSLEngineFactory {
      */
     public SSLEngineFactory(@NonNull JKS jks) throws GeneralSecurityException, IOException {
         this.mJKS = jks;
-        this.mServerSSLContexts = CacheBuilder.newBuilder()
-                .expireAfterAccess(ALIVE_MINUTES, TimeUnit.MINUTES)
-                .concurrencyLevel(CONCURRENCY_LEVEL)
-                .build();
         this.mGenerator = new CertificateGenerator();
         initializeSSLContext();
     }
@@ -112,9 +129,8 @@ public final class SSLEngineFactory {
      * @return A server {@link SSLEngine} instance.
      * @throws ExecutionException If an execution error has occurred.
      */
-    public SSLEngine createServerEngine(@NonNull final String host) throws ExecutionException,
-            SSLException {
-        SSLContext ctx = mServerSSLContexts.get(host, new Callable<SSLContext>() {
+    public SSLEngine createServerEngine(@NonNull final String host) throws ExecutionException {
+        SSLContext ctx = SERVER_SSL_CONTEXTS.get(host, new Callable<SSLContext>() {
             @Override
             public SSLContext call() throws GeneralSecurityException, IOException,
                     OperatorCreationException {
@@ -130,24 +146,17 @@ public final class SSLEngineFactory {
      * @param host Remote server host.
      * @param port Remote server port.
      * @return A client {@link SSLEngine} instance.
-     * @throws NoSuchAlgorithmException if no Provider supports a SSLContextSpi implementation for
-     * the specified protocol.
-     * @throws KeyStoreException If creates KeyManager fail.
-     * @throws KeyManagementException If creates SSLContext fail.
+     * @throws ExecutionException If an execution error has occurred.
      */
-    public SSLEngine createClientEngine(@NonNull final String host, int port)
-            throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, SSLException {
-        SSLContext sslContext = createSSLContext();
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(
-                TrustManagerFactory.getDefaultAlgorithm());
-        trustManagerFactory.init((KeyStore) null);
-        TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
-        if (trustManagers.length != 1 || !(trustManagers[0] instanceof X509TrustManager)) {
-            throw new KeyManagementException("Unexpected default trust managers:"
-                    + Arrays.toString(trustManagers));
-        }
-        sslContext.init(null, new TrustManager[] { trustManagers[0] }, null);
-        SSLEngine engine = sslContext.createSSLEngine(host, port);
+    public SSLEngine createClientEngine(@NonNull final String host, int port) throws ExecutionException {
+        SSLContext ctx = CLIENT_SSL_CONTEXTS.get(host, new Callable<SSLContext>() {
+            @Override
+            public SSLContext call() throws GeneralSecurityException, IOException,
+                    OperatorCreationException {
+                return createClientContext(host);
+            }
+        });
+        SSLEngine engine = ctx.createSSLEngine(host, port);
         List<String> ciphers = new LinkedList<>();
         for (String each : engine.getEnabledCipherSuites()) {
             if (!each.equals("TLS_DHE_RSA_WITH_AES_128_CBC_SHA") &&
@@ -181,17 +190,32 @@ public final class SSLEngineFactory {
 
     private SSLContext createServerContext(String host) throws GeneralSecurityException,
             IOException, OperatorCreationException {
-        KeyStore ks = mGenerator.generateServer(host, mJKS, mCaCert, mCaPrivKey);
-        KeyManager[] keyManagers = getKeyManagers(ks);
-        return createServerContext(keyManagers);
+        KeyManager[] kms = sKeyManagerProvider != null ?
+                sKeyManagerProvider.provide(host, false) : null;
+        if (kms == null) {
+            KeyStore ks = mGenerator.generateServer(host, mJKS, mCaCert, mCaPrivKey);
+            kms = getServerKeyManagers(ks);
+        }
+        TrustManager[] tms = sTrustManagerProvider != null ?
+                sTrustManagerProvider.provide(host, false) : null;
+        return createContext(kms, tms);
     }
 
-    private SSLContext createServerContext(KeyManager[] keyManagers) throws NoSuchAlgorithmException,
+    private SSLContext createClientContext(String host) throws GeneralSecurityException, IOException {
+        KeyManager[] kms = sKeyManagerProvider != null ?
+                sKeyManagerProvider.provide(host, true) : null;
+        TrustManager[] tms = sTrustManagerProvider != null ?
+                sTrustManagerProvider.provide(host, true) : null;
+        return createContext(kms, tms);
+    }
+
+    private SSLContext createContext(KeyManager[] keyManagers, TrustManager[] trustManagers)
+            throws NoSuchAlgorithmException,
             KeyManagementException {
         SSLContext result = createSSLContext();
         SecureRandom random = new SecureRandom();
         random.setSeed(System.currentTimeMillis() + 1);
-        result.init(keyManagers, null, random);
+        result.init(keyManagers, trustManagers, random);
         return result;
     }
 
@@ -203,7 +227,7 @@ public final class SSLEngineFactory {
         }
     }
 
-    private KeyManager[] getKeyManagers(KeyStore keyStore) throws NoSuchAlgorithmException,
+    private KeyManager[] getServerKeyManagers(KeyStore keyStore) throws NoSuchAlgorithmException,
             UnrecoverableKeyException, KeyStoreException {
         String keyManAlg = KeyManagerFactory.getDefaultAlgorithm();
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(keyManAlg);

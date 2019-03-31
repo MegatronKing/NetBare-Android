@@ -20,9 +20,7 @@ import com.github.megatronking.netbare.gateway.Request;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.ExecutionException;
 
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
@@ -68,8 +66,7 @@ public class SSLResponseCodec extends SSLCodec {
                 String host = mRequest.host() != null ? mRequest.host() : mRequest.ip();
                 mEngine = factory.createClientEngine(host, mRequest.port());
                 mEngine.setUseClientMode(true);
-            } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException |
-                    SSLException e) {
+            } catch (ExecutionException e) {
                 NetBareLog.e("Failed to create client SSLEngine: " + e.getMessage());
             }
         }

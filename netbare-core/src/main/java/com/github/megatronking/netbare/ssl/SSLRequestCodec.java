@@ -21,7 +21,6 @@ import com.github.megatronking.netbare.gateway.Request;
 import java.util.concurrent.ExecutionException;
 
 import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLException;
 
 /**
  * An implementation of {@link SSLCodec} to codec request SSL packets. This codec creates a MITM
@@ -66,7 +65,7 @@ public class SSLRequestCodec extends SSLCodec {
                 mEngine = factory.createServerEngine(host);
                 mEngine.setUseClientMode(false);
                 mEngine.setNeedClientAuth(false);
-            } catch (ExecutionException | SSLException e) {
+            } catch (ExecutionException e) {
                 NetBareLog.e("Failed to create server SSLEngine: " + e.getMessage());
             }
         }

@@ -21,6 +21,8 @@ import android.content.Intent;
 import android.net.VpnService;
 import android.support.annotation.NonNull;
 
+import com.github.megatronking.netbare.ssl.SSLEngineFactory;
+
 /**
  * Base class for NetBare services.
  * <p>
@@ -105,6 +107,7 @@ public abstract class NetBareService extends VpnService {
         }
 
         NetBareLog.i("Start NetBare service!");
+        SSLEngineFactory.updateProviders(config.keyManagerProvider, config.trustManagerProvider);
         mNetBareThread = new NetBareThread(this, config);
         mNetBareThread.start();
     }
