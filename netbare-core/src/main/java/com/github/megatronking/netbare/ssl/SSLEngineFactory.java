@@ -17,6 +17,7 @@ package com.github.megatronking.netbare.ssl;
 
 import android.support.annotation.NonNull;
 
+import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.NetBareUtils;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -26,14 +27,19 @@ import org.bouncycastle.operator.OperatorCreationException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
+import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -45,6 +51,8 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * A factory produces client and server MITM {@link SSLEngine}.
@@ -105,8 +113,8 @@ public final class SSLEngineFactory {
         sKeyManagerProvider = keyManagerProvider;
         sTrustManagerProvider = trustManagerProvider;
         // Clean all context caches.
-        SERVER_SSL_CONTEXTS.cleanUp();
-        CLIENT_SSL_CONTEXTS.cleanUp();
+        SERVER_SSL_CONTEXTS.invalidateAll();
+        CLIENT_SSL_CONTEXTS.invalidateAll();
     }
 
     /**
@@ -193,19 +201,21 @@ public final class SSLEngineFactory {
         KeyManager[] kms = sKeyManagerProvider != null ?
                 sKeyManagerProvider.provide(host, false) : null;
         if (kms == null) {
-            KeyStore ks = mGenerator.generateServer(host, mJKS, mCaCert, mCaPrivKey);
-            kms = getServerKeyManagers(ks);
+            kms = getServerKeyManagers(host);
         }
         TrustManager[] tms = sTrustManagerProvider != null ?
                 sTrustManagerProvider.provide(host, false) : null;
         return createContext(kms, tms);
     }
 
-    private SSLContext createClientContext(String host) throws GeneralSecurityException, IOException {
+    private SSLContext createClientContext(String host) throws GeneralSecurityException {
         KeyManager[] kms = sKeyManagerProvider != null ?
                 sKeyManagerProvider.provide(host, true) : null;
         TrustManager[] tms = sTrustManagerProvider != null ?
                 sTrustManagerProvider.provide(host, true) : null;
+        if (tms == null) {
+            tms = getClientTrustManager();
+        }
         return createContext(kms, tms);
     }
 
@@ -227,12 +237,32 @@ public final class SSLEngineFactory {
         }
     }
 
-    private KeyManager[] getServerKeyManagers(KeyStore keyStore) throws NoSuchAlgorithmException,
-            UnrecoverableKeyException, KeyStoreException {
+    private KeyManager[] getServerKeyManagers(String host) throws NoSuchAlgorithmException,
+            UnrecoverableKeyException, KeyStoreException, OperatorCreationException,
+            InvalidKeyException, IOException, SignatureException, NoSuchProviderException,
+            CertificateException {
+        KeyStore keyStore = mGenerator.generateServer(host, mJKS, mCaCert, mCaPrivKey);
         String keyManAlg = KeyManagerFactory.getDefaultAlgorithm();
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(keyManAlg);
         kmf.init(keyStore, mJKS.password());
         return kmf.getKeyManagers();
+    }
+
+    private TrustManager[] getClientTrustManager() {
+        try {
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(
+                    TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init((KeyStore) null);
+            TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+            if (trustManagers.length != 1 || !(trustManagers[0] instanceof X509TrustManager)) {
+                throw new KeyManagementException("Unexpected default trust managers:"
+                        + Arrays.toString(trustManagers));
+            }
+            return trustManagers;
+        } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+            NetBareLog.wtf(e);
+        }
+        return null;
     }
 
 }
