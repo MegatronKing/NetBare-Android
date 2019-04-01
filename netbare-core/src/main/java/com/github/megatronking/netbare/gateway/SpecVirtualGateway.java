@@ -64,38 +64,38 @@ public abstract class SpecVirtualGateway extends VirtualGateway {
     protected abstract void onSpecResponseFinished();
 
     @Override
-    public final void sendRequest(ByteBuffer buffer) throws IOException {
+    public final void onRequest(ByteBuffer buffer) throws IOException {
         if (mIsSpec) {
             onSpecRequest(buffer);
         } else {
-            super.sendRequest(buffer);
+            super.onRequest(buffer);
         }
     }
 
     @Override
-    public final void sendResponse(ByteBuffer buffer) throws IOException {
+    public final void onResponse(ByteBuffer buffer) throws IOException {
         if (mIsSpec) {
             onSpecResponse(buffer);
         } else {
-            super.sendResponse(buffer);
+            super.onResponse(buffer);
         }
     }
 
     @Override
-    public final void sendRequestFinished() {
+    public final void onRequestFinished() {
         if (mIsSpec) {
             onSpecRequestFinished();
         } else {
-            super.sendRequestFinished();
+            super.onRequestFinished();
         }
     }
 
     @Override
-    public final void sendResponseFinished() {
+    public final void onResponseFinished() {
         if (mIsSpec) {
             onSpecResponseFinished();
         } else {
-            super.sendResponseFinished();
+            super.onResponseFinished();
         }
     }
 

@@ -63,7 +63,7 @@ public class VirtualGateway {
      * @param buffer A byte buffer contains the net packet data.
      * @throws IOException If an I/O error has occurred.
      */
-    public void sendRequest(ByteBuffer buffer) throws IOException {
+    public void onRequest(ByteBuffer buffer) throws IOException {
         mRequest.process(buffer);
     }
 
@@ -73,20 +73,20 @@ public class VirtualGateway {
      * @param buffer A byte buffer contains the net packet data.
      * @throws IOException If an I/O error has occurred.
      */
-    public void sendResponse(ByteBuffer buffer) throws IOException {
+    public void onResponse(ByteBuffer buffer) throws IOException {
         mResponse.process(buffer);
     }
 
     /**
      * Notify virtual gateway that no longer has data sent to the server.
      */
-    public void sendRequestFinished() {
+    public void onRequestFinished() {
     }
 
     /**
      * Notify virtual gateway that no longer has data sent to the client.
      */
-    public void sendResponseFinished() {
+    public void onResponseFinished() {
     }
 
 }

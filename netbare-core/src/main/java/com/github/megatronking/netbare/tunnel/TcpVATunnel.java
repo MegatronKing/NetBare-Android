@@ -72,7 +72,7 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
             @Override
             public void onRead() throws IOException {
                 if (mProxyTunnel.isClosed()) {
-                    mGateway.sendResponseFinished();
+                    mGateway.onResponseFinished();
                     return;
                 }
                 ByteBuffer buffer = ByteBuffer.allocate(mMtu);
@@ -84,10 +84,10 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
                 }
                 if (len < 0 || mRemoteTunnel.isClosed()) {
                     NetBareUtils.closeQuietly(mProxyTunnel);
-                    mGateway.sendResponseFinished();
+                    mGateway.onResponseFinished();
                     return;
                 }
-                mGateway.sendRequest(buffer);
+                mGateway.onRequest(buffer);
             }
 
             @Override
@@ -116,7 +116,7 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
             @Override
             public void onRead() throws IOException {
                 if (mRemoteTunnel.isClosed()) {
-                    mGateway.sendRequestFinished();
+                    mGateway.onRequestFinished();
                     return;
                 }
                 ByteBuffer buffer = ByteBuffer.allocate(mMtu);
@@ -128,10 +128,10 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
                 }
                 if (len < 0 || mProxyTunnel.isClosed()) {
                     NetBareUtils.closeQuietly(mRemoteTunnel);
-                    mGateway.sendRequestFinished();
+                    mGateway.onRequestFinished();
                     return;
                 }
-                mGateway.sendResponse(buffer);
+                mGateway.onResponse(buffer);
             }
 
             @Override
@@ -156,8 +156,8 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
     public void close() {
         NetBareUtils.closeQuietly(mProxyTunnel);
         NetBareUtils.closeQuietly(mRemoteTunnel);
-        mGateway.sendRequestFinished();
-        mGateway.sendResponseFinished();
+        mGateway.onRequestFinished();
+        mGateway.onResponseFinished();
     }
 
 }

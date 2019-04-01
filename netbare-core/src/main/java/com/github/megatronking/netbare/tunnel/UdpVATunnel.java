@@ -94,8 +94,8 @@ public class UdpVATunnel extends VirtualGatewayTunnel implements NioCallback,
     @Override
     public void onRead() throws IOException {
         if (mRemoteTunnel.isClosed()) {
-            mGateway.sendRequestFinished();
-            mGateway.sendResponseFinished();
+            mGateway.onRequestFinished();
+            mGateway.onResponseFinished();
             return;
         }
         ByteBuffer buffer = ByteBuffer.allocate(mMtu);
@@ -109,7 +109,7 @@ public class UdpVATunnel extends VirtualGatewayTunnel implements NioCallback,
             close();
             return;
         }
-        mGateway.sendResponse(buffer);
+        mGateway.onResponse(buffer);
     }
 
     @Override
@@ -129,8 +129,8 @@ public class UdpVATunnel extends VirtualGatewayTunnel implements NioCallback,
     @Override
     public void close() {
         NetBareUtils.closeQuietly(mRemoteTunnel);
-        mGateway.sendRequestFinished();
-        mGateway.sendResponseFinished();
+        mGateway.onRequestFinished();
+        mGateway.onResponseFinished();
     }
 
     public void send(UdpHeader header) {
@@ -143,7 +143,7 @@ public class UdpVATunnel extends VirtualGatewayTunnel implements NioCallback,
         }
 
         try {
-            mGateway.sendRequest(header.data());
+            mGateway.onRequest(header.data());
         } catch (IOException e) {
             NetBareLog.e(e.getMessage());
             close();

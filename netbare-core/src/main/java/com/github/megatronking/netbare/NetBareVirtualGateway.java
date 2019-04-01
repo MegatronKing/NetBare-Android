@@ -78,58 +78,58 @@ public final class NetBareVirtualGateway extends VirtualGateway {
     }
 
     @Override
-    public void sendRequest(ByteBuffer buffer) throws IOException {
+    public void onRequest(ByteBuffer buffer) throws IOException {
         if (mRequestFinished) {
             mLog.w("Drop a buffer due to request has finished.");
             return;
         }
         resolvePolicyIfNecessary(buffer);
         if (mPolicy == POLICY_ALLOWED) {
-            mGateway.sendRequest(buffer);
+            mGateway.onRequest(buffer);
         } else if (mPolicy == POLICY_DISALLOWED) {
-            super.sendRequest(buffer);
+            super.onRequest(buffer);
         }
     }
 
     @Override
-    public void sendResponse(ByteBuffer buffer) throws IOException {
+    public void onResponse(ByteBuffer buffer) throws IOException {
         if (mResponseFinished) {
             mLog.w("Drop a buffer due to response has finished.");
             return;
         }
         resolvePolicyIfNecessary(buffer);
         if (mPolicy == POLICY_ALLOWED) {
-            mGateway.sendResponse(buffer);
+            mGateway.onResponse(buffer);
         } else if (mPolicy == POLICY_DISALLOWED) {
-            super.sendResponse(buffer);
+            super.onResponse(buffer);
         }
     }
 
     @Override
-    public void sendRequestFinished() {
+    public void onRequestFinished() {
         if (mRequestFinished) {
             return;
         }
         mLog.i("Gateway request finished!");
         mRequestFinished = true;
         if (mPolicy == POLICY_ALLOWED) {
-            mGateway.sendRequestFinished();
+            mGateway.onRequestFinished();
         } else if (mPolicy == POLICY_DISALLOWED) {
-            super.sendRequestFinished();
+            super.onRequestFinished();
         }
     }
 
     @Override
-    public void sendResponseFinished() {
+    public void onResponseFinished() {
         if (mResponseFinished) {
             return;
         }
         mLog.i("Gateway response finished!");
         mResponseFinished = true;
         if (mPolicy == POLICY_ALLOWED) {
-            mGateway.sendResponseFinished();
+            mGateway.onResponseFinished();
         } else if (mPolicy == POLICY_DISALLOWED) {
-            super.sendResponseFinished();
+            super.onResponseFinished();
         }
     }
 

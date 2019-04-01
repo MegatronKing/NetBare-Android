@@ -44,24 +44,24 @@ import java.util.List;
     }
 
     @Override
-    public void sendRequest(ByteBuffer buffer) throws IOException {
+    public void onRequest(ByteBuffer buffer) throws IOException {
         new RequestChain(mRequest, mInterceptors).process(buffer);
     }
 
     @Override
-    public void sendResponse(ByteBuffer buffer) throws IOException {
+    public void onResponse(ByteBuffer buffer) throws IOException {
         new ResponseChain(mResponse, mInterceptors).process(buffer);
     }
 
     @Override
-    public void sendRequestFinished() {
+    public void onRequestFinished() {
         for (Interceptor interceptor: mInterceptors) {
             interceptor.onRequestFinished(mRequest);
         }
     }
 
     @Override
-    public void sendResponseFinished() {
+    public void onResponseFinished() {
         for (Interceptor interceptor: mInterceptors) {
             interceptor.onResponseFinished(mResponse);
         }
