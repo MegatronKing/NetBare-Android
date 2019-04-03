@@ -15,6 +15,7 @@
  */
 package com.github.megatronking.netbare.ssl;
 
+import android.os.Build;
 import android.support.annotation.NonNull;
 
 import com.github.megatronking.netbare.NetBareLog;
@@ -145,7 +146,18 @@ public final class SSLEngineFactory {
                 return createServerContext(host);
             }
         });
-        return ctx.createSSLEngine();
+        SSLEngine engine;
+        // On Android 8.1, createSSLEngine will be crashed due to 'Unable to create application data'.
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O_MR1) {
+            try {
+                engine = ctx.createSSLEngine();
+            } catch (Exception e) {
+                throw new ExecutionException(e);
+            }
+        } else {
+            engine = ctx.createSSLEngine();
+        }
+        return engine;
     }
 
     /**
