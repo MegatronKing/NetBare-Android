@@ -42,13 +42,13 @@ public abstract class HttpPendingInterceptor extends HttpIndexInterceptor {
     }
 
     @Override
-    protected void onRequestFinished(@NonNull HttpRequest request) {
+    public void onRequestFinished(@NonNull HttpRequest request) {
         super.onRequestFinished(request);
         mRequestPendingBuffers.clear();
     }
 
     @Override
-    protected void onResponseFinished(@NonNull HttpResponse response) {
+    public void onResponseFinished(@NonNull HttpResponse response) {
         super.onResponseFinished(response);
         mResponsePendingBuffers.clear();
     }

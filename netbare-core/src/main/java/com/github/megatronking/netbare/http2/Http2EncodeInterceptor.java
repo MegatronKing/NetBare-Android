@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Megatron King
  * @since 2019/1/5 14:24
  */
-public final class Http2EncodeInterceptor extends HttpInterceptor {
+public final class Http2EncodeInterceptor implements HttpInterceptor {
 
     private final Map<Integer, Integer> mStreamRequestIndexes;
     private final Map<Integer, Integer> mStreamResponseIndexes;
@@ -55,7 +55,7 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
     }
 
     @Override
-    protected void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer)
+    public void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer)
             throws IOException {
         if (chain.request().httpProtocol() == HttpProtocol.HTTP_2) {
             if (mLog == null) {
@@ -86,7 +86,7 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
     }
 
     @Override
-    protected void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer)
+    public void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer)
             throws IOException {
         if (chain.response().httpProtocol() == HttpProtocol.HTTP_2) {
             if (mLog == null) {
@@ -113,6 +113,14 @@ public final class Http2EncodeInterceptor extends HttpInterceptor {
         } else {
             chain.process(buffer);
         }
+    }
+
+    @Override
+    public void onRequestFinished(@NonNull HttpRequest request) {
+    }
+
+    @Override
+    public void onResponseFinished(@NonNull HttpResponse response) {
     }
 
     private void encodeRequestHeader(HttpRequestChain chain) throws IOException {

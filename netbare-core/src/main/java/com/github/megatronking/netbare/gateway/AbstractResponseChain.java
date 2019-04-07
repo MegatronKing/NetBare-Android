@@ -15,23 +15,36 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import android.support.annotation.NonNull;
+import java.util.List;
 
 /**
- * Factory used by developer to create their own interceptor for virtual gateway.
+ * This is a specific chain for all the responses.
  *
  * @author Megatron King
- * @since 2018-11-02 23:46
+ * @since 2019/4/6 19:51
  */
-public interface InterceptorFactory<Req extends Request, C1 extends AbstractRequestChain<Req, ? extends Interceptor>,
-        Res extends Response, C2 extends AbstractResponseChain<Res, ? extends Interceptor>> {
+public abstract class AbstractResponseChain<T extends TunnelFlow, I extends Interceptor>
+        extends InterceptorChain<T, I> {
 
     /**
-     * Creates an interceptor instance and immediately returns it, it must not be null.
+     * Constructs an intercept chain for response.
      *
-     * @return A newly created interceptor.
+     * @param flow A {@link TunnelFlow} implementation.
+     * @param interceptors A collection of interceptors.
      */
-    @NonNull
-    Interceptor<Req, C1, Res, C2> create();
+    public AbstractResponseChain(T flow, List<I> interceptors) {
+        super(flow, interceptors);
+    }
+
+    /**
+     * Constructs an intercept chain for response.
+     *
+     * @param flow A {@link TunnelFlow} implementation.
+     * @param interceptors A collection of interceptors.
+     * @param index The head index.
+     */
+    public AbstractResponseChain(T flow, List<I> interceptors, int index) {
+        super(flow, interceptors, index);
+    }
 
 }

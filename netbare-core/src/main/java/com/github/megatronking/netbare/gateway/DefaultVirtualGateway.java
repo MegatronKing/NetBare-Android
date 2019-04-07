@@ -32,13 +32,13 @@ import java.util.List;
  */
 /* package */ class DefaultVirtualGateway extends VirtualGateway {
 
-    private final List<Interceptor> mInterceptors;
+    private final List<Interceptor<Request, RequestChain, Response, ResponseChain>> mInterceptors;
 
     /* package */ DefaultVirtualGateway(Session session, Request request, Response response,
-                                        List<InterceptorFactory> factories) {
+                                        List<InterceptorFactory<Request, RequestChain, Response, ResponseChain>> factories) {
         super(session, request, response);
         this.mInterceptors = new ArrayList<>(factories.size());
-        for (InterceptorFactory factory : factories) {
+        for (InterceptorFactory<Request, RequestChain, Response, ResponseChain> factory : factories) {
             mInterceptors.add(factory.create());
         }
     }
@@ -55,14 +55,14 @@ import java.util.List;
 
     @Override
     public void onRequestFinished() {
-        for (Interceptor interceptor: mInterceptors) {
+        for (Interceptor<Request, RequestChain, Response, ResponseChain> interceptor: mInterceptors) {
             interceptor.onRequestFinished(mRequest);
         }
     }
 
     @Override
     public void onResponseFinished() {
-        for (Interceptor interceptor: mInterceptors) {
+        for (Interceptor<Request, RequestChain, Response, ResponseChain> interceptor: mInterceptors) {
             interceptor.onResponseFinished(mResponse);
         }
     }

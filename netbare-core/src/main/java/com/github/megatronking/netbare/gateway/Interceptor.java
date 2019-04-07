@@ -32,7 +32,8 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-11-13 23:46
  */
-public interface Interceptor {
+public interface Interceptor<Req extends Request, C1 extends AbstractRequestChain<Req, ? extends Interceptor>,
+        Res extends Response, C2 extends AbstractResponseChain<Res, ? extends Interceptor>> {
 
     /**
      * Intercept request packet, and delivery it to next interceptor or the terminal.
@@ -46,7 +47,7 @@ public interface Interceptor {
      * @param buffer A nio buffer contains the packet data.
      * @throws IOException If an I/O error has occurred.
      */
-    void intercept(@NonNull RequestChain chain, @NonNull ByteBuffer buffer) throws IOException;
+    void intercept(@NonNull C1 chain, @NonNull ByteBuffer buffer) throws IOException;
 
     /**
      * Intercept request packet, and delivery it to next interceptor or the terminal.
@@ -59,7 +60,7 @@ public interface Interceptor {
      * @param buffer A nio buffer contains the packet data.
      * @throws IOException If an I/O error has occurred.
      */
-    void intercept(@NonNull ResponseChain chain, @NonNull ByteBuffer buffer) throws IOException;
+    void intercept(@NonNull C2 chain, @NonNull ByteBuffer buffer) throws IOException;
 
     /**
      * Invoked when a session's request has finished. It means the client has no more data sent to
@@ -67,7 +68,7 @@ public interface Interceptor {
      *
      * @param request The request.
      */
-    void onRequestFinished(@NonNull Request request);
+    void onRequestFinished(@NonNull Req request);
 
     /**
      * Invoked when a session's response has finished. It means the server has no more data sent to
@@ -75,6 +76,6 @@ public interface Interceptor {
      *
      * @param response The response.
      */
-    void onResponseFinished(@NonNull Response response);
+    void onResponseFinished(@NonNull Res response);
 
 }

@@ -27,24 +27,28 @@ import java.util.List;
  * @author Megatron King
  * @since 2018-11-14 23:18
  */
-public class RequestChain extends InterceptorChain<Request, Interceptor> {
+public class RequestChain extends AbstractRequestChain<Request, Interceptor<Request, RequestChain,
+        Response, ResponseChain>> {
 
     private Request mRequest;
 
-    /* package */ RequestChain(Request request, List<Interceptor> interceptors) {
+    /* package */ RequestChain(Request request, List<Interceptor<Request, RequestChain,
+            Response, ResponseChain>> interceptors) {
         super(request, interceptors);
         mRequest = request;
     }
 
-    private RequestChain(Request request, List<Interceptor> interceptors, int index) {
+    private RequestChain(Request request, List<Interceptor<Request, RequestChain,
+            Response, ResponseChain>> interceptors, int index) {
         super(request, interceptors, index);
         mRequest = request;
     }
 
     @Override
-    protected void processNext(ByteBuffer buffer, Request request, List<Interceptor> interceptors,
+    protected void processNext(ByteBuffer buffer, Request request, List<Interceptor<Request, RequestChain,
+            Response, ResponseChain>> interceptors,
                                int index) throws IOException {
-        Interceptor interceptor = interceptors.get(index);
+        Interceptor<Request, RequestChain, Response, ResponseChain> interceptor = interceptors.get(index);
         if (interceptor != null) {
             interceptor.intercept(new RequestChain(request, interceptors, ++index), buffer);
         }

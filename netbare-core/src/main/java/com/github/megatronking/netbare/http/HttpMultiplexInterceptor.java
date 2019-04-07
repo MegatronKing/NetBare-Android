@@ -81,7 +81,7 @@ import java.nio.ByteBuffer;
     }
 
     @Override
-    protected void onResponseFinished(@NonNull HttpResponse response) {
+    public void onResponseFinished(@NonNull HttpResponse response) {
         mResponseIndex = 0;
         super.onResponseFinished(response);
     }

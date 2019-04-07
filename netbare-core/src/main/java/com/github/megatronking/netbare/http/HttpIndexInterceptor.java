@@ -30,7 +30,7 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-12-03 21:00
  */
-public abstract class HttpIndexInterceptor extends HttpInterceptor {
+public abstract class HttpIndexInterceptor implements HttpInterceptor {
 
     private int mRequestIndex;
     private int mResponseIndex;
@@ -60,26 +60,24 @@ public abstract class HttpIndexInterceptor extends HttpInterceptor {
                                       int index) throws IOException;
 
     @Override
-    protected final void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer)
+    public final void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer)
             throws IOException {
         intercept(chain, buffer, mRequestIndex++);
     }
 
     @Override
-    protected final void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer)
+    public final void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer)
             throws IOException {
         intercept(chain, buffer, mResponseIndex++);
     }
 
     @Override
-    protected void onRequestFinished(@NonNull HttpRequest request) {
-        super.onRequestFinished(request);
+    public void onRequestFinished(@NonNull HttpRequest request) {
         mRequestIndex = 0;
     }
 
     @Override
-    protected void onResponseFinished(@NonNull HttpResponse response) {
-        super.onResponseFinished(response);
+    public void onResponseFinished(@NonNull HttpResponse response) {
         mResponseIndex = 0;
     }
 

@@ -17,7 +17,7 @@ package com.github.megatronking.netbare.http;
 
 import android.support.annotation.NonNull;
 
-import com.github.megatronking.netbare.gateway.InterceptorChain;
+import com.github.megatronking.netbare.gateway.AbstractRequestChain;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -29,7 +29,7 @@ import java.util.List;
  * @author Megatron King
  * @since 2018-11-16 23:21
  */
-public class HttpRequestChain extends InterceptorChain<HttpRequest, HttpInterceptor> {
+public class HttpRequestChain extends AbstractRequestChain<HttpRequest, HttpInterceptor> {
 
     private HttpZygoteRequest mZygoteRequest;
 

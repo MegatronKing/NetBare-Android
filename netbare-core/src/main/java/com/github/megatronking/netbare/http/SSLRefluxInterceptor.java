@@ -27,7 +27,7 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-11-15 15:39
  */
-/* package */ class SSLRefluxInterceptor extends HttpInterceptor {
+/* package */ class SSLRefluxInterceptor implements HttpInterceptor {
 
     private SSLRefluxCallback mRefluxCallback;
 
@@ -36,7 +36,7 @@ import java.nio.ByteBuffer;
     }
 
     @Override
-    protected void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer)
+    public void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer)
             throws IOException {
         if (chain.request().isHttps()) {
             mRefluxCallback.onRequest(chain.request(), buffer);
@@ -46,13 +46,21 @@ import java.nio.ByteBuffer;
     }
 
     @Override
-    protected void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer)
+    public void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer)
             throws IOException {
         if (chain.response().isHttps()) {
             mRefluxCallback.onResponse(chain.response(), buffer);
         } else {
             chain.process(buffer);
         }
+    }
+
+    @Override
+    public void onRequestFinished(@NonNull HttpRequest request) {
+    }
+
+    @Override
+    public void onResponseFinished(@NonNull HttpResponse response) {
     }
 
 }

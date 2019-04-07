@@ -123,13 +123,13 @@ import java.nio.ByteBuffer;
     }
 
     @Override
-    protected void onRequestFinished(@NonNull HttpRequest request) {
+    public void onRequestFinished(@NonNull HttpRequest request) {
         super.onRequestFinished(request);
         mRequestHeaderHandled = false;
     }
 
     @Override
-    protected void onResponseFinished(@NonNull HttpResponse response) {
+    public void onResponseFinished(@NonNull HttpResponse response) {
         super.onResponseFinished(response);
         mResponseHeaderHandled = false;
     }

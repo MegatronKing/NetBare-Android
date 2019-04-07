@@ -19,13 +19,12 @@ import android.support.annotation.NonNull;
 
 import com.github.megatronking.netbare.gateway.Request;
 import com.github.megatronking.netbare.gateway.Response;
-import com.github.megatronking.netbare.gateway.SpecVirtualGateway;
 import com.github.megatronking.netbare.gateway.VirtualGateway;
 import com.github.megatronking.netbare.http2.Http2DecodeInterceptor;
 import com.github.megatronking.netbare.http2.Http2EncodeInterceptor;
-import com.github.megatronking.netbare.ip.Protocol;
 import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.ssl.JKS;
+import com.github.megatronking.netbare.tcp.TcpVirtualGateway;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -41,7 +40,7 @@ import java.util.List;
  * @author Megatron King
  * @since 2018-11-20 23:43
  */
-/* package */ class HttpVirtualGateway extends SpecVirtualGateway {
+/* package */ class HttpVirtualGateway extends TcpVirtualGateway {
 
     private HttpZygoteRequest mHttpZygoteRequest;
     private HttpZygoteResponse mHttpZygoteResponse;
@@ -50,7 +49,7 @@ import java.util.List;
 
     /* package */ HttpVirtualGateway(Session session, Request request, Response response, JKS jks,
                                      final List<HttpInterceptorFactory> factories) {
-        super(Protocol.TCP, session, request, response);
+        super(session, request, response);
 
         HttpSessionFactory sessionFactory = new HttpSessionFactory();
         this.mHttpZygoteRequest = new HttpZygoteRequest(request, sessionFactory);

@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Megatron King
  * @since 2019/1/6 16:13
  */
-/* package */ class ContainerHttpInterceptor extends HttpInterceptor {
+/* package */ class ContainerHttpInterceptor implements HttpInterceptor {
 
     private final Map<String, Session> mSessions;
     private final HttpInterceptorsFactory mSubInterceptorsFactory;
@@ -42,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
     }
 
     @Override
-    protected void intercept(@NonNull final HttpRequestChain chain, @NonNull ByteBuffer buffer)
+    public void intercept(@NonNull final HttpRequestChain chain, @NonNull ByteBuffer buffer)
             throws IOException {
         HttpRequest request = chain.request();
         Session session = findSessionById(request.id());
@@ -54,7 +54,7 @@ import java.util.concurrent.ConcurrentHashMap;
     }
 
     @Override
-    protected void intercept(@NonNull final HttpResponseChain chain, @NonNull ByteBuffer buffer)
+    public void intercept(@NonNull final HttpResponseChain chain, @NonNull ByteBuffer buffer)
             throws IOException {
         HttpResponse response = chain.response();
         Session session = findSessionById(response.id());
@@ -66,7 +66,7 @@ import java.util.concurrent.ConcurrentHashMap;
     }
 
     @Override
-    protected void onRequestFinished(@NonNull HttpRequest request) {
+    public void onRequestFinished(@NonNull HttpRequest request) {
         if (request instanceof HttpZygoteRequest) {
             // This means the connection is down, finish all.
             for (Session session : mSessions.values()) {
@@ -88,7 +88,7 @@ import java.util.concurrent.ConcurrentHashMap;
     }
 
     @Override
-    protected void onResponseFinished(@NonNull HttpResponse response) {
+    public void onResponseFinished(@NonNull HttpResponse response) {
         if (response instanceof HttpZygoteResponse) {
             // This means the connection is down, finish all.
             for (Session session : mSessions.values()) {

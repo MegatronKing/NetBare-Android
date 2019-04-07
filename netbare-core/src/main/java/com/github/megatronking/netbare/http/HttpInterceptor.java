@@ -15,16 +15,7 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
-
 import com.github.megatronking.netbare.gateway.Interceptor;
-import com.github.megatronking.netbare.gateway.Request;
-import com.github.megatronking.netbare.gateway.RequestChain;
-import com.github.megatronking.netbare.gateway.Response;
-import com.github.megatronking.netbare.gateway.ResponseChain;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
 
 /**
  * A specific interceptor designed for {@link HttpVirtualGateway}, it focuses on the http protocol
@@ -38,74 +29,6 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-11-15 19:40
  */
-public abstract class HttpInterceptor implements Interceptor {
-
-    /**
-     * Intercept http request packet, and delivery it to next interceptor or the terminal.
-     * <p>
-     * Remember do not block this method for a long time, because all the connections share the
-     * same thread.
-     * </p>
-     *
-     * @param chain The request chain, call {@linkplain HttpRequestChain#process(ByteBuffer)} to
-     *                delivery the packet.
-     * @param buffer A nio buffer contains the packet data.
-     * @throws IOException If an I/O error has occurred.
-     */
-    protected abstract void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer)
-            throws IOException;
-
-    /**
-     * Intercept http response packet, and delivery it to next interceptor or the terminal.
-     * <p>
-     * Remember do not block this method for a long time, because all the connections share the
-     * same thread.
-     * </p>
-     *
-     * @param chain The response chain, call {@linkplain HttpResponseChain#process(ByteBuffer)} to
-     *                delivery the packet.
-     * @param buffer A nio buffer contains the packet data.
-     * @throws IOException If an I/O error has occurred.
-     */
-    protected abstract void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer)
-            throws IOException;
-
-    /**
-     * Invoked when a session's request has finished. It means the client has no more data sent to
-     * server in this session, and it might invoked multi times if a connection is keep-alive.
-     *
-     * @param request The request.
-     */
-    protected void onRequestFinished(@NonNull HttpRequest request) {
-    }
-
-    /**
-     * Invoked when a session's response has finished. It means the server has no more data sent to
-     * client in this session, and it might invoked multi times if a connection is keep-alive.
-     *
-     * @param response The response.
-     */
-    protected void onResponseFinished(@NonNull HttpResponse response) {
-    }
-
-    @Override
-    public final void intercept(@NonNull RequestChain chain, @NonNull ByteBuffer buffer) {
-        // Override the abstract method instead.
-    }
-
-    @Override
-    public final void intercept(@NonNull ResponseChain chain, @NonNull ByteBuffer buffer) {
-        // Override the abstract method instead.
-    }
-
-    @Override
-    public final void onRequestFinished(@NonNull Request request) {
-        // Override the abstract method instead.
-    }
-
-    @Override
-    public final void onResponseFinished(@NonNull Response response) {
-        // Override the abstract method instead.
-    }
-
+public interface HttpInterceptor extends Interceptor<HttpRequest, HttpRequestChain,
+        HttpResponse, HttpResponseChain> {
 }
