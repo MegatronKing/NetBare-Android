@@ -39,21 +39,22 @@ public class RequestChain extends AbstractRequestChain<Request, Interceptor<Requ
     }
 
     private RequestChain(Request request, List<Interceptor<Request, RequestChain,
-            Response, ResponseChain>> interceptors, int index) {
-        super(request, interceptors, index);
+            Response, ResponseChain>> interceptors, int index, Object tag) {
+        super(request, interceptors, index, tag);
         mRequest = request;
     }
 
     @Override
     protected void processNext(ByteBuffer buffer, Request request, List<Interceptor<Request, RequestChain,
             Response, ResponseChain>> interceptors,
-                               int index) throws IOException {
+                               int index, Object tag) throws IOException {
         Interceptor<Request, RequestChain, Response, ResponseChain> interceptor = interceptors.get(index);
         if (interceptor != null) {
-            interceptor.intercept(new RequestChain(request, interceptors, ++index), buffer);
+            interceptor.intercept(new RequestChain(request, interceptors, ++index, tag), buffer);
         }
     }
 
+    @Override
     @NonNull
     public Request request() {
         return mRequest;

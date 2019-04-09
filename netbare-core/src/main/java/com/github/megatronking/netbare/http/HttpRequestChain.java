@@ -34,12 +34,12 @@ public class HttpRequestChain extends AbstractRequestChain<HttpRequest, HttpInte
     private HttpZygoteRequest mZygoteRequest;
 
     /* package */ HttpRequestChain(HttpZygoteRequest request, List<HttpInterceptor> interceptors) {
-        this(request, interceptors, 0);
+        this(request, interceptors, 0, null);
     }
 
     /* package */ HttpRequestChain(HttpZygoteRequest request, List<HttpInterceptor> interceptors,
-                                   int index) {
-        super(request, interceptors, index);
+                                   int index, Object tag) {
+        super(request, interceptors, index, tag);
         this.mZygoteRequest = request;
     }
 
@@ -49,13 +49,14 @@ public class HttpRequestChain extends AbstractRequestChain<HttpRequest, HttpInte
 
     @Override
     protected void processNext(ByteBuffer buffer, HttpRequest request,
-                               List<HttpInterceptor> interceptors, int index) throws IOException {
+                               List<HttpInterceptor> interceptors, int index, Object tag) throws IOException {
         HttpInterceptor interceptor = interceptors.get(index);
         if (interceptor != null) {
-            interceptor.intercept(new HttpRequestChain(mZygoteRequest, interceptors, ++index), buffer);
+            interceptor.intercept(new HttpRequestChain(mZygoteRequest, interceptors, ++index, tag), buffer);
         }
     }
 
+    @Override
     @NonNull
     public HttpRequest request() {
         HttpRequest active = mZygoteRequest.getActive();

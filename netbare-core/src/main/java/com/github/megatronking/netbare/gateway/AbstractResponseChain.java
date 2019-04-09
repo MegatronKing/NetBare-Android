@@ -23,28 +23,36 @@ import java.util.List;
  * @author Megatron King
  * @since 2019/4/6 19:51
  */
-public abstract class AbstractResponseChain<T extends TunnelFlow, I extends Interceptor>
-        extends InterceptorChain<T, I> {
+public abstract class AbstractResponseChain<Res extends Response, I extends Interceptor>
+        extends InterceptorChain<Res, I> {
+
+    /**
+     * Get the current response instance in this chain.
+     *
+     * @return An instance of {@link Response}.
+     */
+    public abstract Res response();
 
     /**
      * Constructs an intercept chain for response.
      *
-     * @param flow A {@link TunnelFlow} implementation.
+     * @param response A {@link Response} implementation.
      * @param interceptors A collection of interceptors.
      */
-    public AbstractResponseChain(T flow, List<I> interceptors) {
-        super(flow, interceptors);
+    public AbstractResponseChain(Res response, List<I> interceptors) {
+        super(response, interceptors);
     }
 
     /**
      * Constructs an intercept chain for response.
      *
-     * @param flow A {@link TunnelFlow} implementation.
+     * @param response A {@link Response} implementation.
      * @param interceptors A collection of interceptors.
      * @param index The head index.
+     * @param tag The chain's tag.
      */
-    public AbstractResponseChain(T flow, List<I> interceptors, int index) {
-        super(flow, interceptors, index);
+    protected AbstractResponseChain(Res response, List<I> interceptors, int index, Object tag) {
+        super(response, interceptors, index, tag);
     }
 
 }

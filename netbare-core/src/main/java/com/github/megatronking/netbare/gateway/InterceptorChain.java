@@ -36,15 +36,22 @@ public abstract class InterceptorChain<T extends TunnelFlow, I extends Intercept
     private int mIndex;
 
     /**
+     * The chain's tag.
+     */
+    private Object mTag;
+
+    /**
      * Hand the net packets to the next {@link Interceptor}.
      *
      * @param buffer A buffer contains net packet data.
      * @param flow A {@link TunnelFlow} implementation.
      * @param interceptors A collection of all interceptors in chain.
      * @param index The next interceptor index.
+     * @param tag The chain's tag.
      * @throws IOException If an I/O error has occurred.
      */
-    protected abstract void processNext(ByteBuffer buffer, T flow, List<I> interceptors, int index)
+    protected abstract void processNext(ByteBuffer buffer, T flow, List<I> interceptors, int index,
+                                        Object tag)
             throws IOException;
 
     /**
@@ -54,7 +61,7 @@ public abstract class InterceptorChain<T extends TunnelFlow, I extends Intercept
      * @param interceptors A collection of interceptors.
      */
     public InterceptorChain(T flow, List<I> interceptors) {
-        this(flow, interceptors, 0);
+        this(flow, interceptors, 0, null);
     }
 
     /**
@@ -63,12 +70,14 @@ public abstract class InterceptorChain<T extends TunnelFlow, I extends Intercept
      *
      * @param flow A {@link TunnelFlow} implementation.
      * @param interceptors A collection of interceptors.
+     * @param tag The chain's tag.
      * @param index The head index.
      */
-    public InterceptorChain(T flow, List<I> interceptors, int index) {
+    public InterceptorChain(T flow, List<I> interceptors, int index, Object tag) {
         this.mFlow = flow;
         this.mInterceptors = interceptors;
         this.mIndex = index;
+        this.mTag = tag;
     }
 
     /**
@@ -92,8 +101,26 @@ public abstract class InterceptorChain<T extends TunnelFlow, I extends Intercept
         if (mIndex >= mInterceptors.size()) {
             processFinal(buffer);
         } else {
-            processNext(buffer, mFlow, mInterceptors, mIndex);
+            processNext(buffer, mFlow, mInterceptors, mIndex, mTag);
         }
+    }
+
+    /**
+     * Sets the tag associated with this chain. A tag can be used to mark the session.
+     *
+     * @param tag An Object to tag the chain with.
+     */
+    public void setTag(Object tag) {
+        mTag = tag;
+    }
+
+    /**
+     * Returns this chain's tag.
+     *
+     *  @return The Object stored in this chain as a tag, or {@code null} if not set.
+     */
+    public Object getTag() {
+        return mTag;
     }
 
 }

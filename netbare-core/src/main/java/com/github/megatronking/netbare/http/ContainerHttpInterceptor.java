@@ -132,17 +132,19 @@ import java.util.concurrent.ConcurrentHashMap;
         private final HttpRequestChain mChain;
         private final List<HttpInterceptor> mInterceptors;
         private final int mIndex;
+        private final Object mTag;
 
         private HttpContainerRequestChain(HttpRequestChain chain, List<HttpInterceptor> interceptors) {
-            this(chain, interceptors, 0);
+            this(chain, interceptors, 0, null);
         }
 
         private HttpContainerRequestChain(HttpRequestChain chain, List<HttpInterceptor> interceptors,
-                                          int index) {
-            super(chain.zygoteRequest(), interceptors, index);
+                                          int index, Object tag) {
+            super(chain.zygoteRequest(), interceptors, index, tag);
             this.mChain = chain;
             this.mInterceptors = interceptors;
             this.mIndex = index;
+            this.mTag = tag;
         }
 
         @Override
@@ -153,7 +155,7 @@ import java.util.concurrent.ConcurrentHashMap;
                 HttpInterceptor interceptor = mInterceptors.get(mIndex);
                 if (interceptor != null) {
                     interceptor.intercept(new HttpContainerRequestChain(mChain, mInterceptors,
-                            mIndex + 1), buffer);
+                            mIndex + 1, mTag), buffer);
                 }
             }
         }
@@ -165,17 +167,19 @@ import java.util.concurrent.ConcurrentHashMap;
         private final HttpResponseChain mChain;
         private final List<HttpInterceptor> mInterceptors;
         private final int mIndex;
+        private final Object mTag;
 
         private HttpContainerResponseChain(HttpResponseChain chain, List<HttpInterceptor> interceptors) {
-            this(chain, interceptors, 0);
+            this(chain, interceptors, 0, null);
         }
 
         private HttpContainerResponseChain(HttpResponseChain chain, List<HttpInterceptor> interceptors,
-                                          int index) {
-            super(chain.zygoteResponse(), interceptors, index);
+                                          int index, Object tag) {
+            super(chain.zygoteResponse(), interceptors, index, tag);
             this.mChain = chain;
             this.mInterceptors = interceptors;
             this.mIndex = index;
+            this.mTag = tag;
         }
 
         @Override
@@ -186,7 +190,7 @@ import java.util.concurrent.ConcurrentHashMap;
                 HttpInterceptor interceptor = mInterceptors.get(mIndex);
                 if (interceptor != null) {
                     interceptor.intercept(new HttpContainerResponseChain(mChain, mInterceptors,
-                            mIndex + 1), buffer);
+                            mIndex + 1, mTag), buffer);
                 }
             }
         }

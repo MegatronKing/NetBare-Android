@@ -39,21 +39,22 @@ public class ResponseChain extends AbstractResponseChain<Response, Interceptor<R
     }
 
     private ResponseChain(Response response, List<Interceptor<Request, RequestChain,
-            Response, ResponseChain>> interceptors, int index) {
-        super(response, interceptors, index);
+            Response, ResponseChain>> interceptors, int index, Object tag) {
+        super(response, interceptors, index, tag);
         mResponse = response;
     }
 
     @Override
     protected void processNext(ByteBuffer buffer, Response response, List<Interceptor<Request, RequestChain,
             Response, ResponseChain>> interceptors,
-                               int index) throws IOException {
+                               int index, Object tag) throws IOException {
         Interceptor<Request, RequestChain, Response, ResponseChain> interceptor = interceptors.get(index);
         if (interceptor != null) {
-            interceptor.intercept(new ResponseChain(response, interceptors, ++index), buffer);
+            interceptor.intercept(new ResponseChain(response, interceptors, ++index, tag), buffer);
         }
     }
 
+    @Override
     @NonNull
     public Response response() {
         return mResponse;

@@ -15,12 +15,8 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
-
+import com.github.megatronking.netbare.gateway.SSLRefluxInterceptor;
 import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
 
 /**
  * An interceptor locates at the last layer of the interceptors. It is responsible for send
@@ -29,40 +25,22 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-11-15 15:39
  */
-/* package */ class HttpSSLRefluxInterceptor implements HttpInterceptor {
-
-    private SSLRefluxCallback<HttpRequest, HttpResponse> mRefluxCallback;
+/* package */ class HttpSSLRefluxInterceptor extends
+        SSLRefluxInterceptor<HttpRequest, HttpRequestChain, HttpResponse, HttpResponseChain>
+        implements HttpInterceptor {
 
     /* package */ HttpSSLRefluxInterceptor(SSLRefluxCallback<HttpRequest, HttpResponse> refluxCallback) {
-        this.mRefluxCallback = refluxCallback;
+        super(refluxCallback);
     }
 
     @Override
-    public void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer)
-            throws IOException {
-        if (chain.request().isHttps()) {
-            mRefluxCallback.onRequest(chain.request(), buffer);
-        } else {
-            chain.process(buffer);
-        }
+    protected boolean shouldReflux(HttpRequestChain chain) {
+        return chain.request().isHttps();
     }
 
     @Override
-    public void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer)
-            throws IOException {
-        if (chain.response().isHttps()) {
-            mRefluxCallback.onResponse(chain.response(), buffer);
-        } else {
-            chain.process(buffer);
-        }
-    }
-
-    @Override
-    public void onRequestFinished(@NonNull HttpRequest request) {
-    }
-
-    @Override
-    public void onResponseFinished(@NonNull HttpResponse response) {
+    protected boolean shouldReflux(HttpResponseChain chain) {
+        return chain.response().isHttps();
     }
 
 }
