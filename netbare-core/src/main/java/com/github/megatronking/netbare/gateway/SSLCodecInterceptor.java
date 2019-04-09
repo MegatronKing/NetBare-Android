@@ -18,7 +18,6 @@ package com.github.megatronking.netbare.gateway;
 import android.support.annotation.NonNull;
 
 import com.github.megatronking.netbare.NetBareXLog;
-import com.github.megatronking.netbare.ip.Protocol;
 import com.github.megatronking.netbare.ssl.SSLCodec;
 import com.github.megatronking.netbare.ssl.SSLEngineFactory;
 import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
@@ -34,7 +33,7 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2019/4/9 21:39
  */
-public class SSLCodecInterceptor<Req extends Request, ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
+public abstract class SSLCodecInterceptor<Req extends Request, ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
         Res extends Response, ResChain extends AbstractResponseChain<Res, ? extends Interceptor>>
         extends PendingIndexedInterceptor<Req, ReqChain, Res, ResChain>
         implements SSLRefluxCallback<Req, Res> {
@@ -48,6 +47,22 @@ public class SSLCodecInterceptor<Req extends Request, ReqChain extends AbstractR
 
     private NetBareXLog mLog;
 
+    /**
+     * Should decrypt the request buffer with SSL codec.
+     *
+     * @param chain The request chain.
+     * @return True if needs to decrypt.
+     */
+    protected abstract boolean shouldDecrypt(ReqChain chain);
+
+    /**
+     * Should decrypt the response buffer with SSL codec.
+     *
+     * @param chain The response chain.
+     * @return True if needs to decrypt.
+     */
+    protected abstract boolean shouldDecrypt(ResChain chain);
+
     public SSLCodecInterceptor(SSLEngineFactory engineFactory, Req request, Res response) {
         this.mEngineFactory = engineFactory;
         this.mRequest = request;
@@ -55,7 +70,7 @@ public class SSLCodecInterceptor<Req extends Request, ReqChain extends AbstractR
         mRequestCodec = new SSLRequestCodec(engineFactory);
         mResponseCodec = new SSLResponseCodec(engineFactory);
 
-        mLog = new NetBareXLog(Protocol.TCP, request.ip(), request.port());
+        mLog = new NetBareXLog(request.protocol(), request.ip(), request.port());
     }
 
     @Override
@@ -65,8 +80,10 @@ public class SSLCodecInterceptor<Req extends Request, ReqChain extends AbstractR
             // Skip all interceptors
             chain.processFinal(buffer);
             mLog.w("JSK not installed, skip all interceptors!");
-        } else {
+        } else if (shouldDecrypt(chain)) {
             decodeRequest(chain, buffer);
+        } else {
+            chain.process(buffer);
         }
     }
 
@@ -77,8 +94,10 @@ public class SSLCodecInterceptor<Req extends Request, ReqChain extends AbstractR
             // Skip all interceptors
             chain.processFinal(buffer);
             mLog.w("JSK not installed, skip all interceptors!");
-        } else {
+        } else if (shouldDecrypt(chain)) {
             decodeResponse(chain, buffer);
+        } else {
+            chain.process(buffer);
         }
     }
 
