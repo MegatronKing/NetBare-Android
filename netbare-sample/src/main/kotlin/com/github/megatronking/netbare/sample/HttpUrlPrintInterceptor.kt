@@ -1,7 +1,7 @@
 package com.github.megatronking.netbare.sample
 
 import android.util.Log
-import com.github.megatronking.netbare.http.HttpIndexInterceptor
+import com.github.megatronking.netbare.http.HttpIndexedInterceptor
 import com.github.megatronking.netbare.http.HttpInterceptorFactory
 import com.github.megatronking.netbare.http.HttpRequestChain
 import com.github.megatronking.netbare.http.HttpResponseChain
@@ -13,7 +13,7 @@ import java.nio.ByteBuffer
  * @author Megatron King
  * @since 2019/1/2 22:05
  */
-class HttpUrlPrintInterceptor : HttpIndexInterceptor() {
+class HttpUrlPrintInterceptor : HttpIndexedInterceptor() {
 
     companion object {
         const val TAG = "URL"

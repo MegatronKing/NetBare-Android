@@ -33,7 +33,7 @@ import java.util.List;
  * @author Megatron King
  * @since 2018-12-09 12:19
  */
-/* package */ final class HttpHeaderParseInterceptor extends HttpIndexInterceptor {
+/* package */ final class HttpHeaderParseInterceptor extends HttpIndexedInterceptor {
 
     private NetBareXLog mLog;
 

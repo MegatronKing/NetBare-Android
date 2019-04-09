@@ -32,7 +32,7 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-12-15 15:17
  */
-/* package */ class HttpMultiplexInterceptor extends HttpIndexInterceptor {
+/* package */ class HttpMultiplexInterceptor extends HttpIndexedInterceptor {
 
     private final HttpZygoteRequest mZygoteRequest;
     private final HttpZygoteResponse mZygoteResponse;

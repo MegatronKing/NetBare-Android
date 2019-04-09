@@ -30,7 +30,7 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-12-29 22:25
  */
-public final class HttpInjectInterceptor extends HttpIndexInterceptor {
+public final class HttpInjectInterceptor extends HttpIndexedInterceptor {
 
     private boolean mShouldInjectRequest;
     private boolean mShouldInjectResponse;

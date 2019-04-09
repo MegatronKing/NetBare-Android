@@ -31,7 +31,7 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-12-04 11:58
  */
-/* package */ final class HttpSniffInterceptor extends HttpIndexInterceptor {
+/* package */ final class HttpSniffInterceptor extends HttpIndexedInterceptor {
 
     private static final int TYPE_HTTP = 1;
     private static final int TYPE_HTTPS = 2;

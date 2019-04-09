@@ -31,7 +31,7 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2019/1/5 14:02
  */
-/* package */ class Http2SniffInterceptor extends HttpIndexInterceptor {
+/* package */ class Http2SniffInterceptor extends HttpIndexedInterceptor {
 
     private SSLRefluxCallback<HttpRequest, HttpResponse> mCallback;
     private NetBareXLog mLog;
