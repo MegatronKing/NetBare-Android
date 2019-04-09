@@ -24,10 +24,12 @@ import com.github.megatronking.netbare.http2.Http2DecodeInterceptor;
 import com.github.megatronking.netbare.http2.Http2EncodeInterceptor;
 import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.ssl.JKS;
+import com.github.megatronking.netbare.ssl.SSLEngineFactory;
 import com.github.megatronking.netbare.tcp.TcpVirtualGateway;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,8 +57,15 @@ import java.util.List;
         this.mHttpZygoteRequest = new HttpZygoteRequest(request, sessionFactory);
         this.mHttpZygoteResponse = new HttpZygoteResponse(response, sessionFactory);
 
+        SSLEngineFactory sslEngineFactory;
+        try {
+            sslEngineFactory = SSLEngineFactory.get(jks);
+        } catch (GeneralSecurityException | IOException e) {
+            sslEngineFactory = null;
+        }
+
         // Add default interceptors.
-        HttpSSLCodecInterceptor codecInterceptor = new HttpSSLCodecInterceptor(jks, request, response);
+        HttpSSLCodecInterceptor codecInterceptor = new HttpSSLCodecInterceptor(sslEngineFactory, request, response);
         this.mInterceptors = new ArrayList<>(8);
 
         mInterceptors.add(new HttpSniffInterceptor(sessionFactory.create(session.id)));

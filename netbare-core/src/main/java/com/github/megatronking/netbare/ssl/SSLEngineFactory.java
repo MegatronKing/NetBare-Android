@@ -89,6 +89,8 @@ public final class SSLEngineFactory {
     private static final Cache<String, SSLContext> SERVER_SSL_CONTEXTS;
     private static final Cache<String, SSLContext> CLIENT_SSL_CONTEXTS;
 
+    private static volatile SSLEngineFactory sEngineFactory;
+
     private static SSLKeyManagerProvider sKeyManagerProvider;
     private static SSLTrustManagerProvider sTrustManagerProvider;
 
@@ -116,6 +118,17 @@ public final class SSLEngineFactory {
         // Clean all context caches.
         SERVER_SSL_CONTEXTS.invalidateAll();
         CLIENT_SSL_CONTEXTS.invalidateAll();
+    }
+
+    public static SSLEngineFactory get(JKS jks) throws GeneralSecurityException, IOException {
+        if (sEngineFactory == null) {
+            synchronized (SSLEngineFactory.class) {
+                if (sEngineFactory == null) {
+                    sEngineFactory = new SSLEngineFactory(jks);
+                }
+            }
+        }
+        return sEngineFactory;
     }
 
     /**

@@ -17,12 +17,10 @@ package com.github.megatronking.netbare.http;
 
 import android.support.annotation.NonNull;
 
-import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.gateway.Request;
 import com.github.megatronking.netbare.gateway.Response;
 import com.github.megatronking.netbare.ip.Protocol;
-import com.github.megatronking.netbare.ssl.JKS;
 import com.github.megatronking.netbare.ssl.SSLCodec;
 import com.github.megatronking.netbare.ssl.SSLEngineFactory;
 import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
@@ -30,7 +28,6 @@ import com.github.megatronking.netbare.ssl.SSLUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.security.GeneralSecurityException;
 
 /**
  * An interceptor decodes SSL encrypt packets to plaintext packets.
@@ -41,12 +38,9 @@ import java.security.GeneralSecurityException;
 /* package */ class HttpSSLCodecInterceptor extends HttpPendingInterceptor implements
         SSLRefluxCallback<HttpRequest, HttpResponse> {
 
-    private static SSLEngineFactory sEngineFactory;
-
+    private SSLEngineFactory mEngineFactory;
     private Request mRequest;
     private Response mResponse;
-
-    private JKS mJKS;
 
     private HttpSSLRequestCodec mRequestCodec;
     private HttpSSLResponseCodec mResponseCodec;
@@ -55,21 +49,12 @@ import java.security.GeneralSecurityException;
 
     private boolean mClientAlpnResolved;
 
-    /* package */ HttpSSLCodecInterceptor(JKS jks, Request request, Response response) {
-        this.mJKS = jks;
+    /* package */ HttpSSLCodecInterceptor(SSLEngineFactory engineFactory, Request request, Response response) {
+        this.mEngineFactory = engineFactory;
         this.mRequest = request;
         this.mResponse = response;
-
-        if (sEngineFactory == null) {
-            try {
-                sEngineFactory = new SSLEngineFactory(jks);
-            } catch (GeneralSecurityException | IOException e) {
-                NetBareLog.e("Create SSLEngineFactory failed: " + e.getMessage());
-            }
-        }
-
-        mRequestCodec = new HttpSSLRequestCodec(sEngineFactory);
-        mResponseCodec = new HttpSSLResponseCodec(sEngineFactory);
+        mRequestCodec = new HttpSSLRequestCodec(engineFactory);
+        mResponseCodec = new HttpSSLResponseCodec(engineFactory);
 
         mLog = new NetBareXLog(Protocol.TCP, request.ip(), request.port());
     }
@@ -79,7 +64,7 @@ import java.security.GeneralSecurityException;
                              int index) throws IOException {
         if (!chain.request().isHttps()) {
             chain.process(buffer);
-        } else if (!mJKS.isInstalled()) {
+        } else if (mEngineFactory == null) {
             // Skip all interceptors
             chain.processFinal(buffer);
             mLog.w("JSK not installed, skip all interceptors!");
@@ -145,7 +130,7 @@ import java.security.GeneralSecurityException;
                              int index) throws IOException {
         if (!chain.response().isHttps()) {
             chain.process(buffer);
-        } else if (!mJKS.isInstalled()) {
+        } else if (mEngineFactory == null) {
             // Skip all interceptors
             chain.processFinal(buffer);
             mLog.w("JSK not installed, skip all interceptors!");
