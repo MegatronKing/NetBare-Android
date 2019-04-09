@@ -39,7 +39,7 @@ public abstract class AbstractRequestChain<Req extends Request, I extends Interc
      * @param request A {@link Request} implementation.
      * @param interceptors A collection of interceptors.
      */
-    public AbstractRequestChain(Req request, List<I> interceptors) {
+    protected AbstractRequestChain(Req request, List<I> interceptors) {
         super(request, interceptors);
     }
 

@@ -39,7 +39,7 @@ public abstract class AbstractResponseChain<Res extends Response, I extends Inte
      * @param response A {@link Response} implementation.
      * @param interceptors A collection of interceptors.
      */
-    public AbstractResponseChain(Res response, List<I> interceptors) {
+    protected AbstractResponseChain(Res response, List<I> interceptors) {
         super(response, interceptors);
     }
 

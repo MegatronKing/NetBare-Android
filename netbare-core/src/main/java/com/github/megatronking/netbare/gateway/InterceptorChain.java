@@ -60,7 +60,7 @@ public abstract class InterceptorChain<T extends TunnelFlow, I extends Intercept
      * @param flow A {@link TunnelFlow} implementation.
      * @param interceptors A collection of interceptors.
      */
-    public InterceptorChain(T flow, List<I> interceptors) {
+    protected InterceptorChain(T flow, List<I> interceptors) {
         this(flow, interceptors, 0, null);
     }
 
@@ -73,7 +73,7 @@ public abstract class InterceptorChain<T extends TunnelFlow, I extends Intercept
      * @param tag The chain's tag.
      * @param index The head index.
      */
-    public InterceptorChain(T flow, List<I> interceptors, int index, Object tag) {
+    protected InterceptorChain(T flow, List<I> interceptors, int index, Object tag) {
         this.mFlow = flow;
         this.mInterceptors = interceptors;
         this.mIndex = index;
