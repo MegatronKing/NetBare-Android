@@ -23,8 +23,8 @@ import android.support.annotation.NonNull;
  * @author Megatron King
  * @since 2018-11-02 23:46
  */
-public interface InterceptorFactory<Req extends Request, C1 extends AbstractRequestChain<Req, ? extends Interceptor>,
-        Res extends Response, C2 extends AbstractResponseChain<Res, ? extends Interceptor>> {
+public interface InterceptorFactory<Req extends Request, ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
+        Res extends Response, ResChain extends AbstractResponseChain<Res, ? extends Interceptor>> {
 
     /**
      * Creates an interceptor instance and immediately returns it, it must not be null.
@@ -32,6 +32,6 @@ public interface InterceptorFactory<Req extends Request, C1 extends AbstractRequ
      * @return A newly created interceptor.
      */
     @NonNull
-    Interceptor<Req, C1, Res, C2> create();
+    Interceptor<Req, ReqChain, Res, ResChain> create();
 
 }

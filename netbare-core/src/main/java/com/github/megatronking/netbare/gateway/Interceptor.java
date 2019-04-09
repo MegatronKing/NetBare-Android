@@ -32,8 +32,8 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-11-13 23:46
  */
-public interface Interceptor<Req extends Request, C1 extends AbstractRequestChain<Req, ? extends Interceptor>,
-        Res extends Response, C2 extends AbstractResponseChain<Res, ? extends Interceptor>> {
+public interface Interceptor<Req extends Request, ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
+        Res extends Response, ResChain extends AbstractResponseChain<Res, ? extends Interceptor>> {
 
     /**
      * Intercept request packet, and delivery it to next interceptor or the terminal.
@@ -47,7 +47,7 @@ public interface Interceptor<Req extends Request, C1 extends AbstractRequestChai
      * @param buffer A nio buffer contains the packet data.
      * @throws IOException If an I/O error has occurred.
      */
-    void intercept(@NonNull C1 chain, @NonNull ByteBuffer buffer) throws IOException;
+    void intercept(@NonNull ReqChain chain, @NonNull ByteBuffer buffer) throws IOException;
 
     /**
      * Intercept request packet, and delivery it to next interceptor or the terminal.
@@ -60,7 +60,7 @@ public interface Interceptor<Req extends Request, C1 extends AbstractRequestChai
      * @param buffer A nio buffer contains the packet data.
      * @throws IOException If an I/O error has occurred.
      */
-    void intercept(@NonNull C2 chain, @NonNull ByteBuffer buffer) throws IOException;
+    void intercept(@NonNull ResChain chain, @NonNull ByteBuffer buffer) throws IOException;
 
     /**
      * Invoked when a session's request has finished. It means the client has no more data sent to

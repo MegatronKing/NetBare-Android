@@ -28,9 +28,9 @@ import java.util.List;
  * @author Megatron King
  * @since 2018-12-09 12:07
  */
-public abstract class PendingIndexedInterceptor <Req extends Request, C1 extends AbstractRequestChain<Req, ? extends Interceptor>,
-        Res extends Response, C2 extends AbstractResponseChain<Res, ? extends Interceptor>>
-        extends IndexedInterceptor<Req, C1, Res, C2> {
+public abstract class PendingIndexedInterceptor <Req extends Request, ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
+        Res extends Response, ResChain extends AbstractResponseChain<Res, ? extends Interceptor>>
+        extends IndexedInterceptor<Req, ReqChain, Res, ResChain> {
 
     private List<ByteBuffer> mRequestPendingBuffers;
     private List<ByteBuffer> mResponsePendingBuffers;

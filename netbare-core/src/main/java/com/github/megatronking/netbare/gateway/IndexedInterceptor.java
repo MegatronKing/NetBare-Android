@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
- * Add the index parameter in the {@link #intercept(C1, ByteBuffer)} and
- * {@link #intercept(C2, ByteBuffer)}, it indicates the packet index in the session.
+ * Add the index parameter in the {@link #intercept(ReqChain, ByteBuffer)} and
+ * {@link #intercept(ResChain, ByteBuffer)}, it indicates the packet index in the session.
  * <p>
  * The index will be reset when the session finished.
  * </p>
@@ -30,45 +30,45 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-12-03 21:00
  */
-public abstract class IndexedInterceptor<Req extends Request, C1 extends AbstractRequestChain<Req, ? extends Interceptor>,
-        Res extends Response, C2 extends AbstractResponseChain<Res, ? extends Interceptor>>
-        implements Interceptor<Req, C1, Res, C2> {
+public abstract class IndexedInterceptor<Req extends Request, ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
+        Res extends Response, ResChain extends AbstractResponseChain<Res, ? extends Interceptor>>
+        implements Interceptor<Req, ReqChain, Res, ResChain> {
 
     private int mRequestIndex;
     private int mResponseIndex;
 
     /**
-     * The same like {@link #intercept(C1, ByteBuffer)}.
+     * The same like {@link #intercept(ReqChain, ByteBuffer)}.
      *
-     * @param chain The request chain, call {@linkplain C1#process(ByteBuffer)} to
+     * @param chain The request chain, call {@linkplain ReqChain#process(ByteBuffer)} to
      *                delivery the packet.
      * @param buffer A nio buffer contains the packet data.
      * @param index The packet index, started from 0.
      * @throws IOException If an I/O error has occurred.
      */
-    protected abstract void intercept(@NonNull C1 chain, @NonNull ByteBuffer buffer,
+    protected abstract void intercept(@NonNull ReqChain chain, @NonNull ByteBuffer buffer,
                                       int index) throws IOException;
 
     /**
-     * The same like {@link #intercept(C2, ByteBuffer)}.
+     * The same like {@link #intercept(ResChain, ByteBuffer)}.
      *
-     * @param chain The response chain, call {@linkplain C2#process(ByteBuffer)} to
+     * @param chain The response chain, call {@linkplain ResChain#process(ByteBuffer)} to
      *                delivery the packet.
      * @param buffer A nio buffer contains the packet data.
      * @param index The packet index, started from 0.
      * @throws IOException If an I/O error has occurred.
      */
-    protected abstract void intercept(@NonNull C2 chain, @NonNull ByteBuffer buffer,
+    protected abstract void intercept(@NonNull ResChain chain, @NonNull ByteBuffer buffer,
                                       int index) throws IOException;
 
     @Override
-    public final void intercept(@NonNull C1 chain, @NonNull ByteBuffer buffer)
+    public final void intercept(@NonNull ReqChain chain, @NonNull ByteBuffer buffer)
             throws IOException {
         intercept(chain, buffer, mRequestIndex++);
     }
 
     @Override
-    public final void intercept(@NonNull C2 chain, @NonNull ByteBuffer buffer)
+    public final void intercept(@NonNull ResChain chain, @NonNull ByteBuffer buffer)
             throws IOException {
         intercept(chain, buffer, mResponseIndex++);
     }
