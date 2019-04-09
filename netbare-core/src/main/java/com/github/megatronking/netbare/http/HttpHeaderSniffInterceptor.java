@@ -18,6 +18,7 @@ package com.github.megatronking.netbare.http;
 import android.support.annotation.NonNull;
 
 import com.github.megatronking.netbare.NetBareLog;
+import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -30,11 +31,11 @@ import java.nio.ByteBuffer;
  */
 /* package */ class HttpHeaderSniffInterceptor extends HttpIndexInterceptor {
 
-    private final SSLRefluxCallback mCallback;
+    private final SSLRefluxCallback<HttpRequest, HttpResponse> mCallback;
 
     private boolean mRealHttpProtocol;
 
-    /* package */ HttpHeaderSniffInterceptor(SSLRefluxCallback callback) {
+    /* package */ HttpHeaderSniffInterceptor(SSLRefluxCallback<HttpRequest, HttpResponse> callback) {
         this.mCallback = callback;
     }
 

@@ -56,7 +56,7 @@ import java.util.List;
         this.mHttpZygoteResponse = new HttpZygoteResponse(response, sessionFactory);
 
         // Add default interceptors.
-        SSLCodecInterceptor codecInterceptor = new SSLCodecInterceptor(jks, request, response);
+        HttpSSLCodecInterceptor codecInterceptor = new HttpSSLCodecInterceptor(jks, request, response);
         this.mInterceptors = new ArrayList<>(8);
 
         mInterceptors.add(new HttpSniffInterceptor(sessionFactory.create(session.id)));
@@ -81,7 +81,7 @@ import java.util.List;
         }));
         // Goalkeepers.
         mInterceptors.add(mInterceptors.size(), new Http2EncodeInterceptor());
-        mInterceptors.add(mInterceptors.size(), new SSLRefluxInterceptor(codecInterceptor));
+        mInterceptors.add(mInterceptors.size(), new HttpSSLRefluxInterceptor(codecInterceptor));
 
         //
         // SSL Flow Model:

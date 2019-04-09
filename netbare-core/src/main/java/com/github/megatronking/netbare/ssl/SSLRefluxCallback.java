@@ -13,7 +13,10 @@
  *  You should have received a copy of the GNU General Public License along with NetBare.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.megatronking.netbare.http;
+package com.github.megatronking.netbare.ssl;
+
+import com.github.megatronking.netbare.gateway.Request;
+import com.github.megatronking.netbare.gateway.Response;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -24,10 +27,10 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-11-15 14:35
  */
-public interface SSLRefluxCallback {
+public interface SSLRefluxCallback<Req extends Request, Res extends Response> {
 
-    void onRequest(HttpRequest request, ByteBuffer buffer) throws IOException;
+    void onRequest(Req request, ByteBuffer buffer) throws IOException;
 
-    void onResponse(HttpResponse response, ByteBuffer buffer) throws IOException;
+    void onResponse(Res response, ByteBuffer buffer) throws IOException;
 
 }

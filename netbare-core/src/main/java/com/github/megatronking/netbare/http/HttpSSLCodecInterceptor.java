@@ -25,6 +25,7 @@ import com.github.megatronking.netbare.ip.Protocol;
 import com.github.megatronking.netbare.ssl.JKS;
 import com.github.megatronking.netbare.ssl.SSLCodec;
 import com.github.megatronking.netbare.ssl.SSLEngineFactory;
+import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
 import com.github.megatronking.netbare.ssl.SSLUtils;
 
 import java.io.IOException;
@@ -37,7 +38,8 @@ import java.security.GeneralSecurityException;
  * @author Megatron King
  * @since 2018-11-15 15:39
  */
-/* package */ class SSLCodecInterceptor extends HttpPendingInterceptor implements SSLRefluxCallback {
+/* package */ class HttpSSLCodecInterceptor extends HttpPendingInterceptor implements
+        SSLRefluxCallback<HttpRequest, HttpResponse> {
 
     private static SSLEngineFactory sEngineFactory;
 
@@ -46,14 +48,14 @@ import java.security.GeneralSecurityException;
 
     private JKS mJKS;
 
-    private SSLHttpRequestCodec mRequestCodec;
-    private SSLHttpResponseCodec mResponseCodec;
+    private HttpSSLRequestCodec mRequestCodec;
+    private HttpSSLResponseCodec mResponseCodec;
 
     private NetBareXLog mLog;
 
     private boolean mClientAlpnResolved;
 
-    /* package */ SSLCodecInterceptor(JKS jks, Request request, Response response) {
+    /* package */ HttpSSLCodecInterceptor(JKS jks, Request request, Response response) {
         this.mJKS = jks;
         this.mRequest = request;
         this.mResponse = response;
@@ -66,8 +68,8 @@ import java.security.GeneralSecurityException;
             }
         }
 
-        mRequestCodec = new SSLHttpRequestCodec(sEngineFactory);
-        mResponseCodec = new SSLHttpResponseCodec(sEngineFactory);
+        mRequestCodec = new HttpSSLRequestCodec(sEngineFactory);
+        mResponseCodec = new HttpSSLResponseCodec(sEngineFactory);
 
         mLog = new NetBareXLog(Protocol.TCP, request.ip(), request.port());
     }
@@ -107,7 +109,7 @@ import java.security.GeneralSecurityException;
                     mResponseCodec.prepareHandshake();
                 } else {
                     // Detect remote server's ALPN and then continue request.
-                    mResponseCodec.prepareHandshake(protocols, new SSLHttpResponseCodec.AlpnResolvedCallback() {
+                    mResponseCodec.prepareHandshake(protocols, new HttpSSLResponseCodec.AlpnResolvedCallback() {
                         @Override
                         public void onResult(String selectedAlpnProtocol) throws IOException {
                             if (selectedAlpnProtocol != null) {

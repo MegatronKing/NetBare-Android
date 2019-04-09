@@ -17,21 +17,23 @@ package com.github.megatronking.netbare.http;
 
 import android.support.annotation.NonNull;
 
+import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
  * An interceptor locates at the last layer of the interceptors. It is responsible for send
- * plaintext packets to {@link SSLCodecInterceptor}.
+ * plaintext packets to {@link HttpSSLCodecInterceptor}.
  *
  * @author Megatron King
  * @since 2018-11-15 15:39
  */
-/* package */ class SSLRefluxInterceptor implements HttpInterceptor {
+/* package */ class HttpSSLRefluxInterceptor implements HttpInterceptor {
 
-    private SSLRefluxCallback mRefluxCallback;
+    private SSLRefluxCallback<HttpRequest, HttpResponse> mRefluxCallback;
 
-    /* package */ SSLRefluxInterceptor(SSLRefluxCallback refluxCallback) {
+    /* package */ HttpSSLRefluxInterceptor(SSLRefluxCallback<HttpRequest, HttpResponse> refluxCallback) {
         this.mRefluxCallback = refluxCallback;
     }
 

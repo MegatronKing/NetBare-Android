@@ -40,7 +40,7 @@ import javax.net.ssl.SSLEngine;
  * @author Megatron King
  * @since 2019/1/3 23:31
  */
-/* package */ class SSLHttpResponseCodec extends SSLResponseCodec {
+/* package */ class HttpSSLResponseCodec extends SSLResponseCodec {
 
     private SSLEngine mSSLEngine;
 
@@ -50,7 +50,7 @@ import javax.net.ssl.SSLEngine;
     private HttpProtocol[] mClientAlpns;
     private AlpnResolvedCallback mAlpnCallback;
 
-    /* package */ SSLHttpResponseCodec(SSLEngineFactory factory) {
+    /* package */ HttpSSLResponseCodec(SSLEngineFactory factory) {
         super(factory);
     }
 

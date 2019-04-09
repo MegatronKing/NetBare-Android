@@ -27,7 +27,7 @@ import com.github.megatronking.netbare.http.HttpResponse;
 import com.github.megatronking.netbare.http.HttpResponseChain;
 import com.github.megatronking.netbare.http.HttpZygoteRequest;
 import com.github.megatronking.netbare.http.HttpZygoteResponse;
-import com.github.megatronking.netbare.http.SSLRefluxCallback;
+import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -43,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
 
-    private final SSLRefluxCallback mRefluxCallback;
+    private final SSLRefluxCallback<HttpRequest, HttpResponse> mRefluxCallback;
 
     private final HttpZygoteRequest mZygoteRequest;
     private final HttpZygoteResponse mZygoteResponse;
@@ -58,7 +58,8 @@ public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
 
     private NetBareXLog mLog;
 
-    public Http2DecodeInterceptor(SSLRefluxCallback refluxCallback, HttpZygoteRequest zygoteRequest,
+    public Http2DecodeInterceptor(SSLRefluxCallback<HttpRequest, HttpResponse> refluxCallback,
+                                  HttpZygoteRequest zygoteRequest,
                                   HttpZygoteResponse zygoteResponse) {
         this.mRefluxCallback = refluxCallback;
 

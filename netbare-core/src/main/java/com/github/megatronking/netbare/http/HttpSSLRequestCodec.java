@@ -35,13 +35,13 @@ import javax.net.ssl.SSLEngine;
  * @author Megatron King
  * @since 2019/1/3 23:01
  */
-/* package */ class SSLHttpRequestCodec extends SSLRequestCodec {
+/* package */ class HttpSSLRequestCodec extends SSLRequestCodec {
 
     private HttpProtocol mSelectedAlpnProtocol;
     private boolean mAlpnEnabled;
     private boolean mSelectedAlpnResolved;
 
-    /* package */ SSLHttpRequestCodec(SSLEngineFactory factory) {
+    /* package */ HttpSSLRequestCodec(SSLEngineFactory factory) {
         super(factory);
     }
 
