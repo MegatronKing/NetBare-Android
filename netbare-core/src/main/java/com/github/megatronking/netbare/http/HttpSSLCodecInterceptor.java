@@ -35,7 +35,7 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-11-15 15:39
  */
-/* package */ class HttpSSLCodecInterceptor extends HttpPendingInterceptor implements
+/* package */ class HttpSSLCodecInterceptor extends HttpPendingIndexedInterceptor implements
         SSLRefluxCallback<HttpRequest, HttpResponse> {
 
     private SSLEngineFactory mEngineFactory;

@@ -13,7 +13,7 @@
  *  You should have received a copy of the GNU General Public License along with NetBare.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.megatronking.netbare.http;
+package com.github.megatronking.netbare.gateway;
 
 import android.support.annotation.NonNull;
 
@@ -28,27 +28,29 @@ import java.util.List;
  * @author Megatron King
  * @since 2018-12-09 12:07
  */
-public abstract class HttpPendingInterceptor extends HttpIndexedInterceptor {
+public abstract class PendingIndexedInterceptor <Req extends Request, C1 extends AbstractRequestChain<Req, ? extends Interceptor>,
+        Res extends Response, C2 extends AbstractResponseChain<Res, ? extends Interceptor>>
+        extends IndexedInterceptor<Req, C1, Res, C2> {
 
     private List<ByteBuffer> mRequestPendingBuffers;
     private List<ByteBuffer> mResponsePendingBuffers;
 
     /**
-     * Constructs a {@link HttpPendingInterceptor} instance.
+     * Constructs a {@link PendingIndexedInterceptor} instance.
      */
-    public HttpPendingInterceptor() {
+    public PendingIndexedInterceptor() {
         mRequestPendingBuffers = new ArrayList<>();
         mResponsePendingBuffers = new ArrayList<>();
     }
 
     @Override
-    public void onRequestFinished(@NonNull HttpRequest request) {
+    public void onRequestFinished(@NonNull Req request) {
         super.onRequestFinished(request);
         mRequestPendingBuffers.clear();
     }
 
     @Override
-    public void onResponseFinished(@NonNull HttpResponse response) {
+    public void onResponseFinished(@NonNull Res response) {
         super.onResponseFinished(response);
         mResponsePendingBuffers.clear();
     }

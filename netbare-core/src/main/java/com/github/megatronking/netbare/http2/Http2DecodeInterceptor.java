@@ -19,7 +19,7 @@ import android.support.annotation.NonNull;
 
 import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.http.HttpId;
-import com.github.megatronking.netbare.http.HttpPendingInterceptor;
+import com.github.megatronking.netbare.http.HttpPendingIndexedInterceptor;
 import com.github.megatronking.netbare.http.HttpProtocol;
 import com.github.megatronking.netbare.http.HttpRequest;
 import com.github.megatronking.netbare.http.HttpRequestChain;
@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Megatron King
  * @since 2019/1/5 14:19
  */
-public final class Http2DecodeInterceptor extends HttpPendingInterceptor {
+public final class Http2DecodeInterceptor extends HttpPendingIndexedInterceptor {
 
     private final SSLRefluxCallback<HttpRequest, HttpResponse> mRefluxCallback;
 

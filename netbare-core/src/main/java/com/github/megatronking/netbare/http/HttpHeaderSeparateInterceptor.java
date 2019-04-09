@@ -31,7 +31,7 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-12-08 15:36
  */
-/* package */ final class HttpHeaderSeparateInterceptor extends HttpPendingInterceptor {
+/* package */ final class HttpHeaderSeparateInterceptor extends HttpPendingIndexedInterceptor {
 
     private boolean mRequestHeaderHandled;
     private boolean mResponseHeaderHandled;
