@@ -315,7 +315,7 @@ public final class NetBareConfig {
         }
 
         /**
-         * Set a SSL KeyManager provider, NetBare will use it to initialize
+         * Set a SSL TrustManager provider, NetBare will use it to initialize
          * {@link javax.net.ssl.SSLContext}.
          *
          * If not set, the MITM server and client will set the parameter to null when initializing
