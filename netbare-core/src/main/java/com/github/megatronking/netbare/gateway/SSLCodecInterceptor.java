@@ -68,7 +68,9 @@ public abstract class SSLCodecInterceptor<Req extends Request, ReqChain extends 
         this.mRequest = request;
         this.mResponse = response;
         mRequestCodec = new SSLRequestCodec(engineFactory);
+        mRequestCodec.setRequest(mRequest);
         mResponseCodec = new SSLResponseCodec(engineFactory);
+        mResponseCodec.setRequest(mRequest);
 
         mLog = new NetBareXLog(request.protocol(), request.ip(), request.port());
     }
@@ -82,6 +84,7 @@ public abstract class SSLCodecInterceptor<Req extends Request, ReqChain extends 
             mLog.w("JSK not installed, skip all interceptors!");
         } else if (shouldDecrypt(chain)) {
             decodeRequest(chain, buffer);
+            mResponseCodec.prepareHandshake();
         } else {
             chain.process(buffer);
         }
