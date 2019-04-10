@@ -15,20 +15,25 @@
  */
 package com.github.megatronking.netbare.net;
 
-import android.support.annotation.NonNull;
+import android.text.TextUtils;
+import android.util.ArrayMap;
 
 import com.github.megatronking.netbare.NetBareConfig;
 import com.github.megatronking.netbare.NetBareUtils;
+import com.github.megatronking.netbare.ip.Protocol;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
-import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A dumper analyzes /proc/net/ files to dump uid of the network session. This class may be a
@@ -37,52 +42,25 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Megatron King
  * @since 2018-12-03 16:54
  */
-public final class UidDumper implements DumpCallback {
+public final class UidDumper {
 
-    private static final int NET_ALIVE_SECONDS = 60;
+    private static final int NET_ALIVE_SECONDS = 15;
     private static final int NET_CONCURRENCY_LEVEL = 6;
     private static final int NET_MAX_SIZE = 100;
 
-    private static final int SESSION_ALIVE_SECONDS = 30;
-    private static final int SESSION_CONCURRENCY_LEVEL = 8;
-    private static final int SESSION_MAX_SIZE = 100;
-
-    private static final int CORE_POOL_SIZE = 4;
-    private static final int MAXIMUM_POOL_SIZE = 4;
-    private static final int KEEP_ALIVE_SECONDS = 3 * 60;
-    private static final int QUEUE_SIZE = 32;
-
-    private static final ThreadFactory THREAD_FACTORY = new ThreadFactory() {
-        private final AtomicInteger mCount = new AtomicInteger(1);
-
-        @Override
-        public Thread newThread(@NonNull Runnable r) {
-            return new Thread(r, "UidDumper #" + mCount.getAndIncrement());
-        }
-    };
-
-    /**
-     * An {@link Executor} that can be used to execute tasks in parallel.
-     */
-    /* package */ static final Executor THREAD_POOL_EXECUTOR;
+    private static final Pattern IPV4_PATTERN = Pattern.compile("\\s+\\d+:\\s([0-9A-F]{8}):" +
+            "([0-9A-F]{4})\\s([0-9A-F]{8}):([0-9A-F]{4})\\s([0-9A-F]{2})\\s[0-9A-F]{8}:[0-9A-F]{8}" +
+            "\\s[0-9A-F]{2}:[0-9A-F]{8}\\s[0-9A-F]{8}\\s+([0-9A-F]+)", Pattern.CASE_INSENSITIVE
+            | Pattern.UNIX_LINES);
+    private static final Pattern IPV6_PATTERN = Pattern.compile("\\s+\\d+:\\s([0-9A-F]{32}):" +
+            "([0-9A-F]{4})\\s([0-9A-F]{32}):([0-9A-F]{4})\\s([0-9A-F]{2})\\s[0-9A-F]{8}:[0-9A-F]{8}" +
+            "\\s[0-9A-F]{2}:[0-9A-F]{8}\\s[0-9A-F]{8}\\s+([0-9A-F]+)", Pattern.CASE_INSENSITIVE
+            | Pattern.UNIX_LINES);
 
     private final Cache<Integer, Net> mNetCaches;
-    private final Cache<Integer, Session> mWaitingSessions;
 
     private final UidProvider mUidProvider;
-
-    private final NetDumper dumper1;
-    private final NetDumper dumper2;
-    private final NetDumper dumper3;
-    private final NetDumper dumper4;
-
-    static {
-        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
-                CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_SECONDS, TimeUnit.SECONDS,
-                new LinkedBlockingDeque<Runnable>(QUEUE_SIZE), THREAD_FACTORY);
-        threadPoolExecutor.allowCoreThreadTimeOut(true);
-        THREAD_POOL_EXECUTOR = threadPoolExecutor;
-    }
+    private final ArrayMap<Protocol, NetDumper[]> mDumpers;
 
     public UidDumper(String localIp, UidProvider provider) {
         this.mUidProvider = provider;
@@ -91,47 +69,16 @@ public final class UidDumper implements DumpCallback {
                 .concurrencyLevel(NET_CONCURRENCY_LEVEL)
                 .maximumSize(NET_MAX_SIZE)
                 .build();
-        this.mWaitingSessions = CacheBuilder.newBuilder()
-                .expireAfterAccess(SESSION_ALIVE_SECONDS, TimeUnit.SECONDS)
-                .concurrencyLevel(SESSION_CONCURRENCY_LEVEL)
-                .maximumSize(SESSION_MAX_SIZE)
-                .build();
-
-        this.dumper1 = new NetDumper("/proc/net/tcp", localIp, this);
-        this.dumper2 = new NetDumper("/proc/net/tcp6", localIp, this);
-        this.dumper3 = new NetDumper("/proc/net/udp", localIp, this);
-        this.dumper4 = new NetDumper("/proc/net/udp6", localIp, this);
+        this.mDumpers = new ArrayMap<>(2);
+        this.mDumpers.put(Protocol.TCP, new NetDumper[]{
+                new NetDumper("/proc/net/tcp6", localIp, IPV6_PATTERN),
+                new NetDumper("/proc/net/tcp", localIp, IPV4_PATTERN)});
+        this.mDumpers.put(Protocol.UDP, new NetDumper[] {
+                new NetDumper("/proc/net/udp6", localIp, IPV6_PATTERN),
+                new NetDumper("/proc/net/udp", localIp, IPV4_PATTERN)});
     }
 
-    public void startDump() {
-        dumper1.startDump();
-        dumper2.startDump();
-        dumper3.startDump();
-        dumper4.startDump();
-    }
-
-    public void stopDump() {
-        dumper1.stopDump();
-        dumper2.stopDump();
-        dumper3.stopDump();
-        dumper4.stopDump();
-    }
-
-    private void pauseDump() {
-        dumper1.pauseDump();
-        dumper2.pauseDump();
-        dumper3.pauseDump();
-        dumper4.pauseDump();
-    }
-
-    private void resumeDump() {
-        dumper1.resumeDump();
-        dumper2.resumeDump();
-        dumper3.resumeDump();
-        dumper4.resumeDump();
-    }
-
-    public void request(Session session) {
+    public void request(final Session session) {
         if (mUidProvider != null) {
             int uid = mUidProvider.uid(session);
             if (uid != UidProvider.UID_UNKNOWN) {
@@ -139,47 +86,112 @@ public final class UidDumper implements DumpCallback {
                 return;
             }
         }
-        int port = NetBareUtils.convertPort(session.localPort);
-        Map<Integer, Net> caches = mNetCaches.asMap();
-        if (caches.containsKey(port)) {
-            Net net = caches.get(port);
+        // Android Q abandons the access permission.
+        if (NetBareUtils.isAndroidQ()) {
+            return;
+        }
+        final int port = NetBareUtils.convertPort(session.localPort);
+        try {
+            Net net = mNetCaches.get(session.remoteIp, new Callable<Net>() {
+                @Override
+                public Net call() throws Exception {
+                    NetDumper[] dumpers = mDumpers.get(session.protocol);
+                    if (dumpers == null) {
+                        throw new Exception();
+                    }
+                    for (NetDumper dumper : dumpers) {
+                        Net net = dumper.dump(port);
+                        if (net != null) {
+                            return net;
+                        }
+                    }
+                    // No find the uid.
+                    throw new Exception();
+                }
+            });
             if (net != null) {
                 session.uid = net.uid;
             }
-        } else {
-            // Find net by remote ip from cache
-            for (Net net : caches.values()) {
-                if (NetBareUtils.convertIp(net.remoteIp) == session.remoteIp) {
-                    session.uid = net.uid;
-                    return;
-                }
-            }
-            mWaitingSessions.put(port, session);
-            // resumeDump();
+        } catch (ExecutionException e) {
+            // Not find the uid
         }
     }
 
-    @Override
-    public void onDump(Net net) {
-        mNetCaches.put(net.localPort, net);
+    private static class NetDumper {
 
-        if (mWaitingSessions.size() == 0) {
-            // If sleep the threads, some uid would be missed. But if keep the threads running, too
-            // much battery would be cost.
-            // pauseDump();
-            return;
+        private static final long MAX_DUMP_DURATION = 100;
+
+        private String mArgs;
+        private String mLocalIp;
+        private Pattern mPattern;
+
+        private NetDumper(String args, String localIp, Pattern pattern) {
+            this.mArgs = args;
+            this.mLocalIp = localIp;
+            this.mPattern = pattern;
         }
-        Map<Integer, Session> map = mWaitingSessions.asMap();
-        for (int port : map.keySet()) {
-            if (net.localPort == port) {
-                Session session = map.get(port);
-                if (session != null) {
-                    session.uid = net.uid;
+
+        private Net dump(int port) {
+            InputStream is = null;
+            BufferedReader reader = null;
+            try {
+                is = new FileInputStream(mArgs);
+                reader = new BufferedReader(new InputStreamReader(is));
+                long now = System.currentTimeMillis();
+                while (System.currentTimeMillis() - now < MAX_DUMP_DURATION) {
+                    String line;
+                    try {
+                        line = reader.readLine();
+                    } catch (IOException e) {
+                        continue;
+                    }
+                    if (line == null || TextUtils.isEmpty(line.trim())) {
+                        continue;
+                    }
+                    Matcher matcher = mPattern.matcher(line);
+                    while (matcher.find()) {
+                        int uid = NetBareUtils.parseInt(matcher.group(6), -1);
+                        if (uid <= 0) {
+                            continue;
+                        }
+                        int localPort = parsePort(matcher.group(2));
+                        if (localPort != port) {
+                            continue;
+                        }
+                        String localIp = parseIp(matcher.group(1));
+                        if (localIp == null || !localIp.equals(mLocalIp)) {
+                            continue;
+                        }
+                        String remoteIp = parseIp(matcher.group(3));
+                        int remotePort = parsePort(matcher.group(4));
+                        return new Net(uid, localIp, localPort, remoteIp, remotePort);
+                    }
                 }
-                mWaitingSessions.invalidate(port);
-                break;
+            } catch (IOException e) {
+                // Ignore
+            } finally {
+                NetBareUtils.closeQuietly(is);
+                NetBareUtils.closeQuietly(reader);
             }
+            return null;
         }
+
+        private String parseIp(String ip) {
+            ip = ip.substring(ip.length() - 8);
+            int ip1 = NetBareUtils.parseInt(ip.substring(6, 8), 16, -1);
+            int ip2 = NetBareUtils.parseInt(ip.substring(4, 6), 16, -1);
+            int ip3 = NetBareUtils.parseInt(ip.substring(2, 4), 16, -1);
+            int ip4 = NetBareUtils.parseInt(ip.substring(0, 2), 16, -1);
+            if (ip1 < 0 || ip2 < 0 || ip3 < 0 || ip4 < 0) {
+                return null;
+            }
+            return ip1 + "." + ip2 + "." + ip3 + "." + ip4;
+        }
+
+        private int parsePort(String port) {
+            return NetBareUtils.parseInt(port, 16, -1);
+        }
+
     }
 
 }

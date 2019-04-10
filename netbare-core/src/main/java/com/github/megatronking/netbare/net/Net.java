@@ -15,6 +15,8 @@
  */
 package com.github.megatronking.netbare.net;
 
+import android.support.annotation.NonNull;
+
 /**
  * A dumped net info class contains IPs, ports and uid.
  *
@@ -56,6 +58,7 @@ public class Net {
         this.remotePort = remotePort;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return uid + " " + localIp + ":" + localPort + " -> " + remoteIp + ":" + remotePort;

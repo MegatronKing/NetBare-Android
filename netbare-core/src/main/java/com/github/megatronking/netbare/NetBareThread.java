@@ -163,29 +163,25 @@ import java.util.Map;
 
     private static class PacketsTransfer {
 
-        private final UidDumper mUidDumper;
         private final Map<Protocol, ProxyServerForwarder> mForwarderRegistry;
 
         private PacketsTransfer(VpnService service, NetBareConfig config) throws IOException {
             int mtu = config.mtu;
             String localIp = config.address.address;
-            this.mUidDumper = config.dumpUid ? new UidDumper(localIp, config.uidProvider) : null;
+            UidDumper uidDumper = config.dumpUid ? new UidDumper(localIp, config.uidProvider) : null;
             // Register all supported protocols here.
             this.mForwarderRegistry = new LinkedHashMap<>(3);
             // TCP
             this.mForwarderRegistry.put(Protocol.TCP, new TcpProxyServerForwarder(service, localIp, mtu,
-                    mUidDumper));
+                    uidDumper));
             // UDP
             this.mForwarderRegistry.put(Protocol.UDP, new UdpProxyServerForwarder(service, mtu,
-                    mUidDumper));
+                    uidDumper));
             // ICMP
             this.mForwarderRegistry.put(Protocol.ICMP, new IcmpProxyServerForwarder());
         }
 
         private void start()  {
-            if (mUidDumper != null) {
-                mUidDumper.startDump();
-            }
             for (ProxyServerForwarder forwarder : mForwarderRegistry.values()) {
                 forwarder.prepare();
             }
@@ -196,9 +192,6 @@ import java.util.Map;
                 forwarder.release();
             }
             mForwarderRegistry.clear();
-            if (mUidDumper != null) {
-                mUidDumper.stopDump();
-            }
         }
 
         private void transfer(InputStream input, OutputStream output, int mtu) throws IOException {
