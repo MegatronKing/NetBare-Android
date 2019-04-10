@@ -32,7 +32,7 @@ public class RequestChain extends AbstractRequestChain<Request, Interceptor<Requ
 
     private Request mRequest;
 
-    /* package */ RequestChain(Request request, List<Interceptor<Request, RequestChain,
+    public RequestChain(Request request, List<Interceptor<Request, RequestChain,
             Response, ResponseChain>> interceptors) {
         super(request, interceptors);
         mRequest = request;

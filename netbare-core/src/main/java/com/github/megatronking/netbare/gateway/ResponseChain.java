@@ -32,7 +32,7 @@ public class ResponseChain extends AbstractResponseChain<Response, Interceptor<R
 
     private Response mResponse;
 
-    /* package */ ResponseChain(Response response, List<Interceptor<Request, RequestChain,
+    public ResponseChain(Response response, List<Interceptor<Request, RequestChain,
             Response, ResponseChain>> interceptors) {
         super(response, interceptors);
         mResponse = response;
