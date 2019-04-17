@@ -91,9 +91,9 @@ public final class CertificateGenerator {
             "WithRSAEncryption";
 
     /**
-     * The milliseconds of 30 day.
+     * The milliseconds of 1 day.
      */
-    private static final long ONE_DAY = 30 * 86400000L;
+    private static final long ONE_DAY = 86400000L;
 
     /**
      * Current time minus 1 year, just in case software clock goes back due to time synchronization.
