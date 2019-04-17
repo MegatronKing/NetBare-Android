@@ -15,6 +15,8 @@
  */
 package com.github.megatronking.netbare.ssl;
 
+import android.os.Build;
+
 import com.github.megatronking.netbare.NetBareUtils;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
@@ -228,12 +230,19 @@ public final class CertificateGenerator {
     private static X509Certificate signCertificate(X509v3CertificateBuilder certificateBuilder,
             PrivateKey signedWithPrivateKey) throws OperatorCreationException,
             CertificateException {
-        ContentSigner signer = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM)
-                .setProvider(PROVIDER_NAME)
-                .build(signedWithPrivateKey);
-        return new JcaX509CertificateConverter()
-                .setProvider(PROVIDER_NAME)
-                .getCertificate(certificateBuilder.build(signer));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            ContentSigner signer = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM)
+                    .build(signedWithPrivateKey);
+            return new JcaX509CertificateConverter()
+                    .getCertificate(certificateBuilder.build(signer));
+        } else {
+            ContentSigner signer = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM)
+                    .setProvider(PROVIDER_NAME)
+                    .build(signedWithPrivateKey);
+            return new JcaX509CertificateConverter()
+                    .setProvider(PROVIDER_NAME)
+                    .getCertificate(certificateBuilder.build(signer));
+        }
     }
 
     /**
