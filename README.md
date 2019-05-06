@@ -243,7 +243,7 @@ NetBare的接入步骤就有些繁琐，所以提供了一个简单的Sample工�
 ![](https://github.com/MegatronKing/NetBare/blob/master/assets/sample2.png)
 
 ## 结语
-NetBare框架尚未完全成熟，仍然有很多工作要做，包括ICMP、IGMP等IP协议的转发，HTTP2.0协议的解析等等，后续会继续完善。
+NetBare框架尚未完全成熟，仍然有很多工作要做，包括ICMP、IGMP等IP协议的转发等等，后续会继续完善。
 
 基于NetBare实现的一款抓包+注入工具，欢迎大家下载体验：https://play.google.com/store/apps/details?id=com.guoshi.httpcanary
 
