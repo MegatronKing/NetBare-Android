@@ -19,6 +19,7 @@ import android.support.annotation.NonNull;
 
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.ssl.SSLCodec;
+import com.github.megatronking.netbare.ssl.SSLWhiteList;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -36,6 +37,7 @@ import java.nio.ByteBuffer;
     private static final int TYPE_HTTP = 1;
     private static final int TYPE_HTTPS = 2;
     private static final int TYPE_INVALID = 3;
+    private static final int TYPE_WHITELIST = 4;
 
     private final HttpSession mSession;
 
@@ -49,12 +51,17 @@ import java.nio.ByteBuffer;
     protected void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer,
                              int index) throws IOException {
         if (index == 0) {
-            mType = chain.request().host() == null ? TYPE_INVALID : verifyHttpType(buffer);
+            if (SSLWhiteList.contains(chain.request().ip())) {
+                mType = TYPE_WHITELIST;
+                NetBareLog.i("detect whitelist ip " + chain.request().ip());
+            } else {
+                mType = chain.request().host() == null ? TYPE_INVALID : verifyHttpType(buffer);
+            }
         }
         if (mType == TYPE_HTTPS) {
             mSession.isHttps = true;
         }
-        if (mType == TYPE_INVALID) {
+        if ((mType == TYPE_INVALID) || (mType == TYPE_WHITELIST)) {
             chain.processFinal(buffer);
             return;
         }
@@ -64,7 +71,7 @@ import java.nio.ByteBuffer;
     @Override
     protected void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer,
                              int index) throws IOException {
-        if (mType == TYPE_INVALID) {
+        if ((mType == TYPE_INVALID) || (mType == TYPE_WHITELIST)) {
             chain.processFinal(buffer);
             return;
         }
