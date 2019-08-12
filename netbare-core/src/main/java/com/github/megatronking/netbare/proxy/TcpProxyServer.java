@@ -22,6 +22,7 @@ import com.github.megatronking.netbare.NetBareUtils;
 import com.github.megatronking.netbare.gateway.VirtualGateway;
 import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.net.SessionProvider;
+import com.github.megatronking.netbare.ssl.SSLWhiteList;
 import com.github.megatronking.netbare.tunnel.ConnectionShutdownException;
 import com.github.megatronking.netbare.tunnel.NioCallback;
 import com.github.megatronking.netbare.tunnel.NioTunnel;
@@ -33,6 +34,7 @@ import com.github.megatronking.netbare.tunnel.TcpVATunnel;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.SelectionKey;
@@ -142,8 +144,13 @@ import javax.net.ssl.SSLHandshakeException;
                                 }
                             } catch (IOException e) {
                                 NioTunnel tunnel = callback.getTunnel();
+                                String ip = null;
+                                InetAddress address = ((Socket)tunnel.socket()).getInetAddress();
+                                if (address != null) {
+                                    ip = address.getHostAddress();
+                                }
                                 if (!tunnel.isClosed()) {
-                                    handleException(e);
+                                    handleException(e, ip);
                                 }
                                 callback.onClosed();
                             }
@@ -192,13 +199,17 @@ import javax.net.ssl.SSLHandshakeException;
         }
     }
 
-    private void handleException(IOException e) {
+    private void handleException(IOException e, String ip) {
         if (e == null || e.getMessage() == null) {
             return;
         }
         if (e instanceof SSLHandshakeException) {
             // Client doesn't accept the MITM CA certificate.
             NetBareLog.e(e.getMessage());
+            if (ip != null) {
+                NetBareLog.i("add %s to whitelist", ip);
+                SSLWhiteList.add(ip);
+            }
         } else if (e instanceof ConnectionShutdownException) {
             // Connection exception, do not mind this.
             NetBareLog.e(e.getMessage());
@@ -210,7 +221,10 @@ import javax.net.ssl.SSLHandshakeException;
             NetBareLog.e(e.getMessage());
         } else {
             NetBareLog.wtf(e);
+            if (ip != null) {
+                NetBareLog.i("add %s to whitelist", ip);
+                SSLWhiteList.add(ip);
+            }
         }
     }
-
 }
