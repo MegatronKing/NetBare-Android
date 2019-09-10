@@ -68,9 +68,15 @@ public final class NetBareVirtualGateway extends VirtualGateway {
         mLog = new NetBareXLog(session);
 
         NetBareConfig config = NetBare.get().getConfig();
-        if (config == null || (config.excludeSelf && session.uid == Process.myUid())) {
+        if (config == null || (config.excludeSelf && session.uid == Process.myUid()) ||
+            !config.allowedApplicationUids.contains(session.uid)) {
             // Exclude the app itself.
             mLog.w("Exclude an app-self connection!");
+            mPolicy = POLICY_DISALLOWED;
+        } else if (!config.allowedApplicationUids.isEmpty() &&
+                !config.allowedApplicationUids.contains(session.uid)) {
+            // Exclude non-allowed application.
+            mLog.w("Exclude non-allowed connection(uid : " + session.uid + ")!");
             mPolicy = POLICY_DISALLOWED;
         } else {
             mPolicy = POLICY_INDETERMINATE;

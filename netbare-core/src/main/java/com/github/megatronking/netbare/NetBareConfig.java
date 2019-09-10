@@ -16,7 +16,7 @@
 package com.github.megatronking.netbare;
 
 import android.app.PendingIntent;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.github.megatronking.netbare.gateway.VirtualGatewayFactory;
 import com.github.megatronking.netbare.http.HttpInterceptorFactory;
@@ -57,6 +57,8 @@ public final class NetBareConfig {
     boolean excludeSelf;
     SSLKeyManagerProvider keyManagerProvider;
     SSLTrustManagerProvider trustManagerProvider;
+
+    Set<Integer> allowedApplicationUids;
 
     private NetBareConfig() {
     }
@@ -116,6 +118,9 @@ public final class NetBareConfig {
             this.mConfig.disallowedApplications = new HashSet<>();
             this.mConfig.allowedHosts = new HashSet<>();
             this.mConfig.disallowedHosts = new HashSet<>();
+
+            // add for springer
+            this.mConfig.allowedApplicationUids = new HashSet<>();
         }
 
         /**
@@ -211,6 +216,22 @@ public final class NetBareConfig {
          */
         public Builder addAllowedApplication(@NonNull String packageName) {
             mConfig.allowedApplications.add(packageName);
+            return this;
+        }
+
+        /**
+         * Adds an application that's allowed to access the VPN connection.
+         *
+         * this is for NetBareVirtualGateWay access control
+         *
+         * @param uid The user id of an application.
+         * @return this {@link Builder} object to facilitate chaining method calls.
+         */
+        public Builder addAllowedApplicationUid(@NonNull int uid) {
+            if (uid > 0) {
+                mConfig.allowedApplicationUids.add(uid);
+            }
+
             return this;
         }
 
