@@ -15,13 +15,13 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import androidx.annotation.NonNull;
 
 /**
  * One http virtual gateway may have multi http sessions, but we don't want to share interceptors
@@ -134,11 +134,13 @@ import java.util.concurrent.ConcurrentHashMap;
         private final int mIndex;
         private final Object mTag;
 
-        private HttpContainerRequestChain(HttpRequestChain chain, List<HttpInterceptor> interceptors) {
+        private HttpContainerRequestChain(HttpRequestChain chain,
+                                          List<HttpInterceptor> interceptors) {
             this(chain, interceptors, 0, null);
         }
 
-        private HttpContainerRequestChain(HttpRequestChain chain, List<HttpInterceptor> interceptors,
+        private HttpContainerRequestChain(HttpRequestChain chain,
+                                          List<HttpInterceptor> interceptors,
                                           int index, Object tag) {
             super(chain.zygoteRequest(), interceptors, index, tag);
             this.mChain = chain;
@@ -169,12 +171,14 @@ import java.util.concurrent.ConcurrentHashMap;
         private final int mIndex;
         private final Object mTag;
 
-        private HttpContainerResponseChain(HttpResponseChain chain, List<HttpInterceptor> interceptors) {
+        private HttpContainerResponseChain(HttpResponseChain chain,
+                                           List<HttpInterceptor> interceptors) {
             this(chain, interceptors, 0, null);
         }
 
-        private HttpContainerResponseChain(HttpResponseChain chain, List<HttpInterceptor> interceptors,
-                                          int index, Object tag) {
+        private HttpContainerResponseChain(HttpResponseChain chain,
+                                           List<HttpInterceptor> interceptors,
+                                           int index, Object tag) {
             super(chain.zygoteResponse(), interceptors, index, tag);
             this.mChain = chain;
             this.mInterceptors = interceptors;

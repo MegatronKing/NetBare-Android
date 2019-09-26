@@ -15,11 +15,11 @@
  */
 package com.github.megatronking.netbare.tunnel;
 
-import com.github.megatronking.netbare.gateway.VirtualGateway;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+
+import com.github.megatronking.netbare.gateway.VirtualGateway;
 
 /**
  * A tunnel uses {@link VirtualGateway} to intercept and filter net packets.
@@ -33,6 +33,7 @@ public abstract class VirtualGatewayTunnel implements Closeable {
      * Connects to the remote server by the given server address.
      *
      * @param address The server IP socket address.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     public abstract void connect(InetSocketAddress address) throws IOException;

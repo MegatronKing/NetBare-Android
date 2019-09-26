@@ -30,12 +30,6 @@
  */
 package com.github.megatronking.netbare.http2;
 
-import android.text.TextUtils;
-
-import com.github.megatronking.netbare.NetBareUtils;
-import com.github.megatronking.netbare.http.HttpMethod;
-import com.github.megatronking.netbare.http.HttpProtocol;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -46,11 +40,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.megatronking.netbare.NetBareUtils;
+import com.github.megatronking.netbare.http.HttpMethod;
+import com.github.megatronking.netbare.http.HttpProtocol;
+
+import android.text.TextUtils;
+
 /**
  * Read and write HPACK v10.
- *
+ * <p>
  * https://httpwg.org/specs/rfc7540.html#HeaderBlock
- *
+ * <p>
  * This implementation uses an array for the dynamic table and a list for indexed entries.  Dynamic
  * entries are added to the array, starting in the last position moving forward.  When the array
  * fills, it is doubled.
@@ -253,7 +253,8 @@ import java.util.Map;
             }
             StringBuilder sb = new StringBuilder();
             if (method != null && path != null) {
-                sb.append(method).append(" ").append(path).append(" ").append(HttpProtocol.HTTP_2.toString());
+                sb.append(method).append(" ").append(path).append(" ")
+                        .append(HttpProtocol.HTTP_2.toString());
                 sb.append(NetBareUtils.LINE_END);
             }
             if (status != null) {
@@ -396,7 +397,8 @@ import java.util.Map;
             if (index != -1) { // Index -1 == new header.
                 Header header = mDynamicTable[dynamicTableIndex(index)];
                 if (header == null) {
-                    throw new IOException("Hpack read headers failed: insert dynamic table failed!");
+                    throw new IOException(
+                            "Hpack read headers failed: insert dynamic table failed!");
                 }
                 delta -= header.hpackSize();
             }
@@ -440,7 +442,8 @@ import java.util.Map;
             int entriesToEvict = 0;
             if (bytesToRecover > 0) {
                 // determine how many headers need to be evicted.
-                for (int j = mDynamicTable.length - 1; j >= mNextHeaderIndex && bytesToRecover > 0; j--) {
+                for (int j = mDynamicTable.length - 1; j >= mNextHeaderIndex && bytesToRecover > 0;
+                     j--) {
                     bytesToRecover -= mDynamicTable[j].hpackSize();
                     mDynamicTableByteCount -= mDynamicTable[j].hpackSize();
                     mHeaderCount--;
@@ -501,7 +504,7 @@ import java.util.Map;
         }
 
         byte[] writeRequestHeaders(HttpMethod method, String path, String host,
-                                Map<String, List<String>> headers) throws IOException {
+                                   Map<String, List<String>> headers) throws IOException {
             mOut = new ByteArrayOutputStream();
             List<Header> hpackHeaders = new ArrayList<>();
             hpackHeaders.add(new Header(Header.TARGET_METHOD, method.name()));
@@ -523,8 +526,9 @@ import java.util.Map;
                 throws IOException {
             mOut = new ByteArrayOutputStream();
             List<Header> hpackHeaders = new ArrayList<>();
-            hpackHeaders.add(new Header(Header.RESPONSE_STATUS, TextUtils.isEmpty(message) ? String.valueOf(code) :
-                    code + " " + message));
+            hpackHeaders.add(new Header(Header.RESPONSE_STATUS,
+                    TextUtils.isEmpty(message) ? String.valueOf(code) :
+                            code + " " + message));
             for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
                 if (HTTP_2_SKIPPED_RESPONSE_HEADERS.contains(entry.getKey().toLowerCase())) {
                     continue;
@@ -547,7 +551,8 @@ import java.util.Map;
             int entriesToEvict = 0;
             if (bytesToRecover > 0) {
                 // determine how many headers need to be evicted.
-                for (int j = mDynamicTable.length - 1; j >= mNextHeaderIndex && bytesToRecover > 0; j--) {
+                for (int j = mDynamicTable.length - 1; j >= mNextHeaderIndex && bytesToRecover > 0;
+                     j--) {
                     bytesToRecover -= mDynamicTable[j].hpackSize();
                     mDynamicTableByteCount -= mDynamicTable[j].hpackSize();
                     mHeaderCount--;
@@ -555,7 +560,8 @@ import java.util.Map;
                 }
                 System.arraycopy(mDynamicTable, mNextHeaderIndex + 1, mDynamicTable,
                         mNextHeaderIndex + 1 + entriesToEvict, mHeaderCount);
-                Arrays.fill(mDynamicTable, mNextHeaderIndex + 1, mNextHeaderIndex + 1 + entriesToEvict, null);
+                Arrays.fill(mDynamicTable, mNextHeaderIndex + 1,
+                        mNextHeaderIndex + 1 + entriesToEvict, null);
                 mNextHeaderIndex += entriesToEvict;
             }
             return entriesToEvict;
@@ -576,7 +582,8 @@ import java.util.Map;
 
             if (mHeaderCount + 1 > mDynamicTable.length) { // Need to grow the dynamic table.
                 Header[] doubled = new Header[mDynamicTable.length * 2];
-                System.arraycopy(mDynamicTable, 0, doubled, mDynamicTable.length, mDynamicTable.length);
+                System.arraycopy(mDynamicTable, 0, doubled, mDynamicTable.length,
+                        mDynamicTable.length);
                 mNextHeaderIndex = mDynamicTable.length - 1;
                 mDynamicTable = doubled;
             }
@@ -608,20 +615,26 @@ import java.util.Map;
                 if (staticIndex != null) {
                     headerNameIndex = staticIndex + 1;
                     if (headerNameIndex > 1 && headerNameIndex < 8) {
-                        // Only search a subset of the static header table. Most entries have an empty value, so
-                        // it's unnecessary to waste cycles looking at them. This check is built on the
-                        // observation that the header entries we care about are in adjacent pairs, and we
+                        // Only search a subset of the static header table. Most entries have an
+                        // empty value, so
+                        // it's unnecessary to waste cycles looking at them. This check is built
+                        // on the
+                        // observation that the header entries we care about are in adjacent
+                        // pairs, and we
                         // always know the first index of the pair.
-                        if (TextUtils.equals(STATIC_HEADER_TABLE[headerNameIndex - 1].value, value)) {
+                        if (TextUtils
+                                .equals(STATIC_HEADER_TABLE[headerNameIndex - 1].value, value)) {
                             headerIndex = headerNameIndex;
-                        } else if (TextUtils.equals(STATIC_HEADER_TABLE[headerNameIndex].value, value)) {
+                        } else if (TextUtils
+                                .equals(STATIC_HEADER_TABLE[headerNameIndex].value, value)) {
                             headerIndex = headerNameIndex + 1;
                         }
                     }
                 }
 
                 if (headerIndex == -1) {
-                    for (int j = mNextHeaderIndex + 1, length = mDynamicTable.length; j < length; j++) {
+                    for (int j = mNextHeaderIndex + 1, length = mDynamicTable.length; j < length;
+                         j++) {
                         if (TextUtils.equals(mDynamicTable[j].name, name)) {
                             if (TextUtils.equals(mDynamicTable[j].value, value)) {
                                 headerIndex = j - mNextHeaderIndex + STATIC_HEADER_TABLE.length;
@@ -642,8 +655,10 @@ import java.util.Map;
                     writeString(name);
                     writeString(value);
                     insertIntoDynamicTable(header);
-                } else if (name.startsWith(Header.PSEUDO_PREFIX) && !Header.TARGET_AUTHORITY.equals(name)) {
-                    // Follow Chromes lead - only include the :authority pseudo header, but exclude all other
+                } else if (name.startsWith(Header.PSEUDO_PREFIX) && !Header.TARGET_AUTHORITY
+                        .equals(name)) {
+                    // Follow Chromes lead - only include the :authority pseudo header, but
+                    // exclude all other
                     // pseudo headers. Literal Header Field without Indexing - Indexed Name.
                     writeInt(headerNameIndex, PREFIX_4_BITS, 0);
                     writeString(value);

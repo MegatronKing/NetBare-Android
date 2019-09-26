@@ -15,10 +15,10 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import android.support.annotation.NonNull;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import androidx.annotation.NonNull;
 
 /**
  * A virtual gateway interceptor, observes and modifies requests/responses. Interceptors are
@@ -29,10 +29,12 @@ import java.nio.ByteBuffer;
  * <p>
  * Use {@link InterceptorFactory} to create an interceptor instance.
  * </p>
+ *
  * @author Megatron King
  * @since 2018-11-13 23:46
  */
-public interface Interceptor<Req extends Request, ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
+public interface Interceptor<Req extends Request, ReqChain extends AbstractRequestChain<Req, ?
+        extends Interceptor>,
         Res extends Response, ResChain extends AbstractResponseChain<Res, ? extends Interceptor>> {
 
     /**
@@ -42,9 +44,10 @@ public interface Interceptor<Req extends Request, ReqChain extends AbstractReque
      * same thread.
      * </p>
      *
-     * @param chain The request chain, call {@linkplain RequestChain#process(ByteBuffer)} to
-     *                delivery the packet.
+     * @param chain  The request chain, call {@linkplain RequestChain#process(ByteBuffer)} to
+     *               delivery the packet.
      * @param buffer A nio buffer contains the packet data.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     void intercept(@NonNull ReqChain chain, @NonNull ByteBuffer buffer) throws IOException;
@@ -55,9 +58,10 @@ public interface Interceptor<Req extends Request, ReqChain extends AbstractReque
      * Remember do not block this method for a long time, because all the connections share the
      * same thread.
      *
-     * @param chain The response chain, call {@linkplain ResponseChain#process(ByteBuffer)} to
-     *                delivery the packet.
+     * @param chain  The response chain, call {@linkplain ResponseChain#process(ByteBuffer)} to
+     *               delivery the packet.
      * @param buffer A nio buffer contains the packet data.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     void intercept(@NonNull ResChain chain, @NonNull ByteBuffer buffer) throws IOException;

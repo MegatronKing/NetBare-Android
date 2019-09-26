@@ -22,7 +22,7 @@ package com.github.megatronking.netbare.ip;
  * but receivers should not use these fields (except to include them in the checksum).
  * Unless otherwise noted under the individual format descriptions, the values of the internet
  * header fields are as follows:
- *
+ * <p>
  * 0                   1                   2                   3
  * 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -32,7 +32,7 @@ package com.github.megatronking.netbare.ip;
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * |                            Optional                           |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *
+ * <p>
  * See https://tools.ietf.org/html/rfc792
  *
  * @author Megatron King

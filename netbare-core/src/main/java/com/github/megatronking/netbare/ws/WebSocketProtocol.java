@@ -70,7 +70,8 @@ package com.github.megatronking.netbare.ws;
 
     /**
      * Byte 1 flag for whether the payload data is masked. <p> If this flag is set, the next four
-     * bytes represent the mask key. These bytes appear after any additional bytes specified by {@link
+     * bytes represent the mask key. These bytes appear after any additional bytes specified by
+     * {@link
      * #B1_MASK_LENGTH}.
      */
     static final int B1_FLAG_MASK = 0b10000000;

@@ -15,11 +15,6 @@
  */
 package com.github.megatronking.netbare.ssl;
 
-import android.os.Build;
-import android.support.annotation.NonNull;
-
-import com.github.megatronking.netbare.NetBareLog;
-
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -30,28 +25,33 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLException;
 
+import com.github.megatronking.netbare.NetBareLog;
+
+import android.os.Build;
+import androidx.annotation.NonNull;
+
 /**
  * A base class for encrypting and decrypting SSL packets. Use {@link CodecCallback} to
  * observe actions and receive output packets.
  *
  * <p>SSL handshake steps:</p>
- *
- *    client          server          message
- *    ======          ======          =======
- *    wrap()          ...             ClientHello
- *    ...             unwrap()        ClientHello
- *    ...             wrap()          ServerHello/Certificate
- *    unwrap()        ...             ServerHello/Certificate
- *    wrap()          ...             ClientKeyExchange
- *    wrap()          ...             ChangeCipherSpec
- *    wrap()          ...             Finished
- *    ...             unwrap()        ClientKeyExchange
- *    ...             unwrap()        ChangeCipherSpec
- *    ...             unwrap()        Finished
- *    ...             wrap()          ChangeCipherSpec
- *    ...             wrap()          Finished
- *    unwrap()        ...             ChangeCipherSpec
- *    unwrap()        ...             Finished
+ * <p>
+ * client          server          message
+ * ======          ======          =======
+ * wrap()          ...             ClientHello
+ * ...             unwrap()        ClientHello
+ * ...             wrap()          ServerHello/Certificate
+ * unwrap()        ...             ServerHello/Certificate
+ * wrap()          ...             ClientKeyExchange
+ * wrap()          ...             ChangeCipherSpec
+ * wrap()          ...             Finished
+ * ...             unwrap()        ClientKeyExchange
+ * ...             unwrap()        ChangeCipherSpec
+ * ...             unwrap()        Finished
+ * ...             wrap()          ChangeCipherSpec
+ * ...             wrap()          Finished
+ * unwrap()        ...             ChangeCipherSpec
+ * unwrap()        ...             Finished
  *
  * @author Megatron King
  * @since 2018-11-15 17:46
@@ -110,7 +110,9 @@ public abstract class SSLCodec {
      * Create an {@link SSLEngine} instance to encode and decode SSL packets.
      *
      * @param factory A factory produces {@link SSLEngine}.
+     *
      * @return An instance of {@link SSLEngine}.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     protected abstract SSLEngine createEngine(SSLEngineFactory factory)
@@ -119,8 +121,9 @@ public abstract class SSLCodec {
     /**
      * Handshake with the client or server and try to decode a SSL encrypt packet.
      *
-     * @param buffer The SSL encrypt packet.
+     * @param buffer   The SSL encrypt packet.
      * @param callback A callback to observe actions and receive output packets.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     public void decode(ByteBuffer buffer, @NonNull CodecCallback callback) throws IOException {
@@ -142,8 +145,9 @@ public abstract class SSLCodec {
      * Try to encrypt a plaintext packet. If SSL handshake has finished, then encode it,
      * otherwise add it to queue and wait handshake finished.
      *
-     * @param buffer The plaintext packet.
+     * @param buffer   The plaintext packet.
      * @param callback A callback to observe actions and receive output packets.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     public void encode(ByteBuffer buffer, @NonNull CodecCallback callback) throws IOException {
@@ -392,7 +396,8 @@ public abstract class SSLCodec {
                         // java.io.EOFException: Read error is an Android 8.1 system bug,
                         // it will cause #4 and #11. We swallowed this exception and not throw.
                         if ((e.getCause() instanceof EOFException && inputRemaining == 31 &&
-                                input.remaining() == 0 && output.remaining() == output.capacity())) {
+                                     input.remaining() == 0 && output.remaining() == output
+                                .capacity())) {
                             // Create a new SSLEngineResult.
                             result = new SSLEngineResult(SSLEngineResult.Status.OK,
                                     SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING,
@@ -470,6 +475,7 @@ public abstract class SSLCodec {
          * The packet is unable to decrypt or encrypt, should send them to tunnel immediately.
          *
          * @param buffer Packets should send to tunnel.
+         *
          * @throws IOException If an I/O error has occurred.
          */
         void onProcess(ByteBuffer buffer) throws IOException;
@@ -478,6 +484,7 @@ public abstract class SSLCodec {
          * Output an encrypted packet.
          *
          * @param buffer The encrypted packet.
+         *
          * @throws IOException If an I/O error has occurred.
          */
         void onEncrypt(ByteBuffer buffer) throws IOException;
@@ -486,6 +493,7 @@ public abstract class SSLCodec {
          * Output an decrypted packet, it is a plaintext.
          *
          * @param buffer The decrypted packet.
+         *
          * @throws IOException If an I/O error has occurred.
          */
         void onDecrypt(ByteBuffer buffer) throws IOException;

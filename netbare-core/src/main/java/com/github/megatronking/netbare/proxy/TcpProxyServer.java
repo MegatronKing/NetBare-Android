@@ -15,22 +15,6 @@
  */
 package com.github.megatronking.netbare.proxy;
 
-import android.net.VpnService;
-
-import com.github.megatronking.netbare.NetBareLog;
-import com.github.megatronking.netbare.NetBareUtils;
-import com.github.megatronking.netbare.gateway.VirtualGateway;
-import com.github.megatronking.netbare.net.Session;
-import com.github.megatronking.netbare.net.SessionProvider;
-import com.github.megatronking.netbare.ssl.SSLWhiteList;
-import com.github.megatronking.netbare.tunnel.ConnectionShutdownException;
-import com.github.megatronking.netbare.tunnel.NioCallback;
-import com.github.megatronking.netbare.tunnel.NioTunnel;
-import com.github.megatronking.netbare.tunnel.TcpProxyTunnel;
-import com.github.megatronking.netbare.tunnel.TcpRemoteTunnel;
-import com.github.megatronking.netbare.tunnel.TcpTunnel;
-import com.github.megatronking.netbare.tunnel.TcpVATunnel;
-
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -46,6 +30,22 @@ import java.util.Set;
 
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
+
+import com.github.megatronking.netbare.NetBareLog;
+import com.github.megatronking.netbare.NetBareUtils;
+import com.github.megatronking.netbare.gateway.VirtualGateway;
+import com.github.megatronking.netbare.net.Session;
+import com.github.megatronking.netbare.net.SessionProvider;
+import com.github.megatronking.netbare.ssl.SSLWhiteList;
+import com.github.megatronking.netbare.tunnel.ConnectionShutdownException;
+import com.github.megatronking.netbare.tunnel.NioCallback;
+import com.github.megatronking.netbare.tunnel.NioTunnel;
+import com.github.megatronking.netbare.tunnel.TcpProxyTunnel;
+import com.github.megatronking.netbare.tunnel.TcpRemoteTunnel;
+import com.github.megatronking.netbare.tunnel.TcpTunnel;
+import com.github.megatronking.netbare.tunnel.TcpVATunnel;
+
+import android.net.VpnService;
 
 /**
  * The TCP proxy server is a nio {@link ServerSocketChannel}, it listens the connections from
@@ -93,7 +93,6 @@ import javax.net.ssl.SSLHandshakeException;
         this.mSessionProvider = sessionProvider;
     }
 
-
     @Override
     int getIp() {
         return mIp;
@@ -119,6 +118,7 @@ import javax.net.ssl.SSLHandshakeException;
         if (select == 0) {
             return;
         }
+
         Set<SelectionKey> selectedKeys = mSelector.selectedKeys();
         if (selectedKeys == null) {
             return;
@@ -145,7 +145,7 @@ import javax.net.ssl.SSLHandshakeException;
                             } catch (IOException e) {
                                 NioTunnel tunnel = callback.getTunnel();
                                 String ip = null;
-                                InetAddress address = ((Socket)tunnel.socket()).getInetAddress();
+                                InetAddress address = ((Socket) tunnel.socket()).getInetAddress();
                                 if (address != null) {
                                     ip = address.getHostAddress();
                                 }
@@ -192,7 +192,7 @@ import javax.net.ssl.SSLHandshakeException;
             TcpVATunnel gatewayTunnel = new TcpVATunnel(session, proxyTunnel,
                     remoteTunnel, mMtu);
             gatewayTunnel.connect(new InetSocketAddress(ip, remotePort));
-        } catch (IOException e){
+        } catch (IOException e) {
             NetBareUtils.closeQuietly(proxyTunnel);
             NetBareUtils.closeQuietly(remoteTunnel);
             throw e;

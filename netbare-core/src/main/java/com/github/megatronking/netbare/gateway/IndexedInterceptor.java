@@ -15,10 +15,10 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import android.support.annotation.NonNull;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import androidx.annotation.NonNull;
 
 /**
  * Add the index parameter in the {@link #intercept(ReqChain, ByteBuffer)} and
@@ -30,7 +30,8 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-12-03 21:00
  */
-public abstract class IndexedInterceptor<Req extends Request, ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
+public abstract class IndexedInterceptor<Req extends Request,
+        ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
         Res extends Response, ResChain extends AbstractResponseChain<Res, ? extends Interceptor>>
         implements Interceptor<Req, ReqChain, Res, ResChain> {
 
@@ -40,10 +41,11 @@ public abstract class IndexedInterceptor<Req extends Request, ReqChain extends A
     /**
      * The same like {@link #intercept(ReqChain, ByteBuffer)}.
      *
-     * @param chain The request chain, call {@linkplain ReqChain#process(ByteBuffer)} to
-     *                delivery the packet.
+     * @param chain  The request chain, call {@linkplain ReqChain#process(ByteBuffer)} to
+     *               delivery the packet.
      * @param buffer A nio buffer contains the packet data.
-     * @param index The packet index, started from 0.
+     * @param index  The packet index, started from 0.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     protected abstract void intercept(@NonNull ReqChain chain, @NonNull ByteBuffer buffer,
@@ -52,10 +54,11 @@ public abstract class IndexedInterceptor<Req extends Request, ReqChain extends A
     /**
      * The same like {@link #intercept(ResChain, ByteBuffer)}.
      *
-     * @param chain The response chain, call {@linkplain ResChain#process(ByteBuffer)} to
-     *                delivery the packet.
+     * @param chain  The response chain, call {@linkplain ResChain#process(ByteBuffer)} to
+     *               delivery the packet.
      * @param buffer A nio buffer contains the packet data.
-     * @param index The packet index, started from 0.
+     * @param index  The packet index, started from 0.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     protected abstract void intercept(@NonNull ResChain chain, @NonNull ByteBuffer buffer,

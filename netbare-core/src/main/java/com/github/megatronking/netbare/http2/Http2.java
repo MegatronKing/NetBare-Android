@@ -17,7 +17,7 @@ package com.github.megatronking.netbare.http2;
 
 /**
  * HTTP2 protocol constants and common methods.
- *
+ * <p>
  * See https://httpwg.org/specs/rfc7540.html
  *
  * @author Megatron King
@@ -35,11 +35,10 @@ public final class Http2 {
 
     /**
      * The initial max frame size, applied independently writing to, or reading from the peer.
-     *
+     * <p>
      * 0x4000 = 2^14 = 16384
      */
     static final int INITIAL_MAX_FRAME_SIZE = 0x4000;
-
 
     static final byte FLAG_NONE = 0x0;
 

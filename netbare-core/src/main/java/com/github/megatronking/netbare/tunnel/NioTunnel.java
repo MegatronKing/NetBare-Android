@@ -15,8 +15,6 @@
  */
 package com.github.megatronking.netbare.tunnel;
 
-import com.github.megatronking.netbare.NetBareUtils;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -24,8 +22,10 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.spi.AbstractSelectableChannel;
-import java.util.Queue;
+import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
+
+import com.github.megatronking.netbare.NetBareUtils;
 
 /**
  * An abstract base nio tunnel class uses nio operations, the sub class should provides IO
@@ -44,6 +44,7 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
      * Let the remote tunnel connects to remote server.
      *
      * @param address The remote server IP socket address.
+     *
      * @throws IOException if an I/O error occurs.
      */
     public abstract void connect(InetSocketAddress address) throws IOException;
@@ -59,7 +60,9 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
      * Write the packet buffer to remote server.
      *
      * @param buffer A packet buffer.
+     *
      * @return The wrote length.
+     *
      * @throws IOException if an I/O error occurs.
      */
     protected abstract int channelWrite(ByteBuffer buffer) throws IOException;
@@ -68,7 +71,9 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
      * Read data from remote server and put it into the given buffer.
      *
      * @param buffer A buffer to store data.
+     *
      * @return The read length.
+     *
      * @throws IOException if an I/O error occurs.
      */
     protected abstract int channelRead(ByteBuffer buffer) throws IOException;
@@ -77,7 +82,7 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
     private final Selector mSelector;
     private SelectionKey mSelectionKey;
 
-    private Queue<ByteBuffer> mPendingBuffers;
+    private Deque<ByteBuffer> mPendingBuffers;
 
     private NioCallback mCallback;
     private boolean mIsClosed;
@@ -109,12 +114,12 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
         }
         // Write pending buffers.
         while (!mPendingBuffers.isEmpty()) {
-            ByteBuffer buffer = mPendingBuffers.poll();
+            ByteBuffer buffer = mPendingBuffers.pollFirst();
             int remaining = buffer.remaining();
             int sent = channelWrite(buffer);
             if (sent < remaining) {
                 // Should wait next onWrite.
-                mPendingBuffers.offer(buffer);
+                mPendingBuffers.offerFirst(buffer);
                 return;
             }
         }
@@ -148,7 +153,7 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
         if (!buffer.hasRemaining()) {
             return;
         }
-        mPendingBuffers.offer(buffer);
+        mPendingBuffers.offerLast(buffer);
         interestWrite();
     }
 
@@ -190,6 +195,5 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
             mSelectionKey.interestOps(SelectionKey.OP_READ);
         }
     }
-
 
 }

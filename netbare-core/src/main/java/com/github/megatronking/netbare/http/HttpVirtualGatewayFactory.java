@@ -15,17 +15,17 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.github.megatronking.netbare.gateway.VirtualGateway;
-import com.github.megatronking.netbare.gateway.VirtualGatewayFactory;
 import com.github.megatronking.netbare.gateway.Request;
 import com.github.megatronking.netbare.gateway.Response;
+import com.github.megatronking.netbare.gateway.VirtualGateway;
+import com.github.megatronking.netbare.gateway.VirtualGatewayFactory;
 import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.ssl.JKS;
 
-import java.util.ArrayList;
-import java.util.List;
+import androidx.annotation.NonNull;
 
 /**
  * A {@link VirtualGatewayFactory} that produces the {@link HttpVirtualGateway}.
@@ -43,6 +43,7 @@ public class HttpVirtualGatewayFactory implements VirtualGatewayFactory {
      * {@link HttpInterceptorFactory}.
      *
      * @param factories a collection of {@link HttpInterceptorFactory}.
+     *
      * @return A instance of {@link HttpVirtualGatewayFactory}.
      */
     public HttpVirtualGatewayFactory(@NonNull JKS jks,
@@ -53,7 +54,8 @@ public class HttpVirtualGatewayFactory implements VirtualGatewayFactory {
 
     @Override
     public VirtualGateway create(Session session, Request request, Response response) {
-        return new HttpVirtualGateway(session, request, response, mJKS, new ArrayList<>(mFactories));
+        return new HttpVirtualGateway(session, request, response, mJKS,
+                new ArrayList<>(mFactories));
     }
 
     /**
@@ -61,6 +63,7 @@ public class HttpVirtualGatewayFactory implements VirtualGatewayFactory {
      * {@link HttpInterceptorFactory}.
      *
      * @param factories a collection of {@link HttpInterceptorFactory}.
+     *
      * @return A instance of {@link HttpVirtualGatewayFactory}.
      */
     public static VirtualGatewayFactory create(@NonNull JKS authority,

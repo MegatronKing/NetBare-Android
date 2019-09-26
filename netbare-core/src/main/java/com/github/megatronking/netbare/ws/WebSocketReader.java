@@ -30,7 +30,7 @@
  */
 package com.github.megatronking.netbare.ws;
 
-import com.github.megatronking.netbare.NetBareUtils;
+import static java.lang.Integer.toHexString;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,7 +39,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.Integer.toHexString;
+import com.github.megatronking.netbare.NetBareUtils;
 
 /**
  * A web socket frame reader.
@@ -134,7 +134,8 @@ public class WebSocketReader {
 
         boolean isMasked = (b1 & WebSocketProtocol.B1_FLAG_MASK) != 0;
         if (isMasked == mClient) {
-            // Masked payloads must be read on the server. Unmasked payloads must be read on the client.
+            // Masked payloads must be read on the server. Unmasked payloads must be read on the
+            // client.
             throw new ProtocolException(mClient
                     ? "Server-sent frames must not be masked."
                     : "Client-sent frames must be masked.");
@@ -148,7 +149,8 @@ public class WebSocketReader {
             mFrameLength = readLong();
             if (mFrameLength < 0) {
                 throw new ProtocolException(
-                        "Frame length 0x" + Long.toHexString(mFrameLength) + " > 0x7FFFFFFFFFFFFFFF");
+                        "Frame length 0x" + Long.toHexString(mFrameLength)
+                                + " > 0x7FFFFFFFFFFFFFFF");
             }
         }
 
@@ -198,7 +200,8 @@ public class WebSocketReader {
                     throw new ProtocolException("Malformed close payload length of 1.");
                 } else if (bufferSize != 0) {
                     code = byteBuffer.getShort();
-                    reason = new String(byteBuffer.array(), byteBuffer.position(), byteBuffer.remaining());
+                    reason = new String(byteBuffer.array(), byteBuffer.position(),
+                            byteBuffer.remaining());
                     String codeExceptionMessage = WebSocketProtocol.closeCodeExceptionMessage(code);
                     if (codeExceptionMessage != null) {
                         throw new ProtocolException(codeExceptionMessage);
@@ -228,7 +231,7 @@ public class WebSocketReader {
         }
         int total = 0;
         for (byte[] segment : mMessageSegments) {
-            total+= segment.length;
+            total += segment.length;
         }
         ByteBuffer byteBuffer = ByteBuffer.allocate(total);
         for (byte[] segment : mMessageSegments) {
@@ -267,7 +270,8 @@ public class WebSocketReader {
 
             readUntilNonControlFrame();
             if (mOpcode != WebSocketProtocol.OPCODE_CONTINUATION) {
-                throw new ProtocolException("Expected continuation opcode. Got: " + toHexString(mOpcode));
+                throw new ProtocolException(
+                        "Expected continuation opcode. Got: " + toHexString(mOpcode));
             }
         }
     }
@@ -284,7 +288,7 @@ public class WebSocketReader {
 
     private short readShort() throws IOException {
         return (short) ((mInput.read() & 0xFF) << 8
-                | (mInput.read() & 0xFF));
+                                | (mInput.read() & 0xFF));
     }
 
     private long readLong() throws IOException {

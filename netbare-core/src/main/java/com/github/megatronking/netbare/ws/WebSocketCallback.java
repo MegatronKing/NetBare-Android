@@ -29,6 +29,7 @@ public interface WebSocketCallback {
      * Invoked when a text message is decoded.
      *
      * @param text A text content.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     void onReadMessage(String text) throws IOException;
@@ -37,6 +38,7 @@ public interface WebSocketCallback {
      * Invoked when a binary message is decoded.
      *
      * @param binary A binary content.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     void onReadMessage(byte[] binary) throws IOException;
@@ -58,7 +60,7 @@ public interface WebSocketCallback {
     /**
      * Invoked when the control frame is closed.
      *
-     * @param code Status code.
+     * @param code   Status code.
      * @param reason Close reason.
      */
     void onReadClose(int code, String reason);

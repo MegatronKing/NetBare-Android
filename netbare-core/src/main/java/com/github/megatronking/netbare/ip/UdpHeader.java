@@ -22,9 +22,9 @@ import java.util.Locale;
 /**
  * The UDP module  must be able to determine the source and destination internet addresses and
  * the protocol field from the internet header.
- *
+ * <p>
  * UDP Header Format:
- *
+ * <p>
  * 0      7 8     15 16    23 24    31
  * +--------+--------+--------+--------+
  * |     Source      |   Destination   |
@@ -36,7 +36,7 @@ import java.util.Locale;
  * |
  * |          data octets ...
  * +---------------- ...
- *
+ * <p>
  * See https://tools.ietf.org/html/rfc768
  *
  * @author Megatron King

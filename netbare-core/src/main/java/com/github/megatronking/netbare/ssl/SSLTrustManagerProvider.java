@@ -15,13 +15,13 @@
  */
 package com.github.megatronking.netbare.ssl;
 
-import android.support.annotation.Nullable;
-
 import javax.net.ssl.TrustManager;
+
+import androidx.annotation.Nullable;
 
 /**
  * A security provider provides peer authentication trust decisions. The {@link TrustManager[]}
- *  * instance would be used to initialize {@link javax.net.ssl.SSLContext}.
+ * * instance would be used to initialize {@link javax.net.ssl.SSLContext}.
  *
  * @author Megatron King
  * @since 2019/3/31 10:56
@@ -31,8 +31,9 @@ public interface SSLTrustManagerProvider {
     /**
      * Provides peer authentication trust decisions or null.
      *
-     * @param host The peer host.
+     * @param host   The peer host.
      * @param client Whether the SSLContext is initialized for client.
+     *
      * @return The sources of peer authentication trust decisions or null.
      */
     @Nullable

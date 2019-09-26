@@ -15,10 +15,14 @@
  */
 package com.github.megatronking.netbare;
 
-import android.content.pm.PackageManager;
-import android.net.VpnService;
-import android.os.ParcelFileDescriptor;
-import android.os.SystemClock;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.github.megatronking.netbare.ip.IpAddress;
 import com.github.megatronking.netbare.ip.IpHeader;
@@ -29,14 +33,11 @@ import com.github.megatronking.netbare.proxy.ProxyServerForwarder;
 import com.github.megatronking.netbare.proxy.TcpProxyServerForwarder;
 import com.github.megatronking.netbare.proxy.UdpProxyServerForwarder;
 
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import android.content.pm.PackageManager;
+import android.net.VpnService;
+import android.os.ParcelFileDescriptor;
+import android.os.SystemClock;
+import android.util.Log;
 
 /**
  * A work thread running NetBare core logic. NetBase established the VPN connection is this thread
@@ -128,6 +129,13 @@ import java.util.Map;
             }
         } catch (PackageManager.NameNotFoundException e) {
             NetBareLog.wtf(e);
+            //Log.e("Cui", "Exception captured");
+            //e.printStackTrace();
+          /*  try {
+                builder.addAllowedApplication(mVpnService.getPackageName());
+            } catch (PackageManager.NameNotFoundException ex) {
+                ex.printStackTrace();
+            } */
         }
         ParcelFileDescriptor vpnDescriptor = builder.establish();
         if (vpnDescriptor == null) {
@@ -152,13 +160,15 @@ import java.util.Map;
             }
         } catch (IOException e) {
             NetBareLog.wtf(e);
+        } catch (Exception e) {
+            Log.e("Cui", e.getMessage());
+        } finally {
+            packetsTransfer.stop();
+
+            NetBareUtils.closeQuietly(vpnDescriptor);
+            NetBareUtils.closeQuietly(input);
+            NetBareUtils.closeQuietly(output);
         }
-
-        packetsTransfer.stop();
-
-        NetBareUtils.closeQuietly(vpnDescriptor);
-        NetBareUtils.closeQuietly(input);
-        NetBareUtils.closeQuietly(output);
     }
 
     private static class PacketsTransfer {
@@ -168,12 +178,14 @@ import java.util.Map;
         private PacketsTransfer(VpnService service, NetBareConfig config) throws IOException {
             int mtu = config.mtu;
             String localIp = config.address.address;
-            UidDumper uidDumper = config.dumpUid ? new UidDumper(localIp, config.uidProvider) : null;
+            UidDumper uidDumper =
+                    config.dumpUid ? new UidDumper(localIp, config.uidProvider) : null;
             // Register all supported protocols here.
             this.mForwarderRegistry = new LinkedHashMap<>(3);
             // TCP
-            this.mForwarderRegistry.put(Protocol.TCP, new TcpProxyServerForwarder(service, localIp, mtu,
-                    uidDumper));
+            this.mForwarderRegistry
+                    .put(Protocol.TCP, new TcpProxyServerForwarder(service, localIp, mtu,
+                            uidDumper));
             // UDP
             this.mForwarderRegistry.put(Protocol.UDP, new UdpProxyServerForwarder(service, mtu,
                     uidDumper));
@@ -181,7 +193,7 @@ import java.util.Map;
             this.mForwarderRegistry.put(Protocol.ICMP, new IcmpProxyServerForwarder());
         }
 
-        private void start()  {
+        private void start() {
             for (ProxyServerForwarder forwarder : mForwarderRegistry.values()) {
                 forwarder.prepare();
             }

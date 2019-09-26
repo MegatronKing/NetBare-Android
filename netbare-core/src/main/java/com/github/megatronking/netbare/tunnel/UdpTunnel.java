@@ -15,14 +15,14 @@
  */
 package com.github.megatronking.netbare.tunnel;
 
-import com.github.megatronking.netbare.NetBareLog;
-
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.Selector;
+
+import com.github.megatronking.netbare.NetBareLog;
 
 /**
  * A UDP protocol implementation based with {@link NioTunnel}.

@@ -15,8 +15,6 @@
  */
 package com.github.megatronking.netbare.tunnel;
 
-import com.github.megatronking.netbare.NetBareLog;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -24,6 +22,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+
+import com.github.megatronking.netbare.NetBareLog;
 
 /**
  * A TCP protocol implementation based with {@link NioTunnel}.

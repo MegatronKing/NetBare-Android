@@ -30,6 +30,11 @@
  */
 package com.github.megatronking.netbare.tunnel;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.NetBareUtils;
 import com.github.megatronking.netbare.NetBareVirtualGateway;
@@ -39,11 +44,6 @@ import com.github.megatronking.netbare.gateway.VirtualGateway;
 import com.github.megatronking.netbare.ip.IpHeader;
 import com.github.megatronking.netbare.ip.UdpHeader;
 import com.github.megatronking.netbare.net.Session;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 
 /**
  * UDP protocol virtual gateway tunnel wraps {@link UdpRemoteTunnel} and itself as client and

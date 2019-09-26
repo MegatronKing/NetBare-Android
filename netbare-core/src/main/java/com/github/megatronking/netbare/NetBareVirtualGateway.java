@@ -15,7 +15,10 @@
  */
 package com.github.megatronking.netbare;
 
-import android.os.Process;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.github.megatronking.netbare.gateway.Request;
 import com.github.megatronking.netbare.gateway.Response;
@@ -23,10 +26,7 @@ import com.github.megatronking.netbare.gateway.VirtualGateway;
 import com.github.megatronking.netbare.ip.Protocol;
 import com.github.megatronking.netbare.net.Session;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.HashSet;
-import java.util.Set;
+import android.os.Process;
 
 /**
  * The main virtual gateway used in proxy servers, it wraps the actual virtual gateway. We use this
@@ -68,8 +68,7 @@ public final class NetBareVirtualGateway extends VirtualGateway {
         mLog = new NetBareXLog(session);
 
         NetBareConfig config = NetBare.get().getConfig();
-        if (config == null || (config.excludeSelf && session.uid == Process.myUid()) ||
-            !config.allowedApplicationUids.contains(session.uid)) {
+        if (config == null || (config.excludeSelf && session.uid == Process.myUid())) {
             // Exclude the app itself.
             mLog.w("Exclude an app-self connection!");
             mPolicy = POLICY_DISALLOWED;

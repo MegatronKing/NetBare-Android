@@ -15,13 +15,13 @@
  */
 package com.github.megatronking.netbare.net;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.github.megatronking.netbare.ip.Protocol;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * A session provider that provides the session instance query services.
@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class SessionProvider {
 
-    private static final int MAX_SESSION = 100;
+    private static final int MAX_SESSION = 200;
 
     private final Map<Short, Session> mSessions;
     private final UidDumper mDumper;
@@ -50,6 +50,7 @@ public final class SessionProvider {
      * Query a session by local VPN port.
      *
      * @param localPort The local VPN port.
+     *
      * @return The instance of {@link Session} if it exists, or null.
      */
     @Nullable
@@ -65,10 +66,11 @@ public final class SessionProvider {
     /**
      * Query or create a session by protocol, ports and remote server IP.
      *
-     * @param protocol IP protocol.
-     * @param localPort Local VPN port.
+     * @param protocol   IP protocol.
+     * @param localPort  Local VPN port.
      * @param remotePort Remote server port.
-     * @param remoteIp Remote server IP.
+     * @param remoteIp   Remote server IP.
+     *
      * @return An instance of {@link Session}, if the instance not exists, will create a new one.
      */
     @NonNull

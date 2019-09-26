@@ -29,26 +29,30 @@ public abstract class ProxyServer {
     /**
      * Establish the server and start receive packets.
      */
-    /* package */ abstract void startServer();
+    /* package */
+    abstract void startServer();
 
     /**
      * Terminate this server.
      */
-    /* package */ abstract void stopServer();
+    /* package */
+    abstract void stopServer();
 
     /**
      * Returns the proxy server IP.
      *
      * @return The proxy server IP.
      */
-    /* package */ abstract int getIp();
+    /* package */
+    abstract int getIp();
 
     /**
      * Returns the proxy server port.
      *
      * @return The proxy server port.
      */
-    /* package */ abstract short getPort();
+    /* package */
+    abstract short getPort();
 
     /**
      * Establish the proxy server.

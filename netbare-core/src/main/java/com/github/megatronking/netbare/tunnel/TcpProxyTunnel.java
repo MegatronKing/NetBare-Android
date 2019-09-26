@@ -15,15 +15,15 @@
  */
 package com.github.megatronking.netbare.tunnel;
 
-import com.github.megatronking.netbare.NetBareXLog;
-import com.github.megatronking.netbare.ip.Protocol;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+
+import com.github.megatronking.netbare.NetBareXLog;
+import com.github.megatronking.netbare.ip.Protocol;
 
 /**
  * A TCP tunnel communicates with the VPN service.

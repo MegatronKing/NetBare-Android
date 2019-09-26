@@ -23,6 +23,7 @@ import com.github.megatronking.netbare.gateway.IndexedInterceptor;
  * @author Megatron King
  * @since 2018-12-03 21:00
  */
-public abstract class HttpIndexedInterceptor extends IndexedInterceptor<HttpRequest, HttpRequestChain,
+public abstract class HttpIndexedInterceptor
+        extends IndexedInterceptor<HttpRequest, HttpRequestChain,
         HttpResponse, HttpResponseChain> implements HttpInterceptor {
 }

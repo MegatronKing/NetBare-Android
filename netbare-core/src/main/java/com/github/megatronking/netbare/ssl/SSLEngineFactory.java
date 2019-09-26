@@ -15,16 +15,6 @@
  */
 package com.github.megatronking.netbare.ssl;
 
-import android.os.Build;
-import android.support.annotation.NonNull;
-
-import com.github.megatronking.netbare.NetBareLog;
-import com.github.megatronking.netbare.NetBareUtils;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
-import org.bouncycastle.operator.OperatorCreationException;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -54,6 +44,16 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+
+import org.bouncycastle.operator.OperatorCreationException;
+
+import com.github.megatronking.netbare.NetBareLog;
+import com.github.megatronking.netbare.NetBareUtils;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+
+import android.os.Build;
+import androidx.annotation.NonNull;
 
 /**
  * A factory produces client and server MITM {@link SSLEngine}.
@@ -122,7 +122,7 @@ public final class SSLEngineFactory {
 
     public static SSLEngineFactory get(JKS jks) throws GeneralSecurityException, IOException {
         if (sEngineFactory == null) {
-            synchronized (SSLEngineFactory.class) {
+            synchronized(SSLEngineFactory.class) {
                 if (sEngineFactory == null) {
                     sEngineFactory = new SSLEngineFactory(jks);
                 }
@@ -135,8 +135,9 @@ public final class SSLEngineFactory {
      * Constructs the factory with a self-signed certificate.
      *
      * @param jks Java keystore of the self-signed certificate.
+     *
      * @throws GeneralSecurityException If a generic security exception has occurred.
-     * @throws IOException If an I/O error has occurred.
+     * @throws IOException              If an I/O error has occurred.
      */
     public SSLEngineFactory(@NonNull JKS jks) throws GeneralSecurityException, IOException {
         this.mJKS = jks;
@@ -148,7 +149,9 @@ public final class SSLEngineFactory {
      * Create a MITM server {@link SSLEngine} with the remote server host.
      *
      * @param host The remote server host.
+     *
      * @return A server {@link SSLEngine} instance.
+     *
      * @throws ExecutionException If an execution error has occurred.
      */
     public SSLEngine createServerEngine(@NonNull final String host) throws ExecutionException {
@@ -160,7 +163,8 @@ public final class SSLEngineFactory {
             }
         });
         SSLEngine engine;
-        // On Android 8.1, createSSLEngine will be crashed due to 'Unable to create application data'.
+        // On Android 8.1, createSSLEngine will be crashed due to 'Unable to create application
+        // data'.
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O_MR1) {
             try {
                 engine = ctx.createSSLEngine();
@@ -178,10 +182,13 @@ public final class SSLEngineFactory {
      *
      * @param host Remote server host.
      * @param port Remote server port.
+     *
      * @return A client {@link SSLEngine} instance.
+     *
      * @throws ExecutionException If an execution error has occurred.
      */
-    public SSLEngine createClientEngine(@NonNull final String host, int port) throws ExecutionException {
+    public SSLEngine createClientEngine(@NonNull final String host, int port)
+            throws ExecutionException {
         SSLContext ctx = CLIENT_SSL_CONTEXTS.get(host, new Callable<SSLContext>() {
             @Override
             public SSLContext call() throws GeneralSecurityException, IOException,

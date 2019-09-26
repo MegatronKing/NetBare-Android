@@ -15,7 +15,8 @@
  */
 package com.github.megatronking.netbare.proxy;
 
-import android.net.VpnService;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.NetBareUtils;
@@ -26,8 +27,7 @@ import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.net.SessionProvider;
 import com.github.megatronking.netbare.net.UidDumper;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import android.net.VpnService;
 
 /**
  * Handshake with local TCP proxy server and then forward packets to it.
@@ -90,7 +90,8 @@ public final class TcpProxyServerForwarder implements ProxyServerForwarder {
 
         if (localPort != mProxyServer.getPort()) {
             // Client requests to server
-            Session session = mSessionProvider.ensureQuery(Protocol.TCP, localPort, remotePort, remoteIp);
+            Session session =
+                    mSessionProvider.ensureQuery(Protocol.TCP, localPort, remotePort, remoteIp);
             session.packetIndex++;
 
             // Forward client request to proxy server.

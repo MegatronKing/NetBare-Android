@@ -15,15 +15,15 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.http2.Http2;
 import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
 import com.google.common.primitives.Bytes;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import androidx.annotation.NonNull;
 
 /**
  * Verifies the HTTP packet and determines whether it is a HTTP2 protocol packets.
@@ -59,7 +59,8 @@ import java.nio.ByteBuffer;
                         mCallback.onRequest(request, buffer);
                         return;
                     } else {
-                        ByteBuffer prefaceBuffer = ByteBuffer.allocate(Http2.CONNECTION_PREFACE.length);
+                        ByteBuffer prefaceBuffer =
+                                ByteBuffer.allocate(Http2.CONNECTION_PREFACE.length);
                         prefaceBuffer.put(Http2.CONNECTION_PREFACE);
                         prefaceBuffer.flip();
                         mCallback.onRequest(request, prefaceBuffer);
@@ -93,7 +94,8 @@ import java.nio.ByteBuffer;
                         mCallback.onResponse(response, buffer);
                         return;
                     } else {
-                        ByteBuffer prefaceBuffer = ByteBuffer.allocate(Http2.CONNECTION_PREFACE.length);
+                        ByteBuffer prefaceBuffer =
+                                ByteBuffer.allocate(Http2.CONNECTION_PREFACE.length);
                         prefaceBuffer.put(Http2.CONNECTION_PREFACE);
                         prefaceBuffer.flip();
                         mCallback.onResponse(response, prefaceBuffer);

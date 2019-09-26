@@ -36,7 +36,7 @@ public abstract class AbstractRequestChain<Req extends Request, I extends Interc
     /**
      * Constructs an intercept chain for request.
      *
-     * @param request A {@link Request} implementation.
+     * @param request      A {@link Request} implementation.
      * @param interceptors A collection of interceptors.
      */
     protected AbstractRequestChain(Req request, List<I> interceptors) {
@@ -46,10 +46,10 @@ public abstract class AbstractRequestChain<Req extends Request, I extends Interc
     /**
      * Constructs an intercept chain for request.
      *
-     * @param request A {@link Request} implementation.
+     * @param request      A {@link Request} implementation.
      * @param interceptors A collection of interceptors.
-     * @param index The head index.
-     * @param tag The chain's tag.
+     * @param index        The head index.
+     * @param tag          The chain's tag.
      */
     protected AbstractRequestChain(Req request, List<I> interceptors, int index, Object tag) {
         super(request, interceptors, index, tag);

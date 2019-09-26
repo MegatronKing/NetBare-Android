@@ -15,11 +15,11 @@
  */
 package com.github.megatronking.netbare.http2;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * This specification defines a number of frame types, each identified by a unique 8-bit type code.
- *
+ * <p>
  * See https://httpwg.org/specs/rfc7540.html#FrameTypes
  *
  * @author Megatron King
@@ -32,26 +32,27 @@ import android.support.annotation.Nullable;
      * a stream. One or more DATA frames are used, for instance, to carry HTTP request or response
      * payloads.
      */
-    DATA((byte)0x0),
+    DATA((byte) 0x0),
 
     /**
      * The HEADERS frame (type=0x1) is used to open a stream (Section 5.1), and additionally
      * carries a header block fragment. HEADERS frames can be sent on a stream in the "idle",
      * "reserved (local)", "open", or "half-closed (remote)" state.
      */
-    HEADERS((byte)0x1),
+    HEADERS((byte) 0x1),
 
     /**
-     * The PRIORITY frame (type=0x2) specifies the sender-advised priority of a stream (Section 5.3).
+     * The PRIORITY frame (type=0x2) specifies the sender-advised priority of a stream (Section 5
+     * .3).
      * It can be sent in any stream state, including idle or closed streams.
      */
-    PRIORITY((byte)0x2),
+    PRIORITY((byte) 0x2),
 
     /**
      * The RST_STREAM frame (type=0x3) allows for immediate termination of a stream. RST_STREAM is
      * sent to request cancellation of a stream or to indicate that an error condition has occurred.
      */
-    RST_STREAM((byte)0x3),
+    RST_STREAM((byte) 0x3),
 
     /**
      * The SETTINGS frame (type=0x4) conveys configuration parameters that affect how endpoints
@@ -59,7 +60,7 @@ import android.support.annotation.Nullable;
      * also used to acknowledge the receipt of those parameters. Individually, a SETTINGS parameter
      * can also be referred to as a "setting".
      */
-    SETTINGS((byte)0x4),
+    SETTINGS((byte) 0x4),
 
     /**
      * The PUSH_PROMISE frame (type=0x5) is used to notify the peer endpoint in advance of streams
@@ -67,14 +68,14 @@ import android.support.annotation.Nullable;
      * identifier of the stream the endpoint plans to create along with a set of headers that
      * provide additional context for the stream.
      */
-    PUSH_PROMISE((byte)0x5),
+    PUSH_PROMISE((byte) 0x5),
 
     /**
      * The PING frame (type=0x6) is a mechanism for measuring a minimal round-trip time from the
      * sender, as well as determining whether an idle connection is still functional. PING frames
      * can be sent from any endpoint.
      */
-    PING((byte)0x6),
+    PING((byte) 0x6),
 
     /**
      * The GOAWAY frame (type=0x7) is used to initiate shutdown of a connection or to signal
@@ -82,12 +83,12 @@ import android.support.annotation.Nullable;
      * while still finishing processing of previously established streams. This enables
      * administrative actions, like server maintenance.
      */
-    GOAWAY((byte)0x7),
+    GOAWAY((byte) 0x7),
 
     /**
      * The WINDOW_UPDATE frame (type=0x8) is used to implement flow control.
      */
-    WINDOW_UPDATE((byte)0x8),
+    WINDOW_UPDATE((byte) 0x8),
 
     /**
      * The CONTINUATION frame (type=0x9) is used to continue a sequence of header block fragments
@@ -95,7 +96,7 @@ import android.support.annotation.Nullable;
      * is on the same stream and is a HEADERS, PUSH_PROMISE, or CONTINUATION frame without the
      * END_HEADERS flag set.
      */
-    CONTINUATION((byte)0x9);
+    CONTINUATION((byte) 0x9);
 
     private final byte value;
 

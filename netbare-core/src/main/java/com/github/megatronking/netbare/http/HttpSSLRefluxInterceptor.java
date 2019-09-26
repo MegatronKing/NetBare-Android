@@ -29,7 +29,8 @@ import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
         SSLRefluxInterceptor<HttpRequest, HttpRequestChain, HttpResponse, HttpResponseChain>
         implements HttpInterceptor {
 
-    /* package */ HttpSSLRefluxInterceptor(SSLRefluxCallback<HttpRequest, HttpResponse> refluxCallback) {
+    /* package */ HttpSSLRefluxInterceptor(
+            SSLRefluxCallback<HttpRequest, HttpResponse> refluxCallback) {
         super(refluxCallback);
     }
 

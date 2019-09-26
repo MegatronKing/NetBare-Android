@@ -15,17 +15,17 @@
  */
 package com.github.megatronking.netbare.ssl;
 
+import java.io.File;
+import java.io.IOException;
+
+import com.github.megatronking.netbare.NetBareLog;
+
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
 import android.security.KeyChain;
-import android.support.annotation.Nullable;
-
-import com.github.megatronking.netbare.NetBareLog;
-
-import java.io.File;
-import java.io.IOException;
+import androidx.annotation.Nullable;
 
 /**
  * A translucent activity uses to install self-signed certificate.
@@ -63,7 +63,7 @@ public class CertificateInstallActivity extends Activity {
             File jsk = new File(getCacheDir(),
                     getIntent().getStringExtra(EXTRA_ALIAS) + JKS.KEY_JKS_FILE_EXTENSION);
             try {
-                if(!jsk.exists() && !jsk.createNewFile()) {
+                if (!jsk.exists() && !jsk.createNewFile()) {
                     throw new IOException("Create jks file failed.");
                 }
             } catch (IOException e) {

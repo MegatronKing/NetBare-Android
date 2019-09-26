@@ -15,7 +15,11 @@
  */
 package com.github.megatronking.netbare.http2;
 
-import android.support.annotation.NonNull;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.http.HttpId;
@@ -29,11 +33,7 @@ import com.github.megatronking.netbare.http.HttpZygoteRequest;
 import com.github.megatronking.netbare.http.HttpZygoteResponse;
 import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import androidx.annotation.NonNull;
 
 /**
  * Decodes HTTP2 request and response packets.
@@ -127,7 +127,8 @@ public final class Http2DecodeInterceptor extends HttpPendingIndexedInterceptor 
                         if (mHpackResponseReader == null) {
                             mHpackResponseReader = new Hpack.Reader();
                         }
-                        mHpackResponseReader.setHeaderTableSizeSetting(http2Settings.getHeaderTableSize());
+                        mHpackResponseReader
+                                .setHeaderTableSizeSetting(http2Settings.getHeaderTableSize());
                     }
                 }
 
@@ -197,7 +198,8 @@ public final class Http2DecodeInterceptor extends HttpPendingIndexedInterceptor 
                         if (mHpackRequestReader == null) {
                             mHpackRequestReader = new Hpack.Reader();
                         }
-                        mHpackRequestReader.setHeaderTableSizeSetting(http2Settings.getHeaderTableSize());
+                        mHpackRequestReader
+                                .setHeaderTableSizeSetting(http2Settings.getHeaderTableSize());
                     }
                 }
 
@@ -333,7 +335,8 @@ public final class Http2DecodeInterceptor extends HttpPendingIndexedInterceptor 
                     break;
                 case 2: // SETTINGS_ENABLE_PUSH
                     if (value != 0 && value != 1) {
-                        throw new IOException("Http2 PROTOCOL_ERROR SETTINGS_ENABLE_PUSH != 0 or 1");
+                        throw new IOException(
+                                "Http2 PROTOCOL_ERROR SETTINGS_ENABLE_PUSH != 0 or 1");
                     }
                     break;
                 case 3: // SETTINGS_MAX_CONCURRENT_STREAMS
@@ -343,13 +346,15 @@ public final class Http2DecodeInterceptor extends HttpPendingIndexedInterceptor 
                 case 4: // SETTINGS_INITIAL_WINDOW_SIZE
                     id = 7; // Renumbered in draft 10.
                     if (value < 0) {
-                        throw new IOException("Http2 PROTOCOL_ERROR SETTINGS_INITIAL_WINDOW_SIZE > 2^31 - 1");
+                        throw new IOException(
+                                "Http2 PROTOCOL_ERROR SETTINGS_INITIAL_WINDOW_SIZE > 2^31 - 1");
                     }
                     mLog.i("Http2 SETTINGS_INITIAL_WINDOW_SIZE: " + value);
                     break;
                 case 5: // SETTINGS_MAX_FRAME_SIZE
                     if (value < Http2.INITIAL_MAX_FRAME_SIZE || value > 16777215) {
-                        throw new IOException("Http2 PROTOCOL_ERROR SETTINGS_MAX_FRAME_SIZE: " + value);
+                        throw new IOException(
+                                "Http2 PROTOCOL_ERROR SETTINGS_MAX_FRAME_SIZE: " + value);
                     }
                     mLog.i("Http2 INITIAL_MAX_FRAME_SIZE: " + value);
                     break;
@@ -415,7 +420,8 @@ public final class Http2DecodeInterceptor extends HttpPendingIndexedInterceptor 
         }
         boolean gzipped = (flags & Http2.FLAG_COMPRESSED) != 0;
         if (gzipped) {
-            throw new IOException("Http2 PROTOCOL_ERROR: FLAG_COMPRESSED without SETTINGS_COMPRESS_DATA");
+            throw new IOException(
+                    "Http2 PROTOCOL_ERROR: FLAG_COMPRESSED without SETTINGS_COMPRESS_DATA");
         }
         short padding = (flags & Http2.FLAG_PADDED) != 0 ? (short) (buffer.get() & 0xff) : 0;
         length = lengthWithoutPadding(length, flags, padding);
@@ -462,7 +468,8 @@ public final class Http2DecodeInterceptor extends HttpPendingIndexedInterceptor 
             length--; // Account for reading the padding length.
         }
         if (padding > length) {
-            throw new IOException("Http2 PROTOCOL_ERROR padding " + padding + " > remaining length " + length);
+            throw new IOException(
+                    "Http2 PROTOCOL_ERROR padding " + padding + " > remaining length " + length);
         }
         return (short) (length - padding);
     }

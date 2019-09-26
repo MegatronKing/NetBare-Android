@@ -15,14 +15,14 @@
  */
 package com.github.megatronking.netbare.http;
 
-import com.github.megatronking.netbare.gateway.Response;
-import com.github.megatronking.netbare.http2.Http2Settings;
-import com.github.megatronking.netbare.ip.Protocol;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
+
+import com.github.megatronking.netbare.gateway.Response;
+import com.github.megatronking.netbare.http2.Http2Settings;
+import com.github.megatronking.netbare.ip.Protocol;
 
 /**
  * It is an implementation of {@link Response} represents the HTTP protocol. Instances of this
@@ -187,6 +187,7 @@ public class HttpResponse extends Response {
      * Returns this request's header values by name.
      *
      * @param name A header name.
+     *
      * @return A collection of header values.
      */
     public List<String> requestHeader(String name) {
@@ -197,6 +198,7 @@ public class HttpResponse extends Response {
      * Returns this response's header values by name.
      *
      * @param name A header name.
+     *
      * @return A collection of header values.
      */
     public List<String> responseHeader(String name) {

@@ -15,13 +15,13 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
-
-import com.github.megatronking.netbare.gateway.AbstractRequestChain;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
+
+import com.github.megatronking.netbare.gateway.AbstractRequestChain;
+
+import androidx.annotation.NonNull;
 
 /**
  * Http request chain, responsible for intercepting http request packets.
@@ -49,10 +49,12 @@ public class HttpRequestChain extends AbstractRequestChain<HttpRequest, HttpInte
 
     @Override
     protected void processNext(ByteBuffer buffer, HttpRequest request,
-                               List<HttpInterceptor> interceptors, int index, Object tag) throws IOException {
+                               List<HttpInterceptor> interceptors, int index, Object tag)
+            throws IOException {
         HttpInterceptor interceptor = interceptors.get(index);
         if (interceptor != null) {
-            interceptor.intercept(new HttpRequestChain(mZygoteRequest, interceptors, ++index, tag), buffer);
+            interceptor.intercept(new HttpRequestChain(mZygoteRequest, interceptors, ++index, tag),
+                    buffer);
         }
     }
 

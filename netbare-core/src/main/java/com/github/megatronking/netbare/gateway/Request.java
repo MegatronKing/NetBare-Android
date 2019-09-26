@@ -15,10 +15,10 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import com.github.megatronking.netbare.tunnel.Tunnel;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import com.github.megatronking.netbare.tunnel.Tunnel;
 
 /**
  * A client requester, it connects to the remote server tunnel directly. We can send packet to the

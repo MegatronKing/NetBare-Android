@@ -15,13 +15,13 @@
  */
 package com.github.megatronking.netbare;
 
+import com.github.megatronking.netbare.ssl.SSLEngineFactory;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Intent;
 import android.net.VpnService;
-import android.support.annotation.NonNull;
-
-import com.github.megatronking.netbare.ssl.SSLEngineFactory;
+import androidx.annotation.NonNull;
 
 /**
  * Base class for NetBare services.
@@ -30,7 +30,7 @@ import com.github.megatronking.netbare.ssl.SSLEngineFactory;
  * route incoming and outgoing net packets. The NetBare service are forced to display a notification
  * due to intercepting packets raises huge security concerns.
  * </p>
- * <P>
+ * <p>
  * The NetBare service is managed by {@link NetBare}, and you can use {@link NetBareListener} to
  * observe the state.
  * </P>

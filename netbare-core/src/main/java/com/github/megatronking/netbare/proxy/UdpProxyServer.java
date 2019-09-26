@@ -15,8 +15,17 @@
  */
 package com.github.megatronking.netbare.proxy;
 
-import android.net.VpnService;
-import android.os.SystemClock;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.NetBareUtils;
@@ -31,22 +40,14 @@ import com.github.megatronking.netbare.tunnel.Tunnel;
 import com.github.megatronking.netbare.tunnel.UdpRemoteTunnel;
 import com.github.megatronking.netbare.tunnel.UdpVATunnel;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.nio.channels.DatagramChannel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import android.net.VpnService;
+import android.os.SystemClock;
 
 /**
  * The UDP proxy server is a virtual server, every packet from {@link UdpProxyServerForwarder} is
  * saw as a connection. It use {@link UdpVATunnel} to bind {@link VirtualGateway} and
- * {@link NioTunnel} together. Not like TCP, UDP only use {@link UdpRemoteTunnel} to communicate with
+ * {@link NioTunnel} together. Not like TCP, UDP only use {@link UdpRemoteTunnel} to communicate
+ * with
  * real remote server.
  *
  * @author Megatron King
@@ -103,8 +104,9 @@ import java.util.concurrent.ConcurrentHashMap;
                 NioTunnel remoteTunnel = new UdpRemoteTunnel(mVpnService, DatagramChannel.open(),
                         mSelector, NetBareUtils.convertIp(session.remoteIp), session.remotePort);
                 tunnel = new UdpVATunnel(session, remoteTunnel, output, mMtu);
-                tunnel.connect(new InetSocketAddress(NetBareUtils.convertIp(ipHeader.getDestinationIp()),
-                        NetBareUtils.convertPort(header.getDestinationPort())));
+                tunnel.connect(
+                        new InetSocketAddress(NetBareUtils.convertIp(ipHeader.getDestinationIp()),
+                                NetBareUtils.convertPort(header.getDestinationPort())));
                 mTunnels.put(header.getSourcePort(), tunnel);
             }
             tunnel.send(header);

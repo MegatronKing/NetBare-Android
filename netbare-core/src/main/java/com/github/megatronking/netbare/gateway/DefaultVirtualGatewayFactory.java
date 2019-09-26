@@ -15,12 +15,12 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import android.support.annotation.NonNull;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.github.megatronking.netbare.net.Session;
 
-import java.util.ArrayList;
-import java.util.List;
+import androidx.annotation.NonNull;
 
 /**
  * A {@link VirtualGatewayFactory} that produces the {@link DefaultVirtualGateway}.
@@ -47,10 +47,12 @@ public final class DefaultVirtualGatewayFactory implements VirtualGatewayFactory
      * {@link InterceptorFactory}.
      *
      * @param factories a collection of {@link InterceptorFactory}.
+     *
      * @return A instance of {@link DefaultVirtualGatewayFactory}.
      */
-    public static VirtualGatewayFactory create(@NonNull List<InterceptorFactory<Request, RequestChain,
-            Response, ResponseChain>> factories) {
+    public static VirtualGatewayFactory create(
+            @NonNull List<InterceptorFactory<Request, RequestChain,
+                    Response, ResponseChain>> factories) {
         return new DefaultVirtualGatewayFactory(factories);
     }
 
@@ -60,7 +62,8 @@ public final class DefaultVirtualGatewayFactory implements VirtualGatewayFactory
      * @return A instance of {@link VirtualGatewayFactory}.
      */
     public static VirtualGatewayFactory create() {
-        return create(new ArrayList<InterceptorFactory<Request, RequestChain, Response, ResponseChain>>());
+        return create(
+                new ArrayList<InterceptorFactory<Request, RequestChain, Response, ResponseChain>>());
     }
 
 }

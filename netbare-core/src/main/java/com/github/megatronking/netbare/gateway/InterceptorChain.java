@@ -43,11 +43,12 @@ public abstract class InterceptorChain<T extends TunnelFlow, I extends Intercept
     /**
      * Hand the net packets to the next {@link Interceptor}.
      *
-     * @param buffer A buffer contains net packet data.
-     * @param flow A {@link TunnelFlow} implementation.
+     * @param buffer       A buffer contains net packet data.
+     * @param flow         A {@link TunnelFlow} implementation.
      * @param interceptors A collection of all interceptors in chain.
-     * @param index The next interceptor index.
-     * @param tag The chain's tag.
+     * @param index        The next interceptor index.
+     * @param tag          The chain's tag.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     protected abstract void processNext(ByteBuffer buffer, T flow, List<I> interceptors, int index,
@@ -57,7 +58,7 @@ public abstract class InterceptorChain<T extends TunnelFlow, I extends Intercept
     /**
      * Constructs an intercept chain with a tunnel flow instance and a collection of interceptors.
      *
-     * @param flow A {@link TunnelFlow} implementation.
+     * @param flow         A {@link TunnelFlow} implementation.
      * @param interceptors A collection of interceptors.
      */
     protected InterceptorChain(T flow, List<I> interceptors) {
@@ -68,10 +69,10 @@ public abstract class InterceptorChain<T extends TunnelFlow, I extends Intercept
      * Constructs a new intercept chain with the tunnel flow instance and a collection of
      * interceptors. The chain will start from the given index.
      *
-     * @param flow A {@link TunnelFlow} implementation.
+     * @param flow         A {@link TunnelFlow} implementation.
      * @param interceptors A collection of interceptors.
-     * @param tag The chain's tag.
-     * @param index The head index.
+     * @param tag          The chain's tag.
+     * @param index        The head index.
      */
     protected InterceptorChain(T flow, List<I> interceptors, int index, Object tag) {
         this.mFlow = flow;
@@ -84,6 +85,7 @@ public abstract class InterceptorChain<T extends TunnelFlow, I extends Intercept
      * Finish the interception and send the packet to tunnel.
      *
      * @param buffer A buffer contains net packet data.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     public void processFinal(ByteBuffer buffer) throws IOException {
@@ -95,6 +97,7 @@ public abstract class InterceptorChain<T extends TunnelFlow, I extends Intercept
      * be sent to tunnel, otherwise hand it to the next interceptor.
      *
      * @param buffer A buffer contains net packet data.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     public void process(ByteBuffer buffer) throws IOException {
@@ -117,7 +120,7 @@ public abstract class InterceptorChain<T extends TunnelFlow, I extends Intercept
     /**
      * Returns this chain's tag.
      *
-     *  @return The Object stored in this chain as a tag, or {@code null} if not set.
+     * @return The Object stored in this chain as a tag, or {@code null} if not set.
      */
     public Object getTag() {
         return mTag;

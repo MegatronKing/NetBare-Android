@@ -15,9 +15,9 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
-
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * Factory creates a collection {@link HttpInterceptor}s.

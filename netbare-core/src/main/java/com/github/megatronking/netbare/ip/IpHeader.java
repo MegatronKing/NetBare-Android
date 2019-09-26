@@ -17,7 +17,7 @@ package com.github.megatronking.netbare.ip;
 
 /**
  * A summary of the contents of the internet header follows:
- *
+ * <p>
  * 0                   1                   2                   3
  * 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -33,7 +33,7 @@ package com.github.megatronking.netbare.ip;
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * |                    Options                    |    Padding    |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *
+ * <p>
  * See https://tools.ietf.org/html/rfc791#section-3.1
  *
  * @author Megatron King

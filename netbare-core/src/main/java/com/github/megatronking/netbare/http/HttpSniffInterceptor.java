@@ -15,14 +15,14 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.ssl.SSLCodec;
 import com.github.megatronking.netbare.ssl.SSLWhiteList;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import androidx.annotation.NonNull;
 
 /**
  * A fronted interceptor verifies the first net packet in order to determine whether it is a HTTP
@@ -113,6 +113,5 @@ import java.nio.ByteBuffer;
         }
         return TYPE_INVALID;
     }
-
 
 }

@@ -15,16 +15,16 @@
  */
 package com.github.megatronking.netbare.tunnel;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+
 import com.github.megatronking.netbare.NetBareUtils;
 import com.github.megatronking.netbare.NetBareVirtualGateway;
 import com.github.megatronking.netbare.gateway.Request;
 import com.github.megatronking.netbare.gateway.Response;
 import com.github.megatronking.netbare.gateway.VirtualGateway;
 import com.github.megatronking.netbare.net.Session;
-
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 
 /**
  * TCP protocol virtual gateway tunnel wraps {@link TcpProxyTunnel} and {@link TcpRemoteTunnel} as
@@ -41,7 +41,8 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
 
     private final int mMtu;
 
-    public TcpVATunnel(Session session, NioTunnel proxyServerTunnel, NioTunnel remoteServerTunnel, int mtu) {
+    public TcpVATunnel(Session session, NioTunnel proxyServerTunnel, NioTunnel remoteServerTunnel,
+                       int mtu) {
         this.mProxyTunnel = proxyServerTunnel;
         this.mRemoteTunnel = remoteServerTunnel;
         this.mGateway = new NetBareVirtualGateway(session, new Request(mRemoteTunnel),

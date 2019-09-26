@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.net;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * A dumped net info class contains IPs, ports and uid.

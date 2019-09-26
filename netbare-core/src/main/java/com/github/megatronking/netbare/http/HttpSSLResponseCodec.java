@@ -15,13 +15,6 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.annotation.SuppressLint;
-import android.support.annotation.NonNull;
-
-import com.github.megatronking.netbare.NetBareLog;
-import com.github.megatronking.netbare.ssl.SSLEngineFactory;
-import com.github.megatronking.netbare.ssl.SSLResponseCodec;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -32,9 +25,16 @@ import java.nio.charset.Charset;
 
 import javax.net.ssl.SSLEngine;
 
+import com.github.megatronking.netbare.NetBareLog;
+import com.github.megatronking.netbare.ssl.SSLEngineFactory;
+import com.github.megatronking.netbare.ssl.SSLResponseCodec;
+
+import android.annotation.SuppressLint;
+import androidx.annotation.NonNull;
+
 /**
  * Http SSL codec enables Application-Layer Protocol Negotiation(ALPN).
- *
+ * <p>
  * See http://tools.ietf.org/html/draft-agl-tls-nextprotoneg-04#page-4
  *
  * @author Megatron King
@@ -104,7 +104,8 @@ import javax.net.ssl.SSLEngine;
         }
     }
 
-    private void enableJava8EngineWrapperAlpn() throws NoSuchMethodException, IllegalAccessException,
+    private void enableJava8EngineWrapperAlpn()
+            throws NoSuchMethodException, IllegalAccessException,
             InvocationTargetException {
         Method setApplicationProtocolsMethod = mSSLEngine.getClass().getDeclaredMethod(
                 "setApplicationProtocols", String[].class);
@@ -113,7 +114,7 @@ import javax.net.ssl.SSLEngine;
         for (int i = 0; i < protocols.length; i++) {
             protocols[i] = mClientAlpns[i].toString().toLowerCase();
         }
-        setApplicationProtocolsMethod.invoke(mSSLEngine, new Object[]{protocols});
+        setApplicationProtocolsMethod.invoke(mSSLEngine, new Object[] {protocols});
 
         Method setUseSessionTicketsMethod = mSSLEngine.getClass().getDeclaredMethod(
                 "setUseSessionTickets", boolean.class);
@@ -130,7 +131,7 @@ import javax.net.ssl.SSLEngine;
         for (int i = 0; i < protocols.length; i++) {
             protocols[i] = mClientAlpns[i].toString().toLowerCase();
         }
-        setAlpnProtocolsMethod.invoke(mSSLEngine, new Object[]{protocols});
+        setAlpnProtocolsMethod.invoke(mSSLEngine, new Object[] {protocols});
 
         Method setUseSessionTicketsMethod = mSSLEngine.getClass().getDeclaredMethod(
                 "setUseSessionTickets", boolean.class);
@@ -145,7 +146,8 @@ import javax.net.ssl.SSLEngine;
         if (sslParameters == null) {
             throw new IllegalAccessException("sslParameters value is null");
         }
-        Field useSessionTicketsField = sslParameters.getClass().getDeclaredField("useSessionTickets");
+        Field useSessionTicketsField =
+                sslParameters.getClass().getDeclaredField("useSessionTickets");
         useSessionTicketsField.setAccessible(true);
         useSessionTicketsField.set(sslParameters, true);
         Field useSniField = sslParameters.getClass().getDeclaredField("useSni");
@@ -156,7 +158,7 @@ import javax.net.ssl.SSLEngine;
         alpnProtocolsField.set(sslParameters, concatLengthPrefixed(mClientAlpns));
     }
 
-    private byte[] concatLengthPrefixed(HttpProtocol ... protocols) {
+    private byte[] concatLengthPrefixed(HttpProtocol... protocols) {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         for (HttpProtocol protocol : protocols) {
             String protocolStr = protocol.toString().toLowerCase();
@@ -165,7 +167,6 @@ import javax.net.ssl.SSLEngine;
         }
         return os.toByteArray();
     }
-
 
     @SuppressLint("PrivateApi")
     private String getAlpnSelectedProtocol() {
@@ -177,7 +178,7 @@ import javax.net.ssl.SSLEngine;
             String sslEngineName = mSSLEngine.getClass().getSimpleName();
             if (sslEngineName.equals("Java8EngineWrapper")) {
                 alpnResult = getJava8EngineWrapperAlpn();
-            } else if (sslEngineName.equals("ConscryptEngine")){
+            } else if (sslEngineName.equals("ConscryptEngine")) {
                 alpnResult = getConscryptEngineAlpn();
             } else {
                 alpnResult = getOpenSSLEngineImplAlpn();
@@ -203,7 +204,8 @@ import javax.net.ssl.SSLEngine;
                 "getAlpnSelectedProtocol");
         getAlpnSelectedProtocolMethod.setAccessible(true);
         byte[] selectedProtocol = (byte[]) getAlpnSelectedProtocolMethod.invoke(mSSLEngine);
-        return selectedProtocol != null ? new String(selectedProtocol, Charset.forName("UTF-8")) : null;
+        return selectedProtocol != null ? new String(selectedProtocol, Charset.forName("UTF-8"))
+                : null;
     }
 
     @SuppressLint("PrivateApi")
@@ -217,8 +219,10 @@ import javax.net.ssl.SSLEngine;
         Field sslNativePointerField = mSSLEngine.getClass().getDeclaredField("sslNativePointer");
         sslNativePointerField.setAccessible(true);
         long sslNativePointer = (long) sslNativePointerField.get(mSSLEngine);
-        byte[] selectedProtocol = (byte[]) SSL_get0_alpn_selectedMethod.invoke(null, sslNativePointer);
-        return selectedProtocol != null ? new String(selectedProtocol, Charset.forName("UTF-8")) : null;
+        byte[] selectedProtocol =
+                (byte[]) SSL_get0_alpn_selectedMethod.invoke(null, sslNativePointer);
+        return selectedProtocol != null ? new String(selectedProtocol, Charset.forName("UTF-8"))
+                : null;
     }
 
     interface AlpnResolvedCallback {

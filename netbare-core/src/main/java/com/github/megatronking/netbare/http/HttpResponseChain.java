@@ -15,13 +15,13 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
-
-import com.github.megatronking.netbare.gateway.AbstractResponseChain;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
+
+import com.github.megatronking.netbare.gateway.AbstractResponseChain;
+
+import androidx.annotation.NonNull;
 
 /**
  * Http response chain, responsible for intercepting http response packets.
@@ -33,7 +33,8 @@ public class HttpResponseChain extends AbstractResponseChain<HttpResponse, HttpI
 
     private HttpZygoteResponse mZygoteResponse;
 
-    /* package */ HttpResponseChain(HttpZygoteResponse response, List<HttpInterceptor> interceptors) {
+    /* package */ HttpResponseChain(HttpZygoteResponse response,
+                                    List<HttpInterceptor> interceptors) {
         this(response, interceptors, 0, null);
     }
 
@@ -49,10 +50,13 @@ public class HttpResponseChain extends AbstractResponseChain<HttpResponse, HttpI
 
     @Override
     protected void processNext(ByteBuffer buffer, HttpResponse response,
-                               List<HttpInterceptor> interceptors, int index, Object tag) throws IOException {
+                               List<HttpInterceptor> interceptors, int index, Object tag)
+            throws IOException {
         HttpInterceptor interceptor = interceptors.get(index);
         if (interceptor != null) {
-            interceptor.intercept(new HttpResponseChain(mZygoteResponse, interceptors, ++index, tag), buffer);
+            interceptor
+                    .intercept(new HttpResponseChain(mZygoteResponse, interceptors, ++index, tag),
+                            buffer);
         }
     }
 

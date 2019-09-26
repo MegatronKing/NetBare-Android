@@ -15,12 +15,12 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import com.github.megatronking.netbare.net.Session;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.github.megatronking.netbare.net.Session;
 
 /**
  * A {@link VirtualGateway} provides the interception service. Interceptors are organized as a list
@@ -35,10 +35,12 @@ import java.util.List;
     private final List<Interceptor<Request, RequestChain, Response, ResponseChain>> mInterceptors;
 
     /* package */ DefaultVirtualGateway(Session session, Request request, Response response,
-                                        List<InterceptorFactory<Request, RequestChain, Response, ResponseChain>> factories) {
+                                        List<InterceptorFactory<Request, RequestChain, Response,
+                                                ResponseChain>> factories) {
         super(session, request, response);
         this.mInterceptors = new ArrayList<>(factories.size());
-        for (InterceptorFactory<Request, RequestChain, Response, ResponseChain> factory : factories) {
+        for (InterceptorFactory<Request, RequestChain, Response, ResponseChain> factory :
+                factories) {
             mInterceptors.add(factory.create());
         }
     }
@@ -55,14 +57,16 @@ import java.util.List;
 
     @Override
     public void onRequestFinished() {
-        for (Interceptor<Request, RequestChain, Response, ResponseChain> interceptor: mInterceptors) {
+        for (Interceptor<Request, RequestChain, Response, ResponseChain> interceptor :
+                mInterceptors) {
             interceptor.onRequestFinished(mRequest);
         }
     }
 
     @Override
     public void onResponseFinished() {
-        for (Interceptor<Request, RequestChain, Response, ResponseChain> interceptor: mInterceptors) {
+        for (Interceptor<Request, RequestChain, Response, ResponseChain> interceptor :
+                mInterceptors) {
             interceptor.onResponseFinished(mResponse);
         }
     }

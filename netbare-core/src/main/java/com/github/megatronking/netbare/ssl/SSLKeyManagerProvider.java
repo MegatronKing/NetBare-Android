@@ -15,9 +15,9 @@
  */
 package com.github.megatronking.netbare.ssl;
 
-import android.support.annotation.Nullable;
-
 import javax.net.ssl.KeyManager;
+
+import androidx.annotation.Nullable;
 
 /**
  * A security provider provides the sources of authentication keys. The {@link KeyManager[]}
@@ -31,8 +31,9 @@ public interface SSLKeyManagerProvider {
     /**
      * Provides an authentication keys or null.
      *
-     * @param host The peer host.
+     * @param host   The peer host.
      * @param client Whether the SSLContext is initialized for client.
+     *
      * @return The sources of authentication keys or null.
      */
     @Nullable

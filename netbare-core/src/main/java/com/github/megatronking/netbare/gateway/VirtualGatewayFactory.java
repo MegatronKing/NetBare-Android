@@ -28,8 +28,8 @@ public interface VirtualGatewayFactory {
     /**
      * Returns a new {@link VirtualGateway} for the given arguments.
      *
-     * @param session A network session.
-     * @param request A request connects to the remote server tunnel.
+     * @param session  A network session.
+     * @param request  A request connects to the remote server tunnel.
      * @param response A response connects to VPN file descriptor
      */
     VirtualGateway create(Session session, Request request, Response response);

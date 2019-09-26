@@ -15,12 +15,12 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import android.support.annotation.NonNull;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import androidx.annotation.NonNull;
 
 /**
  * An interceptor locates at the last layer of the interceptors. It is responsible for send
@@ -29,7 +29,8 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2018-11-15 15:39
  */
-public abstract class SSLRefluxInterceptor<Req extends Request, ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
+public abstract class SSLRefluxInterceptor<Req extends Request,
+        ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
         Res extends Response, ResChain extends AbstractResponseChain<Res, ? extends Interceptor>>
         implements Interceptor<Req, ReqChain, Res, ResChain> {
 
@@ -39,6 +40,7 @@ public abstract class SSLRefluxInterceptor<Req extends Request, ReqChain extends
      * Should reflux the request buffer to SSL codec if the buffer is origin decrypted.
      *
      * @param chain The request chain.
+     *
      * @return True if needs to encrypt again.
      */
     protected abstract boolean shouldReflux(ReqChain chain);
@@ -47,6 +49,7 @@ public abstract class SSLRefluxInterceptor<Req extends Request, ReqChain extends
      * Should reflux the response buffer to SSL codec if the buffer is origin decrypted.
      *
      * @param chain The response chain.
+     *
      * @return True if needs to encrypt again.
      */
     protected abstract boolean shouldReflux(ResChain chain);

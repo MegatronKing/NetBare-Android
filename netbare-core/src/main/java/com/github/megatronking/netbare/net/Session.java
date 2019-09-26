@@ -15,9 +15,9 @@
  */
 package com.github.megatronking.netbare.net;
 
-import com.github.megatronking.netbare.ip.Protocol;
-
 import java.util.UUID;
+
+import com.github.megatronking.netbare.ip.Protocol;
 
 /**
  * This object represents a network session, it contains IPs, ports and IP packet details.

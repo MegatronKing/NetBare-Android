@@ -15,12 +15,12 @@
  */
 package com.github.megatronking.netbare.ssl;
 
-import com.github.megatronking.netbare.NetBareLog;
-import com.github.megatronking.netbare.gateway.Request;
-
 import java.util.concurrent.ExecutionException;
 
 import javax.net.ssl.SSLEngine;
+
+import com.github.megatronking.netbare.NetBareLog;
+import com.github.megatronking.netbare.gateway.Request;
 
 /**
  * An implementation of {@link SSLCodec} to codec request SSL packets. This codec creates a MITM

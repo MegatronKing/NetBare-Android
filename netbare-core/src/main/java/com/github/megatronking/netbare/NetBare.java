@@ -15,24 +15,24 @@
  */
 package com.github.megatronking.netbare;
 
-import android.app.Activity;
-import android.app.Application;
-import android.content.Intent;
-import android.net.VpnService;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import com.github.megatronking.netbare.gateway.DefaultVirtualGatewayFactory;
 import com.github.megatronking.netbare.gateway.VirtualGatewayFactory;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import android.app.Activity;
+import android.app.Application;
+import android.content.Intent;
+import android.net.VpnService;
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 /**
  * NetBare is a single instance, we can use this class to config and manage the NetBare service.
  * The NetBare service is an implement class of {@link VpnService}, before starting this service,
  * should call {@link #prepare()} to check the vpn state.
- *
+ * <p>
  * Start and stop the NetBare service:
  * <pre>
  * <code>
@@ -72,7 +72,8 @@ public final class NetBare {
      * {@link Application} class.
      *
      * @param application The application instance.
-     * @param debug Should print logs in console.
+     * @param debug       Should print logs in console.
+     *
      * @return The single instance of NetBare.
      */
     public NetBare attachApplication(@NonNull Application application, boolean debug) {
@@ -148,6 +149,14 @@ public final class NetBare {
      */
     public void unregisterNetBareListener(NetBareListener listener) {
         mListeners.remove(listener);
+    }
+
+    public void addAllowedApplicationUid(int uid) {
+        mNetBareConfig.allowedApplicationUids.add(uid);
+    }
+
+    public void cleanAllowedApplicationUids() {
+        mNetBareConfig.allowedApplicationUids.clear();
     }
 
     /* package */ NetBareConfig getConfig() {

@@ -15,10 +15,10 @@
  */
 package com.github.megatronking.netbare.ip;
 
+import java.util.Objects;
+
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import java.util.Objects;
 
 public class IpAddress implements Parcelable {
 

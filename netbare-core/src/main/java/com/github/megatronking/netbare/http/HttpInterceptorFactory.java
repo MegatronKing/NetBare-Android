@@ -15,9 +15,9 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
-
 import com.github.megatronking.netbare.gateway.InterceptorFactory;
+
+import androidx.annotation.NonNull;
 
 /**
  * Factory used by developer to create their own interceptor for {@link HttpVirtualGateway}.

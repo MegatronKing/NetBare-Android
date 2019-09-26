@@ -15,8 +15,10 @@
  */
 package com.github.megatronking.netbare;
 
-import android.app.PendingIntent;
-import androidx.annotation.NonNull;
+import java.net.InetAddress;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import com.github.megatronking.netbare.gateway.VirtualGatewayFactory;
 import com.github.megatronking.netbare.http.HttpInterceptorFactory;
@@ -28,10 +30,8 @@ import com.github.megatronking.netbare.ssl.JKS;
 import com.github.megatronking.netbare.ssl.SSLKeyManagerProvider;
 import com.github.megatronking.netbare.ssl.SSLTrustManagerProvider;
 
-import java.net.InetAddress;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import android.app.PendingIntent;
+import androidx.annotation.NonNull;
 
 /**
  * The configuration class for NetBare. Use {@link Builder} to construct an instance.
@@ -77,8 +77,9 @@ public final class NetBareConfig {
     /**
      * Create a default config using {@link HttpVirtualGatewayFactory} for HTTP protocol.
      *
-     * @param jks JSK instance, not null.
+     * @param jks          JSK instance, not null.
      * @param interceptors A collection of {@link HttpInterceptorFactory}.
+     *
      * @return A NetBare config instance.
      */
     public static NetBareConfig defaultHttpConfig(@NonNull JKS jks,
@@ -119,7 +120,6 @@ public final class NetBareConfig {
             this.mConfig.allowedHosts = new HashSet<>();
             this.mConfig.disallowedHosts = new HashSet<>();
 
-            // add for springer
             this.mConfig.allowedApplicationUids = new HashSet<>();
         }
 
@@ -128,6 +128,7 @@ public final class NetBareConfig {
          * notifications. This is recommended not required.
          *
          * @param session Session name.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder setSession(@NonNull String session) {
@@ -140,6 +141,7 @@ public final class NetBareConfig {
          * If it is not set, the button to configure will not be shown in system-managed dialogs.
          *
          * @param intent An Activity intent.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder setConfigureIntent(@NonNull PendingIntent intent) {
@@ -152,6 +154,7 @@ public final class NetBareConfig {
          * default value in the operating system will be used.
          *
          * @param mtu Maximum transmission unit (MTU).
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder setMtu(int mtu) {
@@ -162,11 +165,12 @@ public final class NetBareConfig {
         /**
          * Convenience method to add a network address to the VPN interface using a numeric address
          * string. See {@link InetAddress} for the definitions of numeric address formats.
-         *
+         * <p>
          * Adding an address implicitly allows traffic from that address family (i.e., IPv4 or IPv6)
          * to be routed over the VPN.
          *
          * @param address IPv4 or IPv6 address.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder setAddress(@NonNull IpAddress address) {
@@ -176,11 +180,12 @@ public final class NetBareConfig {
 
         /**
          * Add a network route to the VPN interface. Both IPv4 and IPv6 routes are supported.
-         *
+         * <p>
          * Adding a route implicitly allows traffic from that address family (i.e., IPv4 or IPv6)
          * to be routed over the VPN.
          *
          * @param address IPv4 or IPv6 address.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder addRoute(@NonNull IpAddress address) {
@@ -191,11 +196,12 @@ public final class NetBareConfig {
         /**
          * Add a DNS server to the VPN connection. Both IPv4 and IPv6 addresses are supported.
          * If none is set, the DNS servers of the default network will be used.
-         *
+         * <p>
          * Adding a server implicitly allows traffic from that address family (i.e., IPv4 or IPv6)
          * to be routed over the VPN.
          *
          * @param address IPv4 or IPv6 address.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder addDnsServer(@NonNull String address) {
@@ -205,13 +211,14 @@ public final class NetBareConfig {
 
         /**
          * Adds an application that's allowed to access the VPN connection.
-         *
+         * <p>
          * If this method is called at least once, only applications added through this method (and
          * no others) are allowed access. Else (if this method is never called), all applications
          * are allowed by default.  If some applications are added, other, un-added applications
          * will use networking as if the VPN wasn't running.
          *
          * @param packageName The full name (e.g.: "com.google.apps.contacts") of an application.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder addAllowedApplication(@NonNull String packageName) {
@@ -221,10 +228,11 @@ public final class NetBareConfig {
 
         /**
          * Adds an application that's allowed to access the VPN connection.
-         *
+         * <p>
          * this is for NetBareVirtualGateWay access control
          *
          * @param uid The user id of an application.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder addAllowedApplicationUid(@NonNull int uid) {
@@ -237,11 +245,12 @@ public final class NetBareConfig {
 
         /**
          * Adds an application that's denied access to the VPN connection.
-         *
+         * <p>
          * By default, all applications are allowed access, except for those denied through this
          * method.  Denied applications will use networking as if the VPN wasn't running.
          *
          * @param packageName The full name (e.g.: "com.google.apps.contacts") of an application.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder addDisallowedApplication(@NonNull String packageName) {
@@ -253,6 +262,7 @@ public final class NetBareConfig {
          * Adds an ip host or a domain host that's allowed to capture.
          *
          * @param host An ip host or a domain host, not support the domain host.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder addAllowedHost(@NonNull String host) {
@@ -264,6 +274,7 @@ public final class NetBareConfig {
          * Adds an ip host or a domain host that's denied access to capture.
          *
          * @param host An ip host or a domain host, not support the domain host.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder addDisallowedHost(@NonNull String host) {
@@ -276,6 +287,7 @@ public final class NetBareConfig {
          * server and client received the final data.
          *
          * @param gatewayFactory A factory of gateway.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder setVirtualGatewayFactory(VirtualGatewayFactory gatewayFactory) {
@@ -290,6 +302,7 @@ public final class NetBareConfig {
          * <p>Android Q removes access to /proc/net, this config doesn't work on Android Q.</p>
          *
          * @param dumpUid Should dump session's uid from /proc/net/
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder dumpUid(boolean dumpUid) {
@@ -302,6 +315,7 @@ public final class NetBareConfig {
          * If the config of dumpUid is false, the excludeSelf will be forced to false too.
          *
          * @param excludeSelf Should exclude all net packets of the app self.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder excludeSelf(boolean excludeSelf) {
@@ -313,6 +327,7 @@ public final class NetBareConfig {
          * Sets an uid provider.
          *
          * @param provider This interface provides a known uid for a session.
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder setUidProvider(UidProvider provider) {
@@ -323,11 +338,12 @@ public final class NetBareConfig {
         /**
          * Set a SSL KeyManager provider, NetBare will use it to initialize
          * {@link javax.net.ssl.SSLContext}.
-         *
+         * <p>
          * If not set, the MITM server will use a self-signed root CA, the MITM client will set the
          * parameter to null when initializing {@link javax.net.ssl.SSLContext}.
          *
          * @param provider This interface provides {@link javax.net.ssl.KeyManager[]}
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder setSSLKeyManagerProvider(SSLKeyManagerProvider provider) {
@@ -338,11 +354,12 @@ public final class NetBareConfig {
         /**
          * Set a SSL TrustManager provider, NetBare will use it to initialize
          * {@link javax.net.ssl.SSLContext}.
-         *
+         * <p>
          * If not set, the MITM server and client will set the parameter to null when initializing
          * {@link javax.net.ssl.SSLContext}.
          *
          * @param provider This interface provides {@link javax.net.ssl.TrustManager[]}
+         *
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder setSSLTrustManagerProvider(SSLTrustManagerProvider provider) {

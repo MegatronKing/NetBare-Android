@@ -15,11 +15,11 @@
  */
 package com.github.megatronking.netbare.proxy;
 
+import java.io.OutputStream;
+
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.ip.IcmpHeader;
 import com.github.megatronking.netbare.ip.IpHeader;
-
-import java.io.OutputStream;
 
 /**
  * Forward the Internet Control Message Protocol (ICMP) to proxy server.

@@ -15,11 +15,11 @@
  */
 package com.github.megatronking.netbare;
 
-import android.os.Build;
-import android.text.TextUtils;
-
 import java.io.Closeable;
 import java.io.IOException;
+
+import android.os.Build;
+import android.text.TextUtils;
 
 /**
  * A collection of assorted utility classes.
@@ -58,6 +58,7 @@ public final class NetBareUtils {
      * Convert a int ip value to ipv4 string.
      *
      * @param ip The ip address.
+     *
      * @return A ipv4 string value, format is N.N.N.N
      */
     public static String convertIp(int ip) {
@@ -69,6 +70,7 @@ public final class NetBareUtils {
      * Convert a string ip value to int.
      *
      * @param ip The ip address.
+     *
      * @return A int ip value.
      */
     public static int convertIp(String ip) {
@@ -83,6 +85,7 @@ public final class NetBareUtils {
      * Convert a short ip value to int.
      *
      * @param port The port.
+     *
      * @return A int port value.
      */
     public static int convertPort(short port) {
@@ -108,8 +111,9 @@ public final class NetBareUtils {
      * Parse a string to a integer value. If the string is not a integer value, this will return the
      * default value.
      *
-     * @param string The string value.
+     * @param string       The string value.
      * @param defaultValue The default integer value.
+     *
      * @return The integer value.
      */
     public static int parseInt(String string, int defaultValue) {
@@ -131,9 +135,10 @@ public final class NetBareUtils {
      * Parse a string to a integer value with a radix. If the string is not a integer value, this
      * will return the default value.
      *
-     * @param string The string value.
-     * @param radix The radix to be used.
+     * @param string       The string value.
+     * @param radix        The radix to be used.
      * @param defaultValue The default integer value.
+     *
      * @return The integer value.
      */
     public static int parseInt(String string, int radix, int defaultValue) {

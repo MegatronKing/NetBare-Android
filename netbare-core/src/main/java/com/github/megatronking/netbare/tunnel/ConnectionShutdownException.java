@@ -29,7 +29,7 @@ public class ConnectionShutdownException extends IOException {
      * Constructs an {@code ConnectionShutdownException} with the specified detail message.
      *
      * @param message The detail message (which is saved for later retrieval by the
-     * {@link #getMessage()} method).
+     *                {@link #getMessage()} method).
      */
     public ConnectionShutdownException(String message) {
         super(message);

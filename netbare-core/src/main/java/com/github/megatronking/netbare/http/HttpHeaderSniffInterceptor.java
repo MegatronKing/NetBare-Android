@@ -15,13 +15,13 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import androidx.annotation.NonNull;
 
 /**
  * Detect the plaintext packet header to determine is it the HTTP protocol.
@@ -35,7 +35,8 @@ import java.nio.ByteBuffer;
 
     private boolean mRealHttpProtocol;
 
-    /* package */ HttpHeaderSniffInterceptor(SSLRefluxCallback<HttpRequest, HttpResponse> callback) {
+    /* package */ HttpHeaderSniffInterceptor(
+            SSLRefluxCallback<HttpRequest, HttpResponse> callback) {
         this.mCallback = callback;
     }
 
@@ -64,7 +65,7 @@ import java.nio.ByteBuffer;
         } else {
             if (mRealHttpProtocol) {
                 chain.process(buffer);
-            }  else {
+            } else {
                 mCallback.onRequest(chain.request(), buffer);
             }
         }
@@ -95,7 +96,7 @@ import java.nio.ByteBuffer;
         } else {
             if (mRealHttpProtocol) {
                 chain.process(buffer);
-            }  else {
+            } else {
                 mCallback.onResponse(chain.response(), buffer);
             }
         }
@@ -103,7 +104,7 @@ import java.nio.ByteBuffer;
 
     private boolean requestHeaderFirstByteNotPassed(byte first) {
         switch (first) {
-                // GET
+            // GET
             case 'G':
                 // HEAD
             case 'H':
@@ -143,7 +144,7 @@ import java.nio.ByteBuffer;
 
     private boolean responseHeaderFirstByteNotPassed(byte first) {
         switch (first) {
-                // h2
+            // h2
             case 'h':
                 // HTTP1.x
             case 'H':

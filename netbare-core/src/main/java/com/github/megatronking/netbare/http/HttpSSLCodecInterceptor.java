@@ -15,7 +15,8 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.gateway.Request;
@@ -26,8 +27,7 @@ import com.github.megatronking.netbare.ssl.SSLEngineFactory;
 import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
 import com.github.megatronking.netbare.ssl.SSLUtils;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import androidx.annotation.NonNull;
 
 /**
  * An interceptor decodes SSL encrypt packets to plaintext packets.
@@ -49,7 +49,8 @@ import java.nio.ByteBuffer;
 
     private boolean mClientAlpnResolved;
 
-    /* package */ HttpSSLCodecInterceptor(SSLEngineFactory engineFactory, Request request, Response response) {
+    /* package */ HttpSSLCodecInterceptor(SSLEngineFactory engineFactory, Request request,
+                                          Response response) {
         this.mEngineFactory = engineFactory;
         this.mRequest = request;
         this.mResponse = response;
@@ -94,25 +95,31 @@ import java.nio.ByteBuffer;
                     mResponseCodec.prepareHandshake();
                 } else {
                     // Detect remote server's ALPN and then continue request.
-                    mResponseCodec.prepareHandshake(protocols, new HttpSSLResponseCodec.AlpnResolvedCallback() {
-                        @Override
-                        public void onResult(String selectedAlpnProtocol) throws IOException {
-                            if (selectedAlpnProtocol != null) {
-                                HttpProtocol protocol = HttpProtocol.parse(selectedAlpnProtocol);
-                                // Only accept Http1.1 and Http2.0
-                                if (protocol == HttpProtocol.HTTP_1_1 || protocol == HttpProtocol.HTTP_2) {
-                                    mRequestCodec.setSelectedAlpnProtocol(protocol);
-                                    chain.request().session().protocol = protocol;
-                                    mLog.i("Server selected ALPN protocol: " + protocol.toString());
-                                } else {
-                                    mLog.w("Unexpected server ALPN protocol: " + protocol.toString());
+                    mResponseCodec.prepareHandshake(protocols,
+                            new HttpSSLResponseCodec.AlpnResolvedCallback() {
+                                @Override
+                                public void onResult(String selectedAlpnProtocol)
+                                        throws IOException {
+                                    if (selectedAlpnProtocol != null) {
+                                        HttpProtocol protocol =
+                                                HttpProtocol.parse(selectedAlpnProtocol);
+                                        // Only accept Http1.1 and Http2.0
+                                        if (protocol == HttpProtocol.HTTP_1_1
+                                                || protocol == HttpProtocol.HTTP_2) {
+                                            mRequestCodec.setSelectedAlpnProtocol(protocol);
+                                            chain.request().session().protocol = protocol;
+                                            mLog.i("Server selected ALPN protocol: " + protocol
+                                                    .toString());
+                                        } else {
+                                            mLog.w("Unexpected server ALPN protocol: " + protocol
+                                                    .toString());
+                                        }
+                                    }
+                                    mRequestCodec.setSelectedAlpnResolved();
+                                    // Continue request.
+                                    decodeRequest(chain, ByteBuffer.allocate(0));
                                 }
-                            }
-                            mRequestCodec.setSelectedAlpnResolved();
-                            // Continue request.
-                            decodeRequest(chain, ByteBuffer.allocate(0));
-                        }
-                    });
+                            });
                 }
             }
             // Hold the request buffer until the server ALPN configuration resolved.
@@ -212,8 +219,8 @@ import java.nio.ByteBuffer;
                 });
     }
 
-
-    private void decodeResponse(final HttpResponseChain chain, ByteBuffer buffer) throws IOException {
+    private void decodeResponse(final HttpResponseChain chain, ByteBuffer buffer)
+            throws IOException {
         // Merge buffers
         mResponseCodec.decode(mergeResponseBuffer(buffer),
                 new SSLCodec.CodecCallback() {

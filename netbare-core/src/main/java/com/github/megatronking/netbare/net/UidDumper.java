@@ -15,15 +15,6 @@
  */
 package com.github.megatronking.netbare.net;
 
-import android.text.TextUtils;
-import android.util.ArrayMap;
-
-import com.github.megatronking.netbare.NetBareConfig;
-import com.github.megatronking.netbare.NetBareUtils;
-import com.github.megatronking.netbare.ip.Protocol;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -34,6 +25,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.github.megatronking.netbare.NetBareConfig;
+import com.github.megatronking.netbare.NetBareUtils;
+import com.github.megatronking.netbare.ip.Protocol;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+
+import android.text.TextUtils;
+import android.util.ArrayMap;
 
 /**
  * A dumper analyzes /proc/net/ files to dump uid of the network session. This class may be a
@@ -49,11 +49,13 @@ public final class UidDumper {
     private static final int NET_MAX_SIZE = 100;
 
     private static final Pattern IPV4_PATTERN = Pattern.compile("\\s+\\d+:\\s([0-9A-F]{8}):" +
-            "([0-9A-F]{4})\\s([0-9A-F]{8}):([0-9A-F]{4})\\s([0-9A-F]{2})\\s[0-9A-F]{8}:[0-9A-F]{8}" +
+            "([0-9A-F]{4})\\s([0-9A-F]{8}):([0-9A-F]{4})\\s([0-9A-F]{2})\\s[0-9A-F]{8}:[0-9A-F]{8}"
+            +
             "\\s[0-9A-F]{2}:[0-9A-F]{8}\\s[0-9A-F]{8}\\s+([0-9A-F]+)", Pattern.CASE_INSENSITIVE
             | Pattern.UNIX_LINES);
     private static final Pattern IPV6_PATTERN = Pattern.compile("\\s+\\d+:\\s([0-9A-F]{32}):" +
-            "([0-9A-F]{4})\\s([0-9A-F]{32}):([0-9A-F]{4})\\s([0-9A-F]{2})\\s[0-9A-F]{8}:[0-9A-F]{8}" +
+            "([0-9A-F]{4})\\s([0-9A-F]{32}):([0-9A-F]{4})\\s([0-9A-F]{2})\\s[0-9A-F]{8}:[0-9A-F]{8}"
+            +
             "\\s[0-9A-F]{2}:[0-9A-F]{8}\\s[0-9A-F]{8}\\s+([0-9A-F]+)", Pattern.CASE_INSENSITIVE
             | Pattern.UNIX_LINES);
 
@@ -70,7 +72,7 @@ public final class UidDumper {
                 .maximumSize(NET_MAX_SIZE)
                 .build();
         this.mDumpers = new ArrayMap<>(2);
-        this.mDumpers.put(Protocol.TCP, new NetDumper[]{
+        this.mDumpers.put(Protocol.TCP, new NetDumper[] {
                 new NetDumper("/proc/net/tcp6", localIp, IPV6_PATTERN),
                 new NetDumper("/proc/net/tcp", localIp, IPV4_PATTERN)});
         this.mDumpers.put(Protocol.UDP, new NetDumper[] {

@@ -15,7 +15,12 @@
  */
 package com.github.megatronking.netbare.http2;
 
-import android.support.annotation.NonNull;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.gateway.InterceptorChain;
@@ -26,12 +31,7 @@ import com.github.megatronking.netbare.http.HttpRequestChain;
 import com.github.megatronking.netbare.http.HttpResponse;
 import com.github.megatronking.netbare.http.HttpResponseChain;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import androidx.annotation.NonNull;
 
 /**
  * Encodes HTTP2 request and response packets.
@@ -167,8 +167,9 @@ public final class Http2EncodeInterceptor implements HttpInterceptor {
                 response.responseStreamEnd());
     }
 
-    private void sendHeaderBlockFrame(InterceptorChain chain, byte[] headerBlock, Http2Settings http2Settings,
-                                      int streamId, boolean endStream) throws IOException  {
+    private void sendHeaderBlockFrame(InterceptorChain chain, byte[] headerBlock,
+                                      Http2Settings http2Settings,
+                                      int streamId, boolean endStream) throws IOException {
         int maxFrameSize = http2Settings == null ? Http2.INITIAL_MAX_FRAME_SIZE :
                 http2Settings.getMaxFrameSize(Http2.INITIAL_MAX_FRAME_SIZE);
         int byteCount = headerBlock.length;
@@ -193,7 +194,8 @@ public final class Http2EncodeInterceptor implements HttpInterceptor {
     }
 
     private void sendContinuationFrame(InterceptorChain chain, byte[] headerBlock, int streamId,
-                                       int maxFrameSize, long byteCount, boolean endStream) throws IOException {
+                                       int maxFrameSize, long byteCount, boolean endStream)
+            throws IOException {
         int offset = 0;
         while (byteCount > 0) {
             int length = (int) Math.min(maxFrameSize, byteCount);

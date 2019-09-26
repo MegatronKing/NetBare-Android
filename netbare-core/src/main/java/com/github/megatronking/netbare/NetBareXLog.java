@@ -15,8 +15,8 @@
  */
 package com.github.megatronking.netbare;
 
-import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.ip.Protocol;
+import com.github.megatronking.netbare.net.Session;
 
 /**
  * A log util using in NetBare, it uses the protocol, ip and port as the prefix.
@@ -32,8 +32,8 @@ public final class NetBareXLog {
      * Constructs a NetBareXLog instance with the net information.
      *
      * @param protocol The IP protocol.
-     * @param ip The ip address, a string value.
-     * @param port The port, a short value.
+     * @param ip       The ip address, a string value.
+     * @param port     The port, a short value.
      */
     public NetBareXLog(Protocol protocol, String ip, short port) {
         this(protocol, ip, NetBareUtils.convertPort(port));
@@ -43,8 +43,8 @@ public final class NetBareXLog {
      * Constructs a NetBareXLog instance with the net information.
      *
      * @param protocol The IP protocol.
-     * @param ip The ip address, a int value.
-     * @param port The port, a short value.
+     * @param ip       The ip address, a int value.
+     * @param port     The port, a short value.
      */
     public NetBareXLog(Protocol protocol, int ip, short port) {
         this(protocol, NetBareUtils.convertIp(ip), port);
@@ -54,8 +54,8 @@ public final class NetBareXLog {
      * Constructs a NetBareXLog instance with the net information.
      *
      * @param protocol The IP protocol.
-     * @param ip The ip address, a int value.
-     * @param port The port, a int value.
+     * @param ip       The ip address, a int value.
+     * @param port     The port, a int value.
      */
     public NetBareXLog(Protocol protocol, int ip, int port) {
         this(protocol, NetBareUtils.convertIp(ip), port);
@@ -74,8 +74,8 @@ public final class NetBareXLog {
      * Constructs a NetBareXLog instance with the net information.
      *
      * @param protocol The IP protocol.
-     * @param ip The ip address, a string value.
-     * @param port The port, a int value.
+     * @param ip       The ip address, a string value.
+     * @param port     The port, a int value.
      */
     public NetBareXLog(Protocol protocol, String ip, int port) {
         this.mPrefix = "[" + protocol.name() + "][" + ip + ":" + port + "]";
@@ -89,7 +89,6 @@ public final class NetBareXLog {
     public void v(String msg) {
         NetBareLog.v(mPrefix + msg);
     }
-
 
     public void v(String msg, Object... args) {
         NetBareLog.v(mPrefix + msg, args);
@@ -107,7 +106,7 @@ public final class NetBareXLog {
     /**
      * Print a verbose level log in console, format is '[protocol][ip:port]message'.
      *
-     * @param msg The message you would like logged.
+     * @param msg  The message you would like logged.
      * @param args Arguments referenced by the format specifiers in the format string.
      */
     public void d(String msg, Object... args) {
@@ -126,7 +125,7 @@ public final class NetBareXLog {
     /**
      * Print a info level log in console, format is '[protocol][ip:port]message'.
      *
-     * @param msg The message you would like logged.
+     * @param msg  The message you would like logged.
      * @param args Arguments referenced by the format specifiers in the format string.
      */
     public void i(String msg, Object... args) {
@@ -145,7 +144,7 @@ public final class NetBareXLog {
     /**
      * Print a error level log in console, format is '[protocol][ip:port]message'.
      *
-     * @param msg The message you would like logged.
+     * @param msg  The message you would like logged.
      * @param args Arguments referenced by the format specifiers in the format string.
      */
     public void e(String msg, Object... args) {
@@ -164,7 +163,7 @@ public final class NetBareXLog {
     /**
      * Print a warning level log in console, format is '[protocol][ip:port]message'.
      *
-     * @param msg The message you would like logged.
+     * @param msg  The message you would like logged.
      * @param args Arguments referenced by the format specifiers in the format string.
      */
     public void w(String msg, Object... args) {

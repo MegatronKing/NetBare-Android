@@ -15,17 +15,6 @@
  */
 package com.github.megatronking.netbare.ssl;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.security.KeyChain;
-import android.support.annotation.NonNull;
-
-import com.github.megatronking.netbare.NetBareLog;
-import com.github.megatronking.netbare.NetBareUtils;
-
-import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -35,6 +24,17 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
+
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+
+import com.github.megatronking.netbare.NetBareLog;
+import com.github.megatronking.netbare.NetBareUtils;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.security.KeyChain;
+import androidx.annotation.NonNull;
 
 /**
  * A java keystore to manage root certificate.
@@ -151,7 +151,8 @@ public class JKS {
      * Whether the certificate with given alias has been installed.
      *
      * @param context Any context.
-     * @param alias Key store alias.
+     * @param alias   Key store alias.
+     *
      * @return True if the certificate has been installed.
      */
     public static boolean isInstalled(Context context, String alias) {
@@ -163,8 +164,9 @@ public class JKS {
      * Install the self-signed root certificate.
      *
      * @param context Any context.
-     * @param name Key chain name.
-     * @param alias Key store alias.
+     * @param name    Key chain name.
+     * @param alias   Key store alias.
+     *
      * @throws IOException If an IO error has occurred.
      */
     public static void install(Context context, String name, String alias)

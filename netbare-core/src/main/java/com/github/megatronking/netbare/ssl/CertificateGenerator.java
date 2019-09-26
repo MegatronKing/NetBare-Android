@@ -15,9 +15,26 @@
  */
 package com.github.megatronking.netbare.ssl;
 
-import android.os.Build;
-
-import com.github.megatronking.netbare.NetBareUtils;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Date;
+import java.util.Random;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1InputStream;
@@ -43,26 +60,9 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.Key;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.SignatureException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.Date;
-import java.util.Random;
+import com.github.megatronking.netbare.NetBareUtils;
+
+import android.os.Build;
 
 /**
  * Generates self-signed certificate by {@link JKS}.
@@ -104,7 +104,7 @@ public final class CertificateGenerator {
      * The maximum possible value in X.509 specification: 9999-12-31 23:59:59,
      * new Date(253402300799000L), but Apple iOS 8 fails with a certificate
      * expiration date grater than Mon, 24 Jan 6084 02:07:59 GMT (issue #6).
-     *
+     * <p>
      * Hundred years in the future from starting the proxy should be enough.
      */
     private static final Date NOT_AFTER = new Date(System.currentTimeMillis() + ONE_DAY * 365 * 10);
@@ -113,6 +113,7 @@ public final class CertificateGenerator {
      * Generate a root keystore by a given {@link JKS}.
      *
      * @param jks A java keystore object.
+     *
      * @return A root {@link KeyStore}.
      */
     public KeyStore generateRoot(JKS jks)
@@ -151,12 +152,12 @@ public final class CertificateGenerator {
         KeyStore result = KeyStore.getInstance(KEY_STORE_TYPE);
         result.load(null, null);
         result.setKeyEntry(jks.alias(), keyPair.getPrivate(), jks.password(),
-                new Certificate[] { cert });
+                new Certificate[] {cert});
         return result;
     }
 
     public KeyStore generateServer(String commonName, JKS jks,
-                                          Certificate caCert, PrivateKey caPrivKey)
+                                   Certificate caCert, PrivateKey caPrivKey)
             throws NoSuchAlgorithmException, NoSuchProviderException,
             IOException, OperatorCreationException, CertificateException,
             InvalidKeyException, SignatureException, KeyStoreException {
@@ -171,8 +172,10 @@ public final class CertificateGenerator {
         name.addRDN(BCStyle.OU, jks.certOrganizationalUnitName());
         X500Name subject = name.build();
 
-        X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(issuer, serial, NOT_BEFORE,
-                new Date(System.currentTimeMillis() + ONE_DAY), subject, keyPair.getPublic());
+        X509v3CertificateBuilder builder =
+                new JcaX509v3CertificateBuilder(issuer, serial, NOT_BEFORE,
+                        new Date(System.currentTimeMillis() + ONE_DAY), subject,
+                        keyPair.getPublic());
         builder.addExtension(Extension.subjectKeyIdentifier, false,
                 createSubjectKeyIdentifier(keyPair.getPublic()));
         builder.addExtension(Extension.basicConstraints, false,
@@ -187,7 +190,7 @@ public final class CertificateGenerator {
 
         KeyStore result = KeyStore.getInstance(KeyStore.getDefaultType());
         result.load(null, null);
-        Certificate[] chain = { cert, caCert };
+        Certificate[] chain = {cert, caCert};
         result.setKeyEntry(jks.alias(), keyPair.getPrivate(), jks.password(), chain);
         return result;
     }
@@ -228,7 +231,8 @@ public final class CertificateGenerator {
     }
 
     private static X509Certificate signCertificate(X509v3CertificateBuilder certificateBuilder,
-            PrivateKey signedWithPrivateKey) throws OperatorCreationException,
+                                                   PrivateKey signedWithPrivateKey)
+            throws OperatorCreationException,
             CertificateException {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             ContentSigner signer = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM)
@@ -252,7 +256,7 @@ public final class CertificateGenerator {
      * if sun.arch.data.model explicitly indicates a 32-bit JVM.
      *
      * @return true if we can determine definitively that this is a 32-bit JVM,
-     *         otherwise false
+     * otherwise false
      */
     private static boolean is32BitJvm() {
         Integer bits = Integer.getInteger("sun.arch.data.model");

@@ -15,7 +15,8 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import android.support.annotation.NonNull;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.ssl.SSLCodec;
@@ -24,8 +25,7 @@ import com.github.megatronking.netbare.ssl.SSLRefluxCallback;
 import com.github.megatronking.netbare.ssl.SSLRequestCodec;
 import com.github.megatronking.netbare.ssl.SSLResponseCodec;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import androidx.annotation.NonNull;
 
 /**
  * Decodes SSL/TLS packets to plaintext.
@@ -33,7 +33,8 @@ import java.nio.ByteBuffer;
  * @author Megatron King
  * @since 2019/4/9 21:39
  */
-public abstract class SSLCodecInterceptor<Req extends Request, ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
+public abstract class SSLCodecInterceptor<Req extends Request,
+        ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
         Res extends Response, ResChain extends AbstractResponseChain<Res, ? extends Interceptor>>
         extends PendingIndexedInterceptor<Req, ReqChain, Res, ResChain>
         implements SSLRefluxCallback<Req, Res> {
@@ -51,6 +52,7 @@ public abstract class SSLCodecInterceptor<Req extends Request, ReqChain extends 
      * Should decrypt the request buffer with SSL codec.
      *
      * @param chain The request chain.
+     *
      * @return True if needs to decrypt.
      */
     protected abstract boolean shouldDecrypt(ReqChain chain);
@@ -59,6 +61,7 @@ public abstract class SSLCodecInterceptor<Req extends Request, ReqChain extends 
      * Should decrypt the response buffer with SSL codec.
      *
      * @param chain The response chain.
+     *
      * @return True if needs to decrypt.
      */
     protected abstract boolean shouldDecrypt(ResChain chain);
@@ -175,7 +178,6 @@ public abstract class SSLCodecInterceptor<Req extends Request, ReqChain extends 
                     }
                 });
     }
-
 
     private void decodeResponse(final ResChain chain, ByteBuffer buffer) throws IOException {
         // Merge buffers

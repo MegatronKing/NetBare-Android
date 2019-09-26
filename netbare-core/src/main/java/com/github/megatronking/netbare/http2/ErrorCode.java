@@ -75,7 +75,8 @@ package com.github.megatronking.netbare.http2;
         this.httpCode = httpCode;
     }
 
-    /* package */ static ErrorCode fromHttp2(int code) {
+    /* package */
+    static ErrorCode fromHttp2(int code) {
         for (ErrorCode errorCode : ErrorCode.values()) {
             if (errorCode.httpCode == code) {
                 return errorCode;

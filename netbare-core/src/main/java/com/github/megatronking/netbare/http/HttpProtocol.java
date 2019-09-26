@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Http protocols that NetBare defined.
@@ -81,6 +81,7 @@ public enum HttpProtocol {
      * Returns the protocol identified by {@code protocol}.
      *
      * @param protocol A string protocol presents in request line and status line.
+     *
      * @return A HttpProtocol enum.
      */
     @NonNull

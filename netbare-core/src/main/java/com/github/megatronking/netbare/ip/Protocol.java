@@ -15,11 +15,11 @@
  */
 package com.github.megatronking.netbare.ip;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * The enum defines all supported IP protocols.
- *
+ * <p>
  * Internet Protocol numbers see:
  * https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers
  *
@@ -31,17 +31,17 @@ public enum Protocol {
     /**
      * Internet Control Message Protocol.
      */
-    ICMP((byte)1),
+    ICMP((byte) 1),
 
     /**
-     * 	Transmission Control Protocol.
+     * Transmission Control Protocol.
      */
-    TCP((byte)6),
+    TCP((byte) 6),
 
     /**
-     * 	User Datagram Protocol.
+     * User Datagram Protocol.
      */
-    UDP((byte)17);
+    UDP((byte) 17);
 
     final byte number;
 
@@ -53,6 +53,7 @@ public enum Protocol {
      * Parse the protocol by number.
      *
      * @param number Protocol number.
+     *
      * @return The supported protocol number or null.
      */
     @Nullable

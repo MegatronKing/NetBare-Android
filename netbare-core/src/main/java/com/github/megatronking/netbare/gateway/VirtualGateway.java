@@ -15,10 +15,10 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import com.github.megatronking.netbare.net.Session;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import com.github.megatronking.netbare.net.Session;
 
 /**
  * Virtual Gateway is a virtual net packets interception distributor, all packets will flow through
@@ -46,8 +46,8 @@ public class VirtualGateway {
     /**
      * Constructs a VirtualGateway object with the net session, request tunnel and response tunnel.
      *
-     * @param session The net session contains basic net information such as IPs and ports.
-     * @param request The request tunnel connects to the server terminal.
+     * @param session  The net session contains basic net information such as IPs and ports.
+     * @param request  The request tunnel connects to the server terminal.
      * @param response The response tunnel connects to the client terminal.
      */
     public VirtualGateway(Session session, Request request, Response response) {
@@ -61,6 +61,7 @@ public class VirtualGateway {
      * Send a packet to server terminal through the request tunnel.
      *
      * @param buffer A byte buffer contains the net packet data.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     public void onRequest(ByteBuffer buffer) throws IOException {
@@ -71,6 +72,7 @@ public class VirtualGateway {
      * Send a packet to client terminal through the response tunnel.
      *
      * @param buffer A byte buffer contains the net packet data.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     public void onResponse(ByteBuffer buffer) throws IOException {

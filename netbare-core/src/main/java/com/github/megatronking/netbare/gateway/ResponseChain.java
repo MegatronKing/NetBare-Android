@@ -15,11 +15,11 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import android.support.annotation.NonNull;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * A response chain, responsible for intercepting response packets.
@@ -45,10 +45,12 @@ public class ResponseChain extends AbstractResponseChain<Response, Interceptor<R
     }
 
     @Override
-    protected void processNext(ByteBuffer buffer, Response response, List<Interceptor<Request, RequestChain,
-            Response, ResponseChain>> interceptors,
+    protected void processNext(ByteBuffer buffer, Response response,
+                               List<Interceptor<Request, RequestChain,
+                                       Response, ResponseChain>> interceptors,
                                int index, Object tag) throws IOException {
-        Interceptor<Request, RequestChain, Response, ResponseChain> interceptor = interceptors.get(index);
+        Interceptor<Request, RequestChain, Response, ResponseChain> interceptor =
+                interceptors.get(index);
         if (interceptor != null) {
             interceptor.intercept(new ResponseChain(response, interceptors, ++index, tag), buffer);
         }

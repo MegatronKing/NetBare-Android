@@ -36,7 +36,7 @@ public abstract class AbstractResponseChain<Res extends Response, I extends Inte
     /**
      * Constructs an intercept chain for response.
      *
-     * @param response A {@link Response} implementation.
+     * @param response     A {@link Response} implementation.
      * @param interceptors A collection of interceptors.
      */
     protected AbstractResponseChain(Res response, List<I> interceptors) {
@@ -46,10 +46,10 @@ public abstract class AbstractResponseChain<Res extends Response, I extends Inte
     /**
      * Constructs an intercept chain for response.
      *
-     * @param response A {@link Response} implementation.
+     * @param response     A {@link Response} implementation.
      * @param interceptors A collection of interceptors.
-     * @param index The head index.
-     * @param tag The chain's tag.
+     * @param index        The head index.
+     * @param tag          The chain's tag.
      */
     protected AbstractResponseChain(Res response, List<I> interceptors, int index, Object tag) {
         super(response, interceptors, index, tag);

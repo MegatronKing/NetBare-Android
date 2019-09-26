@@ -30,6 +30,7 @@ public interface Tunnel {
      * Write a packet buffer to the terminal.
      *
      * @param buffer A packet buffer.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     void write(ByteBuffer buffer) throws IOException;

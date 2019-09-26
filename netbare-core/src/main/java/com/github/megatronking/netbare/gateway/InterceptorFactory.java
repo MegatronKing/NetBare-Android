@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Factory used by developer to create their own interceptor for virtual gateway.
@@ -23,7 +23,8 @@ import android.support.annotation.NonNull;
  * @author Megatron King
  * @since 2018-11-02 23:46
  */
-public interface InterceptorFactory<Req extends Request, ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
+public interface InterceptorFactory<Req extends Request,
+        ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
         Res extends Response, ResChain extends AbstractResponseChain<Res, ? extends Interceptor>> {
 
     /**

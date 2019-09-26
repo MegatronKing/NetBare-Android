@@ -15,12 +15,12 @@
  */
 package com.github.megatronking.netbare.ssl;
 
-import com.github.megatronking.netbare.NetBareLog;
-import com.github.megatronking.netbare.http.HttpProtocol;
-
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.github.megatronking.netbare.NetBareLog;
+import com.github.megatronking.netbare.http.HttpProtocol;
 
 /**
  * A SSL utils class.
@@ -79,7 +79,9 @@ public final class SSLUtils {
      * Verify a packet to see whether it is a valid SSL packet.
      *
      * @param buffer Encrypted SSL packet.
-     * @return Verification result, one of {@link #PACKET_NOT_ENOUGH}, {@link #PACKET_NOT_ENCRYPTED},
+     *
+     * @return Verification result, one of {@link #PACKET_NOT_ENOUGH},
+     * {@link #PACKET_NOT_ENCRYPTED},
      * and {@link #PACKET_SSL}.
      */
     public static int verifyPacket(ByteBuffer buffer) {
@@ -126,7 +128,8 @@ public final class SSLUtils {
             if (majorVersion == 2 || majorVersion == 3) {
                 // SSLv2
                 packetLength = headerLength == 2 ?
-                        (buffer.getShort(position) & 0x7FFF) + 2 : (buffer.getShort(position) & 0x3FFF) + 3;
+                        (buffer.getShort(position) & 0x7FFF) + 2
+                        : (buffer.getShort(position) & 0x3FFF) + 3;
                 if (packetLength <= headerLength) {
                     NetBareLog.w("No enough ssl/tls packet length, packet: " + packetLength +
                             " header: " + headerLength);

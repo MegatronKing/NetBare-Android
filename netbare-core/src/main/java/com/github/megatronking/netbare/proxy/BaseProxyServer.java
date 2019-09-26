@@ -15,13 +15,14 @@
  */
 package com.github.megatronking.netbare.proxy;
 
-import com.github.megatronking.netbare.NetBareLog;
-
 import java.io.IOException;
+
+import com.github.megatronking.netbare.NetBareLog;
 
 /**
  * An abstract base class defined for proxy servers. The local proxy server runs a separated thread
- * and loop to process packets. The sub class needs to impl {@link #process()} to handle the packets.
+ * and loop to process packets. The sub class needs to impl {@link #process()} to handle the
+ * packets.
  *
  * @author Megatron King
  * @since 2018-10-10 00:31

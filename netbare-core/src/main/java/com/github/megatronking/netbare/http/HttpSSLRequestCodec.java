@@ -15,10 +15,6 @@
  */
 package com.github.megatronking.netbare.http;
 
-import com.github.megatronking.netbare.NetBareLog;
-import com.github.megatronking.netbare.ssl.SSLEngineFactory;
-import com.github.megatronking.netbare.ssl.SSLRequestCodec;
-
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -27,9 +23,13 @@ import java.nio.charset.Charset;
 
 import javax.net.ssl.SSLEngine;
 
+import com.github.megatronking.netbare.NetBareLog;
+import com.github.megatronking.netbare.ssl.SSLEngineFactory;
+import com.github.megatronking.netbare.ssl.SSLRequestCodec;
+
 /**
  * Http request ssl codec enables Application-Layer Protocol Negotiation(ALPN).
- *
+ * <p>
  * See http://tools.ietf.org/html/draft-agl-tls-nextprotoneg-04#page-4
  *
  * @author Megatron King
@@ -97,16 +97,17 @@ import javax.net.ssl.SSLEngine;
                 "setApplicationProtocols", String[].class);
         setApplicationProtocolsMethod.setAccessible(true);
         String[] protocols = {mSelectedAlpnProtocol.toString().toLowerCase()};
-        setApplicationProtocolsMethod.invoke(sslEngine, new Object[]{protocols});
+        setApplicationProtocolsMethod.invoke(sslEngine, new Object[] {protocols});
     }
 
-    private void enableConscryptEngineAlpn(SSLEngine sslEngine) throws NoSuchMethodException, IllegalAccessException,
+    private void enableConscryptEngineAlpn(SSLEngine sslEngine)
+            throws NoSuchMethodException, IllegalAccessException,
             InvocationTargetException {
         Method setAlpnProtocolsMethod = sslEngine.getClass().getDeclaredMethod(
                 "setAlpnProtocols", String[].class);
         setAlpnProtocolsMethod.setAccessible(true);
         String[] protocols = {mSelectedAlpnProtocol.toString().toLowerCase()};
-        setAlpnProtocolsMethod.invoke(sslEngine, new Object[]{protocols});
+        setAlpnProtocolsMethod.invoke(sslEngine, new Object[] {protocols});
     }
 
     private void enableOpenSSLEngineImplAlpn(SSLEngine sslEngine) throws NoSuchFieldException,
@@ -121,7 +122,6 @@ import javax.net.ssl.SSLEngine;
         }
     }
 
-
     private byte[] concatLengthPrefixed() {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         String protocolStr = mSelectedAlpnProtocol.toString().toLowerCase();
@@ -129,6 +129,5 @@ import javax.net.ssl.SSLEngine;
         os.write(protocolStr.getBytes(Charset.forName("UTF-8")), 0, protocolStr.length());
         return os.toByteArray();
     }
-
 
 }

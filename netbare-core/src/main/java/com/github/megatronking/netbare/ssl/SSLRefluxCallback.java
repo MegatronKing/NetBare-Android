@@ -15,11 +15,11 @@
  */
 package com.github.megatronking.netbare.ssl;
 
-import com.github.megatronking.netbare.gateway.Request;
-import com.github.megatronking.netbare.gateway.Response;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import com.github.megatronking.netbare.gateway.Request;
+import com.github.megatronking.netbare.gateway.Response;
 
 /**
  * A callback to receive SSL plaintext packets and input them to {@link javax.net.ssl.SSLEngine}.

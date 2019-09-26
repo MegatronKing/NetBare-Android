@@ -15,16 +15,16 @@
  */
 package com.github.megatronking.netbare.tunnel;
 
-import android.net.VpnService;
-
-import com.github.megatronking.netbare.NetBareXLog;
-import com.github.megatronking.netbare.ip.Protocol;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+
+import com.github.megatronking.netbare.NetBareXLog;
+import com.github.megatronking.netbare.ip.Protocol;
+
+import android.net.VpnService;
 
 /**
  * A TCP tunnel communicates with the remote server.
@@ -79,6 +79,5 @@ public class TcpRemoteTunnel extends TcpTunnel {
         mLog.i("Remote tunnel is closed.");
         super.close();
     }
-
 
 }

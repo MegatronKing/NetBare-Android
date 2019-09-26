@@ -15,20 +15,20 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
-
-import com.github.megatronking.netbare.NetBareUtils;
-import com.github.megatronking.netbare.NetBareXLog;
-import com.github.megatronking.netbare.ip.Protocol;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.megatronking.netbare.NetBareUtils;
+import com.github.megatronking.netbare.NetBareXLog;
+import com.github.megatronking.netbare.ip.Protocol;
+
+import androidx.annotation.NonNull;
+
 /**
  * Parse HTTP request header part and response header part from HTTP packets. The parse result will
- *  be set to {@link HttpSession}.
+ * be set to {@link HttpSession}.
  *
  * @author Megatron King
  * @since 2018-12-09 12:19

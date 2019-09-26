@@ -15,10 +15,10 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import com.github.megatronking.netbare.tunnel.Tunnel;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import com.github.megatronking.netbare.tunnel.Tunnel;
 
 /**
  * A server response, it connects to VPN file descriptor. We can send packet to the client using

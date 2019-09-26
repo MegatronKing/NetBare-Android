@@ -15,12 +15,12 @@
  */
 package com.github.megatronking.netbare.http;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.github.megatronking.netbare.gateway.Request;
 import com.github.megatronking.netbare.http2.Http2Settings;
 import com.github.megatronking.netbare.http2.Http2Updater;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A zygote http request class, it creates the real http request instance.

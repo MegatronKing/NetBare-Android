@@ -34,7 +34,7 @@ public interface ProxyServerForwarder {
      * Forward a packet to local proxy server.
      *
      * @param packet A data packet, the array length is MTU.
-     * @param len The actual data length in packet array.
+     * @param len    The actual data length in packet array.
      * @param output An output stream connects VPN file descriptor.
      */
     void forward(byte[] packet, int len, OutputStream output);

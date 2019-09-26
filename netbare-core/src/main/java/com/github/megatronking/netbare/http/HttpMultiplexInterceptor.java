@@ -15,13 +15,13 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.ip.Protocol;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import androidx.annotation.NonNull;
 
 /**
  * If a HTTP connection is keep-alive, there will be multiple sessions go through the same virtual

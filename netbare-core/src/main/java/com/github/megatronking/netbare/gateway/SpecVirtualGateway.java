@@ -15,11 +15,11 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import com.github.megatronking.netbare.ip.Protocol;
-import com.github.megatronking.netbare.net.Session;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import com.github.megatronking.netbare.ip.Protocol;
+import com.github.megatronking.netbare.net.Session;
 
 /**
  * The spec VirtualGateway filter the net packets by {@link Protocol}.
@@ -41,6 +41,7 @@ public abstract class SpecVirtualGateway extends VirtualGateway {
      * The specific protocol packets sent to server will flow through this method.
      *
      * @param buffer A byte buffer contains the net packet data.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     protected abstract void onSpecRequest(ByteBuffer buffer) throws IOException;
@@ -49,6 +50,7 @@ public abstract class SpecVirtualGateway extends VirtualGateway {
      * The specific protocol packets sent to client will flow through this method.
      *
      * @param buffer A byte buffer contains the net packet data.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     protected abstract void onSpecResponse(ByteBuffer buffer) throws IOException;

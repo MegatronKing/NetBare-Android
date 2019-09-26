@@ -30,6 +30,7 @@ import java.nio.ByteBuffer;
      * Send a packet to remote tunnel, and the tunnel will send it to the terminal.
      *
      * @param buffer A net packet buffer.
+     *
      * @throws IOException If an I/O error has occurred.
      */
     void process(ByteBuffer buffer) throws IOException;

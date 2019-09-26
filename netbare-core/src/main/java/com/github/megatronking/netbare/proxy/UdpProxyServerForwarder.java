@@ -15,7 +15,8 @@
  */
 package com.github.megatronking.netbare.proxy;
 
-import android.net.VpnService;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.NetBareUtils;
@@ -26,8 +27,7 @@ import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.net.SessionProvider;
 import com.github.megatronking.netbare.net.UidDumper;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import android.net.VpnService;
 
 /**
  * Unlike TCP proxy server, UDP doesn't need handshake, we can forward packets to it directly.
@@ -73,7 +73,8 @@ public final class UdpProxyServerForwarder implements ProxyServerForwarder {
                 NetBareUtils.convertPort(remotePort));
         NetBareLog.v("udp: %s, size: %d", udpHeader.toString(), udpDataSize);
 
-        Session session = mSessionProvider.ensureQuery(Protocol.UDP, localPort, remotePort, remoteIp);
+        Session session =
+                mSessionProvider.ensureQuery(Protocol.UDP, localPort, remotePort, remoteIp);
         session.packetIndex++;
 
         try {

@@ -15,11 +15,11 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import android.support.annotation.NonNull;
-
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * An abstract interceptor provides multi-apis for packet pending. The packet will be stored in a
@@ -28,7 +28,8 @@ import java.util.List;
  * @author Megatron King
  * @since 2018-12-09 12:07
  */
-public abstract class PendingIndexedInterceptor <Req extends Request, ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
+public abstract class PendingIndexedInterceptor<Req extends Request,
+        ReqChain extends AbstractRequestChain<Req, ? extends Interceptor>,
         Res extends Response, ResChain extends AbstractResponseChain<Res, ? extends Interceptor>>
         extends IndexedInterceptor<Req, ReqChain, Res, ResChain> {
 
@@ -78,6 +79,7 @@ public abstract class PendingIndexedInterceptor <Req extends Request, ReqChain e
      * contains all data. The pending buffers will be clear after the merge action.
      *
      * @param buffer A fresh packet buffer.
+     *
      * @return A new buffer.
      */
     protected ByteBuffer mergeRequestBuffer(ByteBuffer buffer) {
@@ -89,6 +91,7 @@ public abstract class PendingIndexedInterceptor <Req extends Request, ReqChain e
      * contains all data. The pending buffers will be clear after the merge action.
      *
      * @param buffer A fresh packet buffer.
+     *
      * @return A new buffer.
      */
     protected ByteBuffer mergeResponseBuffer(ByteBuffer buffer) {

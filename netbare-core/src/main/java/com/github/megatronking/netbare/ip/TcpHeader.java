@@ -22,9 +22,9 @@ import java.util.Locale;
  * information fields, including the source and destination host addresses. A TCP header follows
  * the internet header, supplying information specific to the TCP protocol. This division allows
  * for the existence of host level protocols other than TCP.
- *
+ * <p>
  * TCP Header Format:
- *
+ * <p>
  * 0                   1                   2                   3
  * 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -44,7 +44,7 @@ import java.util.Locale;
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * |                             data                              |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *
+ * <p>
  * See https://tools.ietf.org/html/rfc793#section-3.1
  *
  * @author Megatron King

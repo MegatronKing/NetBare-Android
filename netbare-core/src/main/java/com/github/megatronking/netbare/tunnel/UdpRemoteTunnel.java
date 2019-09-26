@@ -15,16 +15,16 @@
  */
 package com.github.megatronking.netbare.tunnel;
 
-import android.net.VpnService;
-
-import com.github.megatronking.netbare.NetBareXLog;
-import com.github.megatronking.netbare.ip.Protocol;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.Selector;
+
+import com.github.megatronking.netbare.NetBareXLog;
+import com.github.megatronking.netbare.ip.Protocol;
+
+import android.net.VpnService;
 
 /**
  * A UDP tunnel communicates with the remote server.

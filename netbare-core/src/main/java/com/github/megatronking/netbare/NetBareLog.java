@@ -32,7 +32,8 @@ public final class NetBareLog {
     private NetBareLog() {
     }
 
-    /* package */ static void setDebug(boolean debug) {
+    /* package */
+    static void setDebug(boolean debug) {
         sDebug = debug;
     }
 
@@ -51,7 +52,7 @@ public final class NetBareLog {
     /**
      * Print a verbose level log in console.
      *
-     * @param msg The message you would like logged.
+     * @param msg  The message you would like logged.
      * @param args Arguments referenced by the format specifiers in the format string.
      */
     public static void v(String msg, Object... args) {
@@ -73,7 +74,7 @@ public final class NetBareLog {
     /**
      * Print a debug level log in console.
      *
-     * @param msg The message you would like logged.
+     * @param msg  The message you would like logged.
      * @param args Arguments referenced by the format specifiers in the format string.
      */
     public static void d(String msg, Object... args) {
@@ -95,7 +96,7 @@ public final class NetBareLog {
     /**
      * Print a info level log in console.
      *
-     * @param msg The message you would like logged.
+     * @param msg  The message you would like logged.
      * @param args Arguments referenced by the format specifiers in the format string.
      */
     public static void i(String msg, Object... args) {
@@ -117,7 +118,7 @@ public final class NetBareLog {
     /**
      * Print a error level log in console.
      *
-     * @param msg The message you would like logged.
+     * @param msg  The message you would like logged.
      * @param args Arguments referenced by the format specifiers in the format string.
      */
     public static void e(String msg, Object... args) {
@@ -139,7 +140,7 @@ public final class NetBareLog {
     /**
      * Print a warning level log in console.
      *
-     * @param msg The message you would like logged.
+     * @param msg  The message you would like logged.
      * @param args Arguments referenced by the format specifiers in the format string.
      */
     public static void w(String msg, Object... args) {

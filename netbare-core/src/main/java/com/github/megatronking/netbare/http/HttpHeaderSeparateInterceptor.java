@@ -15,15 +15,15 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
-import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.NetBareUtils;
+import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.ip.Protocol;
 import com.google.common.primitives.Bytes;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import androidx.annotation.NonNull;
 
 /**
  * Separate HTTP header part and body part into different packets.
@@ -62,13 +62,16 @@ import java.nio.ByteBuffer;
         } else {
             mRequestHeaderHandled = true;
             // Check whether the header and the body are in the same buffer.
-            boolean hasMultiPart = headerEndIndex < buffer.limit() - NetBareUtils.PART_END_BYTES.length;
+            boolean hasMultiPart =
+                    headerEndIndex < buffer.limit() - NetBareUtils.PART_END_BYTES.length;
             if (hasMultiPart) {
                 mLog.w("Multiple http request parts are founded.");
                 // Separate the header and body data to two buffers.
                 int offset = headerEndIndex + NetBareUtils.PART_END_BYTES.length;
-                ByteBuffer headerBuffer = ByteBuffer.wrap(buffer.array(), buffer.position(), offset);
-                // Allocate a new buffer, do not use wrap, different buffers will share the same array.
+                ByteBuffer headerBuffer =
+                        ByteBuffer.wrap(buffer.array(), buffer.position(), offset);
+                // Allocate a new buffer, do not use wrap, different buffers will share the same
+                // array.
                 ByteBuffer bodyBuffer = ByteBuffer.allocate(buffer.limit() - offset);
                 bodyBuffer.put(buffer.array(), offset, buffer.limit() - offset);
                 bodyBuffer.flip();
@@ -81,7 +84,8 @@ import java.nio.ByteBuffer;
     }
 
     @Override
-    protected void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer, int index)
+    protected void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer,
+                             int index)
             throws IOException {
         if (mLog == null) {
             mLog = new NetBareXLog(Protocol.TCP, chain.response().ip(), chain.response().port());
@@ -104,13 +108,16 @@ import java.nio.ByteBuffer;
         } else {
             mResponseHeaderHandled = true;
             // Check whether the header and the body are in the same buffer.
-            boolean hasMultiPart = headerEndIndex < buffer.limit() - NetBareUtils.PART_END_BYTES.length;
+            boolean hasMultiPart =
+                    headerEndIndex < buffer.limit() - NetBareUtils.PART_END_BYTES.length;
             if (hasMultiPart) {
                 mLog.w("Multiple http response parts are founded.");
                 // Separate the header and body data to two buffers.
                 int offset = headerEndIndex + NetBareUtils.PART_END_BYTES.length;
-                ByteBuffer headerBuffer = ByteBuffer.wrap(buffer.array(), buffer.position(), offset);
-                // Allocate a new buffer, do not use wrap, different buffers will share the same array.
+                ByteBuffer headerBuffer =
+                        ByteBuffer.wrap(buffer.array(), buffer.position(), offset);
+                // Allocate a new buffer, do not use wrap, different buffers will share the same
+                // array.
                 ByteBuffer bodyBuffer = ByteBuffer.allocate(buffer.limit() - offset);
                 bodyBuffer.put(buffer.array(), offset, buffer.limit() - offset);
                 bodyBuffer.flip();
