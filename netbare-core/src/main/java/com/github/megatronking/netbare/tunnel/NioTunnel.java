@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.spi.AbstractSelectableChannel;
-import java.util.Queue;
+import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
@@ -77,7 +77,7 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
     private final Selector mSelector;
     private SelectionKey mSelectionKey;
 
-    private Queue<ByteBuffer> mPendingBuffers;
+    private Deque<ByteBuffer> mPendingBuffers;
 
     private NioCallback mCallback;
     private boolean mIsClosed;
@@ -109,12 +109,12 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
         }
         // Write pending buffers.
         while (!mPendingBuffers.isEmpty()) {
-            ByteBuffer buffer = mPendingBuffers.poll();
+            ByteBuffer buffer = mPendingBuffers.pollFirst();
             int remaining = buffer.remaining();
             int sent = channelWrite(buffer);
             if (sent < remaining) {
                 // Should wait next onWrite.
-                mPendingBuffers.offer(buffer);
+                mPendingBuffers.offerFirst(buffer);
                 return;
             }
         }
@@ -148,7 +148,7 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
         if (!buffer.hasRemaining()) {
             return;
         }
-        mPendingBuffers.offer(buffer);
+        mPendingBuffers.offerLast(buffer);
         interestWrite();
     }
 
