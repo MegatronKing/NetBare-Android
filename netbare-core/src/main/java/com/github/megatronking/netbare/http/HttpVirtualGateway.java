@@ -61,7 +61,7 @@ import java.util.List;
         if (jks != null){
             try {
                 sslEngineFactory = SSLEngineFactory.get(jks);
-            } catch (GeneralSecurityException | IOException e) {
+            } catch (GeneralSecurityException | IOException | NullPointerException e) {
                 //Ignore
             }
         }
