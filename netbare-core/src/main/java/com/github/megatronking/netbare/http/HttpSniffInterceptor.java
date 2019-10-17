@@ -74,7 +74,7 @@ import java.nio.ByteBuffer;
     @Override
     protected void intercept(@NonNull HttpResponseChain chain, @NonNull ByteBuffer buffer,
                              int index) throws IOException {
-        if ((mType == TYPE_INVALID) || (mType == TYPE_WHITELIST)) {
+        if ((mType == TYPE_INVALID) || (mType == TYPE_WHITELIST) || (mType == TYPE_HTTPS && sslEngineFactory == null)) {
             chain.processFinal(buffer);
             return;
         }
