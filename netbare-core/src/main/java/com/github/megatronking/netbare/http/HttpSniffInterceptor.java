@@ -61,7 +61,7 @@ import java.nio.ByteBuffer;
                 mType = chain.request().host() == null ? TYPE_INVALID : verifyHttpType(buffer);
             }
         }
-        if (mType == TYPE_HTTPS) {
+        if (mType == TYPE_HTTPS && sslEngineFactory != null) {
             mSession.isHttps = true;
         }
         if ((mType == TYPE_INVALID) || (mType == TYPE_WHITELIST) || (mType == TYPE_HTTPS && sslEngineFactory == null)) {
