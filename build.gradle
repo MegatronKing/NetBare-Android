@@ -16,10 +16,40 @@ buildscript {
     }
 }
 
+/** Returns the artifact ID for the project, or null if it is not published. */
+ext.publishedArtifactId = { project ->
+    if (project.name == 'netbare-core'
+            || project.name == 'netbare-injector') {
+        return project.name
+    } else {
+        return null
+    }
+}
+
 allprojects {
+    group = "com.github.megatronking.netbare"
+    project.ext.artifactId = rootProject.ext.publishedArtifactId(project)
+    version = "1.0.0"
+
     repositories {
         google()
         jcenter()
+    }
+}
+
+subprojects {
+    if (project.ext.artifactId == null) return
+
+    apply plugin: 'maven-publish'
+
+    publishing {
+        publications {
+            library(MavenPublication) {
+                groupId = project.group
+                artifactId = project.ext.artifactId
+                version = project.version
+            }
+        }
     }
 }
 
