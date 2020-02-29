@@ -48,8 +48,6 @@ import java.util.Map;
  */
 /* package */ final class NetBareThread extends Thread {
 
-    private static final int TRANSPORT_WAIT_TIME = 5;
-
     private final NetBareConfig mConfig;
     private final VpnService mVpnService;
 
