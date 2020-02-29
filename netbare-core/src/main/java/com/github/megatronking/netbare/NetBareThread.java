@@ -101,6 +101,7 @@ import java.util.Map;
 
     private void establishVpn(PacketsTransfer packetsTransfer) {
         VpnService.Builder builder = mVpnService.new Builder();
+        builder.setBlocking(true);
         builder.setMtu(mConfig.mtu);
         builder.addAddress(mConfig.address.address, mConfig.address.prefixLength);
         if (mConfig.session != null) {
@@ -198,13 +199,6 @@ import java.util.Map;
             // The thread would be blocked if there is no outgoing packets from input stream.
             byte[] packet = new byte[mtu];
             int readLength = input.read(packet);
-            if (readLength < 0) {
-                throw new IOException("Read -1 from vpn FileDescriptor.");
-            }
-            if (readLength == 0) {
-                SystemClock.sleep(TRANSPORT_WAIT_TIME);
-                return;
-            }
             transfer(packet, readLength, output);
         }
 
