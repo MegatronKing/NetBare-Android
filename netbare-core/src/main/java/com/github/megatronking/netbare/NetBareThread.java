@@ -196,8 +196,7 @@ import java.util.Map;
         private void transfer(InputStream input, OutputStream output, int mtu) throws IOException {
             // The thread would be blocked if there is no outgoing packets from input stream.
             byte[] packet = new byte[mtu];
-            int readLength = input.read(packet);
-            transfer(packet, readLength, output);
+            transfer(packet, input.read(packet), output);
         }
 
         private void transfer(byte[] packet, int len, OutputStream output) {
