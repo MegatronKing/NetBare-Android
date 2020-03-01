@@ -202,7 +202,6 @@ import java.util.Map;
         }
 
         private void transfer(InputStream input, OutputStream output) throws IOException {
-			Arrays.fill(buffer, (byte) 0);
             int readLength = input.read(buffer);
             if (readLength < 0) {
                 throw new IOException("Read -1 from vpn FileDescriptor.");
