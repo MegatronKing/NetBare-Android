@@ -35,9 +35,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -144,7 +141,6 @@ import java.util.Map;
         }
         InputStream input = new FileInputStream(descriptor);
         OutputStream output = new FileOutputStream(descriptor);
-        int mtu = mConfig.mtu;
 
         packetsTransfer.start();
 
