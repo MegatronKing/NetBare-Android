@@ -48,182 +48,167 @@ import java.util.Map;
  */
 /* package */ final class NetBareThread extends Thread {
 
-    private static final int TRANSPORT_WAIT_TIME = 5;
+	private final NetBareConfig mConfig;
+	private final VpnService mVpnService;
 
-    private final NetBareConfig mConfig;
-    private final VpnService mVpnService;
+	private ParcelFileDescriptor vpnDescriptor;
+	private FileInputStream input;
+	private FileOutputStream output;
 
-    private boolean mRunning;
+	private PacketsTransfer packetsTransfer;
 
-    /* package */ NetBareThread(VpnService vpnService, NetBareConfig config) {
-        super("NetBare");
-        this.mVpnService = vpnService;
-        this.mConfig = config;
-    }
+	/* package */ NetBareThread(VpnService vpnService, NetBareConfig config) {
+		super("NetBare");
+		this.mVpnService = vpnService;
+		this.mConfig = config;
+	}
 
-    @Override
-    public void start() {
-        mRunning = true;
-        super.start();
-    }
+	@Override
+	public void interrupt() {
+		super.interrupt();
+		packetsTransfer.stop();
+		NetBareUtils.closeQuietly(vpnDescriptor);
+		NetBareUtils.closeQuietly(input);
+		NetBareUtils.closeQuietly(output);
+	}
 
-    @Override
-    public void interrupt() {
-        mRunning = false;
-        super.interrupt();
-    }
-
-    @Override
-    public void run() {
-        super.run();
-        if (!mRunning) {
-            return;
-        }
+	@Override
+	public void run() {
+		super.run();
 
         // Notify NetBareListener that the service is started now.
-        NetBare.get().notifyServiceStarted();
+		NetBare.get().notifyServiceStarted();
 
-        PacketsTransfer packetsTransfer = null;
-        try {
-            packetsTransfer = new PacketsTransfer(mVpnService, mConfig);
-        } catch (IOException e) {
-            NetBareLog.wtf(e);
-        }
-        if (packetsTransfer != null) {
-            // Establish VPN, it runs a while loop unless failed.
-            establishVpn(packetsTransfer);
-        }
+		try {
+			packetsTransfer = new PacketsTransfer(mVpnService, mConfig);
+		} catch (IOException e) {
+			NetBareLog.wtf(e);
+		}
+		if (packetsTransfer != null) {
+			// Establish VPN, it runs a while loop unless failed.
+			establishVpn(packetsTransfer);
+		}
 
-        // Notify NetBareListener that the service is stopped now.
-        NetBare.get().notifyServiceStopped();
+		// Notify NetBareListener that the service is stopped now.
+		NetBare.get().notifyServiceStopped();
 
-    }
+	}
 
-    private void establishVpn(PacketsTransfer packetsTransfer) {
-        VpnService.Builder builder = mVpnService.new Builder();
-        builder.setMtu(mConfig.mtu);
-        builder.addAddress(mConfig.address.address, mConfig.address.prefixLength);
-        if (mConfig.session != null) {
-            builder.setSession(mConfig.session);
-        }
-        if (mConfig.configureIntent != null) {
-            builder.setConfigureIntent(mConfig.configureIntent);
-        }
-        for (IpAddress ip : mConfig.routes) {
-            builder.addRoute(ip.address, ip.prefixLength);
-        }
-        for (String address : mConfig.dnsServers) {
-            builder.addDnsServer(address);
-        }
-        try {
-            for (String packageName : mConfig.allowedApplications) {
-                builder.addAllowedApplication(packageName);
-            }
-            for (String packageName : mConfig.disallowedApplications) {
-                builder.addDisallowedApplication(packageName);
-            }
-            // Add self to allowed list.
-            if (!mConfig.allowedApplications.isEmpty()) {
-                builder.addAllowedApplication(mVpnService.getPackageName());
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            NetBareLog.wtf(e);
-        }
-        ParcelFileDescriptor vpnDescriptor = builder.establish();
-        if (vpnDescriptor == null) {
-            return;
-        }
+	private void establishVpn(PacketsTransfer packetsTransfer) {
+		VpnService.Builder builder = mVpnService.new Builder();
+		builder.setBlocking(true);
+		builder.setMtu(mConfig.mtu);
+		builder.addAddress(mConfig.address.address, mConfig.address.prefixLength);
+		if (mConfig.session != null) {
+			builder.setSession(mConfig.session);
+		}
+		if (mConfig.configureIntent != null) {
+			builder.setConfigureIntent(mConfig.configureIntent);
+		}
+		for (IpAddress ip : mConfig.routes) {
+			builder.addRoute(ip.address, ip.prefixLength);
+		}
+		for (String address : mConfig.dnsServers) {
+			builder.addDnsServer(address);
+		}
+		try {
+			for (String packageName : mConfig.allowedApplications) {
+				builder.addAllowedApplication(packageName);
+			}
+			for (String packageName : mConfig.disallowedApplications) {
+				builder.addDisallowedApplication(packageName);
+			}
+			// Add self to allowed list.
+			if (!mConfig.allowedApplications.isEmpty()) {
+				builder.addAllowedApplication(mVpnService.getPackageName());
+			}
+		} catch (PackageManager.NameNotFoundException e) {
+			NetBareLog.wtf(e);
+		}
+		vpnDescriptor = builder.establish();
+		if (vpnDescriptor == null) {
+			return;
+		}
 
-        // Open io with the VPN descriptor.
-        FileDescriptor descriptor = vpnDescriptor.getFileDescriptor();
-        if (descriptor == null) {
-            return;
-        }
-        InputStream input = new FileInputStream(descriptor);
-        OutputStream output = new FileOutputStream(descriptor);
+		// Open io with the VPN descriptor.
+		FileDescriptor descriptor = vpnDescriptor.getFileDescriptor();
+		if (descriptor == null) {
+			return;
+		}
+		input = new FileInputStream(descriptor);
+		output = new FileOutputStream(descriptor);
 
-        packetsTransfer.start();
+		packetsTransfer.start();
 
-        try {
-            // Read packets from input io and forward them to proxy servers.
-            while (mRunning) {
-                packetsTransfer.transfer(input, output);
-            }
-        } catch (IOException e) {
-            NetBareLog.wtf(e);
-        }
+		try {
+			// Read packets from input io and forward them to proxy servers.
+			while (!isInterrupted()) {
+				packetsTransfer.transfer(input, output);
+			}
+		} catch (IOException e) {
+			if (!isInterrupted()) {
+				NetBareLog.wtf(e);
+			}
+		}
+	}
 
-        packetsTransfer.stop();
+	private static class PacketsTransfer {
 
-        NetBareUtils.closeQuietly(vpnDescriptor);
-        NetBareUtils.closeQuietly(input);
-        NetBareUtils.closeQuietly(output);
-    }
+		private final Map<Protocol, ProxyServerForwarder> mForwarderRegistry;
 
-    private static class PacketsTransfer {
+		private byte[] buffer;
 
-        private final Map<Protocol, ProxyServerForwarder> mForwarderRegistry;
+		private PacketsTransfer(VpnService service, NetBareConfig config) throws IOException {
+			int mtu = config.mtu;
+			String localIp = config.address.address;
+			UidDumper uidDumper = config.dumpUid ? new UidDumper(localIp, config.uidProvider) : null;
+			// Register all supported protocols here.
+			this.mForwarderRegistry = new LinkedHashMap<>(3);
+			// TCP
+			this.mForwarderRegistry.put(Protocol.TCP, new TcpProxyServerForwarder(service, localIp, mtu,
+					uidDumper));
+			// UDP
+			this.mForwarderRegistry.put(Protocol.UDP, new UdpProxyServerForwarder(service, mtu,
+					uidDumper));
+			// ICMP
+			this.mForwarderRegistry.put(Protocol.ICMP, new IcmpProxyServerForwarder());
 
-        private byte[] buffer;
+			buffer = new byte[mtu];
+		}
 
-        private PacketsTransfer(VpnService service, NetBareConfig config) throws IOException {
-            int mtu = config.mtu;
-            String localIp = config.address.address;
-            UidDumper uidDumper = config.dumpUid ? new UidDumper(localIp, config.uidProvider) : null;
-            // Register all supported protocols here.
-            this.mForwarderRegistry = new LinkedHashMap<>(3);
-            // TCP
-            this.mForwarderRegistry.put(Protocol.TCP, new TcpProxyServerForwarder(service, localIp, mtu,
-                    uidDumper));
-            // UDP
-            this.mForwarderRegistry.put(Protocol.UDP, new UdpProxyServerForwarder(service, mtu,
-                    uidDumper));
-            // ICMP
-            this.mForwarderRegistry.put(Protocol.ICMP, new IcmpProxyServerForwarder());
+		private void start()  {
+			for (ProxyServerForwarder forwarder : mForwarderRegistry.values()) {
+				forwarder.prepare();
+			}
+		}
 
-            buffer = new byte[mtu];
-        }
+		private void stop() {
+			for (ProxyServerForwarder forwarder : mForwarderRegistry.values()) {
+				forwarder.release();
+			}
+			mForwarderRegistry.clear();
+		}
 
-        private void start()  {
-            for (ProxyServerForwarder forwarder : mForwarderRegistry.values()) {
-                forwarder.prepare();
-            }
-        }
+		private void transfer(InputStream input, OutputStream output) throws IOException {
+			// The thread would be blocked if there is no outgoing packets from input stream.
+			transfer(buffer, input.read(buffer), output);
+		}
 
-        private void stop() {
-            for (ProxyServerForwarder forwarder : mForwarderRegistry.values()) {
-                forwarder.release();
-            }
-            mForwarderRegistry.clear();
-        }
+		private void transfer(byte[] packet, int len, OutputStream output) {
+			if (len < IpHeader.MIN_HEADER_LENGTH) {
+				NetBareLog.w("Ip header length < " + IpHeader.MIN_HEADER_LENGTH);
+				return;
+			}
+			IpHeader ipHeader = new IpHeader(packet, 0);
+			Protocol protocol = Protocol.parse(ipHeader.getProtocol());
+			ProxyServerForwarder forwarder = mForwarderRegistry.get(protocol);
+			if (forwarder != null) {
+				forwarder.forward(packet, len, output);
+			} else {
+				NetBareLog.w("Unknown ip protocol: " + ipHeader.getProtocol());
+			}
+		}
 
-        private void transfer(InputStream input, OutputStream output) throws IOException {
-            int readLength = input.read(buffer);
-            if (readLength < 0) {
-                throw new IOException("Read -1 from vpn FileDescriptor.");
-            }
-            if (readLength == 0) {
-                SystemClock.sleep(TRANSPORT_WAIT_TIME);
-                return;
-            }
-            transfer(buffer, readLength, output);
-        }
-
-        private void transfer(byte[] packet, int len, OutputStream output) {
-            if (len < IpHeader.MIN_HEADER_LENGTH) {
-                NetBareLog.w("Ip header length < " + IpHeader.MIN_HEADER_LENGTH);
-                return;
-            }
-            IpHeader ipHeader = new IpHeader(packet, 0);
-            Protocol protocol = Protocol.parse(ipHeader.getProtocol());
-            ProxyServerForwarder forwarder = mForwarderRegistry.get(protocol);
-            if (forwarder != null) {
-                forwarder.forward(packet, len, output);
-            } else {
-                NetBareLog.w("Unknown ip protocol: " + ipHeader.getProtocol());
-            }
-        }
-
-    }
+	}
 
 }
