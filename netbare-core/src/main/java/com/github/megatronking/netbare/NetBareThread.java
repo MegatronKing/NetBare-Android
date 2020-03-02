@@ -51,7 +51,9 @@ import java.util.Map;
     private final NetBareConfig mConfig;
     private final VpnService mVpnService;
 
-    private boolean mRunning;
+    private ParcelFileDescriptor vpnDescriptor;
+    private FileInputStream input;
+    private FileOutputStream output;
 
     /* package */ NetBareThread(VpnService vpnService, NetBareConfig config) {
         super("NetBare");
@@ -60,23 +62,16 @@ import java.util.Map;
     }
 
     @Override
-    public void start() {
-        mRunning = true;
-        super.start();
-    }
-
-    @Override
     public void interrupt() {
-        mRunning = false;
         super.interrupt();
+		NetBareUtils.closeQuietly(vpnDescriptor);
+		NetBareUtils.closeQuietly(input);
+		NetBareUtils.closeQuietly(output);
     }
 
     @Override
     public void run() {
         super.run();
-        if (!mRunning) {
-            return;
-        }
 
         // Notify NetBareListener that the service is started now.
         NetBare.get().notifyServiceStarted();
@@ -128,7 +123,7 @@ import java.util.Map;
         } catch (PackageManager.NameNotFoundException e) {
             NetBareLog.wtf(e);
         }
-        ParcelFileDescriptor vpnDescriptor = builder.establish();
+        vpnDescriptor = builder.establish();
         if (vpnDescriptor == null) {
             return;
         }
@@ -138,25 +133,23 @@ import java.util.Map;
         if (descriptor == null) {
             return;
         }
-        InputStream input = new FileInputStream(descriptor);
-        OutputStream output = new FileOutputStream(descriptor);
+        input = new FileInputStream(descriptor);
+        output = new FileOutputStream(descriptor);
 
         packetsTransfer.start();
 
         try {
             // Read packets from input io and forward them to proxy servers.
-            while (mRunning) {
+            while (isAlive()) {
                 packetsTransfer.transfer(input, output);
             }
         } catch (IOException e) {
-            NetBareLog.wtf(e);
+        	if (isAlive()) {
+				NetBareLog.wtf(e);
+			}
         }
 
         packetsTransfer.stop();
-
-        NetBareUtils.closeQuietly(vpnDescriptor);
-        NetBareUtils.closeQuietly(input);
-        NetBareUtils.closeQuietly(output);
     }
 
     private static class PacketsTransfer {
