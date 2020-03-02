@@ -57,18 +57,20 @@ import java.util.List;
         this.mHttpZygoteRequest = new HttpZygoteRequest(request, sessionFactory);
         this.mHttpZygoteResponse = new HttpZygoteResponse(response, sessionFactory);
 
-        SSLEngineFactory sslEngineFactory;
-        try {
-            sslEngineFactory = SSLEngineFactory.get(jks);
-        } catch (GeneralSecurityException | IOException e) {
-            sslEngineFactory = null;
+        SSLEngineFactory sslEngineFactory = null;
+        if (jks != null){
+            try {
+                sslEngineFactory = SSLEngineFactory.get(jks);
+            } catch (GeneralSecurityException | IOException | NullPointerException e) {
+                //Ignore
+            }
         }
 
         // Add default interceptors.
         HttpSSLCodecInterceptor codecInterceptor = new HttpSSLCodecInterceptor(sslEngineFactory, request, response);
         this.mInterceptors = new ArrayList<>(8);
 
-        mInterceptors.add(new HttpSniffInterceptor(sessionFactory.create(session.id)));
+        mInterceptors.add(new HttpSniffInterceptor(sessionFactory.create(session.id), sslEngineFactory));
         mInterceptors.add(codecInterceptor);
         mInterceptors.add(new Http2SniffInterceptor(codecInterceptor));
         mInterceptors.add(new Http2DecodeInterceptor(codecInterceptor, mHttpZygoteRequest, mHttpZygoteResponse));

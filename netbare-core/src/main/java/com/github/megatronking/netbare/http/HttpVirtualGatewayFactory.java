@@ -45,7 +45,7 @@ public class HttpVirtualGatewayFactory implements VirtualGatewayFactory {
      * @param factories a collection of {@link HttpInterceptorFactory}.
      * @return A instance of {@link HttpVirtualGatewayFactory}.
      */
-    public HttpVirtualGatewayFactory(@NonNull JKS jks,
+    public HttpVirtualGatewayFactory(JKS jks,
                                      @NonNull List<HttpInterceptorFactory> factories) {
         this.mJKS = jks;
         this.mFactories = factories;
@@ -63,7 +63,7 @@ public class HttpVirtualGatewayFactory implements VirtualGatewayFactory {
      * @param factories a collection of {@link HttpInterceptorFactory}.
      * @return A instance of {@link HttpVirtualGatewayFactory}.
      */
-    public static VirtualGatewayFactory create(@NonNull JKS authority,
+    public static VirtualGatewayFactory create(JKS authority,
                                                @NonNull List<HttpInterceptorFactory> factories) {
         return new HttpVirtualGatewayFactory(authority, factories);
     }

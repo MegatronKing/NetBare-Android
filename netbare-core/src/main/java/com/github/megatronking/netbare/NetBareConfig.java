@@ -75,11 +75,11 @@ public final class NetBareConfig {
     /**
      * Create a default config using {@link HttpVirtualGatewayFactory} for HTTP protocol.
      *
-     * @param jks JSK instance, not null.
+     * @param jks JSK instance, skip https when jks is empty.
      * @param interceptors A collection of {@link HttpInterceptorFactory}.
      * @return A NetBare config instance.
      */
-    public static NetBareConfig defaultHttpConfig(@NonNull JKS jks,
+    public static NetBareConfig defaultHttpConfig(JKS jks,
                                                   List<HttpInterceptorFactory> interceptors) {
         return defaultConfig().newBuilder()
                 .setVirtualGatewayFactory(new HttpVirtualGatewayFactory(jks, interceptors))
