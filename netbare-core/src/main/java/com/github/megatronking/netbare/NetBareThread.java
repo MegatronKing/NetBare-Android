@@ -55,6 +55,8 @@ import java.util.Map;
 	private FileInputStream input;
 	private FileOutputStream output;
 
+	private PacketsTransfer packetsTransfer;
+
 	/* package */ NetBareThread(VpnService vpnService, NetBareConfig config) {
 		super("NetBare");
 		this.mVpnService = vpnService;
@@ -64,6 +66,7 @@ import java.util.Map;
 	@Override
 	public void interrupt() {
 		super.interrupt();
+		packetsTransfer.stop();
 		NetBareUtils.closeQuietly(vpnDescriptor);
 		NetBareUtils.closeQuietly(input);
 		NetBareUtils.closeQuietly(output);
@@ -76,7 +79,6 @@ import java.util.Map;
         // Notify NetBareListener that the service is started now.
 		NetBare.get().notifyServiceStarted();
 
-		PacketsTransfer packetsTransfer = null;
 		try {
 			packetsTransfer = new PacketsTransfer(mVpnService, mConfig);
 		} catch (IOException e) {
@@ -148,8 +150,6 @@ import java.util.Map;
 				NetBareLog.wtf(e);
 			}
 		}
-
-		packetsTransfer.stop();
 	}
 
 	private static class PacketsTransfer {
