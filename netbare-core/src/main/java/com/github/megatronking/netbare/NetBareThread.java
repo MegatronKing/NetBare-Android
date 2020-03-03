@@ -77,6 +77,8 @@ import java.util.Map;
 		} catch (IOException e) {
 			NetBareLog.wtf(e);
 		}
+		// Notify NetBareListener that the service is stopped now.
+		NetBare.get().notifyServiceStopped();
 	}
 
 	@Override
@@ -95,10 +97,6 @@ import java.util.Map;
 			// Establish VPN, it runs a while loop unless failed.
 			establishVpn(packetsTransfer);
 		}
-
-		// Notify NetBareListener that the service is stopped now.
-		NetBare.get().notifyServiceStopped();
-
 	}
 
 	private void establishVpn(PacketsTransfer packetsTransfer) {
