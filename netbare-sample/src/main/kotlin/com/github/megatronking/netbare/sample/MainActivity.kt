@@ -78,7 +78,7 @@ class MainActivity : AppCompatActivity(), NetBareListener {
         }
         // 启动NetBare服务
         mNetBare.start(NetBareConfig.defaultHttpConfig(App.getInstance().getJSK(),
-                interceptorFactories()))
+                interceptorFactories()).newBuilder().addAllowedApplication("none").build())
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
