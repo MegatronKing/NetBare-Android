@@ -31,6 +31,8 @@ public class PacketTransferThread extends Thread implements Closeable{
 	private ParcelFileDescriptor.AutoCloseInputStream input;
 	private FileOutputStream output;
 
+	private VpnService.Builder builder;
+
 	private final Map<Protocol, ProxyServer> proxyServerRegistry = new LinkedHashMap<>(3);
 
 	private byte[] buffer;
@@ -70,7 +72,7 @@ public class PacketTransferThread extends Thread implements Closeable{
 	}
 
 	@Override
-	public synchronized void close() throws IOException {
+	public void close() throws IOException {
 		for (ProxyServer proxyServer : proxyServerRegistry.values()) {
 			proxyServer.interrupt();
 			proxyServer.close();
@@ -79,7 +81,7 @@ public class PacketTransferThread extends Thread implements Closeable{
 		input.close();
 		output.close();
 		vpnDescriptor.close();
-		vpnService.new Builder().setBlocking(true).addAddress(config.address.address, config.address.prefixLength).establish().close();
+		builder.establish().close();
 	}
 
 	private void establishVpn() {
@@ -113,6 +115,7 @@ public class PacketTransferThread extends Thread implements Closeable{
 		} catch (PackageManager.NameNotFoundException e) {
 			NetBareLog.wtf(e);
 		}
+		this.builder = builder;
 		vpnDescriptor = builder.establish();
 		if (vpnDescriptor == null) {
 			return;
