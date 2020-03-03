@@ -13,7 +13,9 @@
  *  You should have received a copy of the GNU General Public License along with NetBare.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.megatronking.netbare.ip;
+package com.github.megatronking.netbare.ip.header;
+
+import java.nio.ByteBuffer;
 
 /**
  * ICMP messages are sent using the basic IP header. The first octet of the data portion of the
@@ -46,7 +48,7 @@ public class IcmpHeader extends Header {
 
     private IpHeader mIpHeader;
 
-    public IcmpHeader(IpHeader header, byte[] packet, int offset) {
+    public IcmpHeader(IpHeader header, ByteBuffer packet, int offset) {
         super(packet, offset);
         mIpHeader = header;
     }
@@ -56,19 +58,19 @@ public class IcmpHeader extends Header {
     }
 
     public byte getType() {
-        return readByte(offset + OFFSET_TYPE);
+        return getBuffer().get(offset + OFFSET_TYPE);
     }
 
     public byte getCode() {
-        return readByte(offset + OFFSET_CODE);
+        return getBuffer().get(offset + OFFSET_CODE);
     }
 
     public short getCrc() {
-        return readShort(offset + OFFSET_CRC);
+        return getBuffer().getShort(offset + OFFSET_CRC);
     }
 
     public void setCrc(short crc) {
-        writeShort(crc, offset + OFFSET_CRC);
+        getBuffer().putShort(offset + OFFSET_CRC, crc);
     }
 
     public void updateChecksum() {
@@ -77,10 +79,10 @@ public class IcmpHeader extends Header {
     }
 
     private short computeChecksum() {
-        int dataLength = mIpHeader.getDataLength();
+        short dataLength = mIpHeader.getDataLength();
         long sum = mIpHeader.getIpSum();
         sum += mIpHeader.getProtocol() & 0xFF;
-        sum += dataLength;
+        sum += dataLength & 0xFFFF;
         sum += getSum(offset, dataLength);
         while ((sum >> 16) > 0) {
             sum = (sum & 0xFFFF) + (sum >> 16);

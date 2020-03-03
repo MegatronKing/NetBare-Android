@@ -27,6 +27,7 @@ import org.bouncycastle.operator.OperatorCreationException;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
@@ -151,8 +152,8 @@ public final class SSLEngineFactory {
      * @return A server {@link SSLEngine} instance.
      * @throws ExecutionException If an execution error has occurred.
      */
-    public SSLEngine createServerEngine(@NonNull final String host) throws ExecutionException {
-        SSLContext ctx = SERVER_SSL_CONTEXTS.get(host, new Callable<SSLContext>() {
+    public SSLEngine createServerEngine(@NonNull final InetAddress host) throws ExecutionException {
+        SSLContext ctx = SERVER_SSL_CONTEXTS.get(host.getHostAddress(), new Callable<SSLContext>() {
             @Override
             public SSLContext call() throws GeneralSecurityException, IOException,
                     OperatorCreationException {
@@ -181,15 +182,15 @@ public final class SSLEngineFactory {
      * @return A client {@link SSLEngine} instance.
      * @throws ExecutionException If an execution error has occurred.
      */
-    public SSLEngine createClientEngine(@NonNull final String host, int port) throws ExecutionException {
-        SSLContext ctx = CLIENT_SSL_CONTEXTS.get(host, new Callable<SSLContext>() {
+    public SSLEngine createClientEngine(@NonNull final InetAddress host, int port) throws ExecutionException {
+        SSLContext ctx = CLIENT_SSL_CONTEXTS.get(host.getHostAddress(), new Callable<SSLContext>() {
             @Override
             public SSLContext call() throws GeneralSecurityException, IOException,
                     OperatorCreationException {
                 return createClientContext(host);
             }
         });
-        SSLEngine engine = ctx.createSSLEngine(host, port);
+        SSLEngine engine = ctx.createSSLEngine(host.getHostAddress(), port);
         List<String> ciphers = new LinkedList<>();
         for (String each : engine.getEnabledCipherSuites()) {
             if (!each.equals("TLS_DHE_RSA_WITH_AES_128_CBC_SHA") &&
@@ -221,7 +222,7 @@ public final class SSLEngineFactory {
         return ks;
     }
 
-    private SSLContext createServerContext(String host) throws GeneralSecurityException,
+    private SSLContext createServerContext(InetAddress host) throws GeneralSecurityException,
             IOException, OperatorCreationException {
         KeyManager[] kms = sKeyManagerProvider != null ?
                 sKeyManagerProvider.provide(host, false) : null;
@@ -233,7 +234,7 @@ public final class SSLEngineFactory {
         return createContext(kms, tms);
     }
 
-    private SSLContext createClientContext(String host) throws GeneralSecurityException {
+    private SSLContext createClientContext(InetAddress host) throws GeneralSecurityException {
         KeyManager[] kms = sKeyManagerProvider != null ?
                 sKeyManagerProvider.provide(host, true) : null;
         TrustManager[] tms = sTrustManagerProvider != null ?
@@ -262,11 +263,11 @@ public final class SSLEngineFactory {
         }
     }
 
-    private KeyManager[] getServerKeyManagers(String host) throws NoSuchAlgorithmException,
+    private KeyManager[] getServerKeyManagers(InetAddress host) throws NoSuchAlgorithmException,
             UnrecoverableKeyException, KeyStoreException, OperatorCreationException,
             InvalidKeyException, IOException, SignatureException, NoSuchProviderException,
             CertificateException {
-        KeyStore keyStore = mGenerator.generateServer(host, mJKS, mCaCert, mCaPrivKey);
+        KeyStore keyStore = mGenerator.generateServer(host.getHostAddress(), mJKS, mCaCert, mCaPrivKey);
         String keyManAlg = KeyManagerFactory.getDefaultAlgorithm();
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(keyManAlg);
         kmf.init(keyStore, mJKS.password());

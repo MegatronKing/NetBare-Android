@@ -20,6 +20,7 @@ import android.support.annotation.Nullable;
 
 import com.github.megatronking.netbare.ip.Protocol;
 
+import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -72,7 +73,7 @@ public final class SessionProvider {
      * @return An instance of {@link Session}, if the instance not exists, will create a new one.
      */
     @NonNull
-    public Session ensureQuery(Protocol protocol, short localPort, short remotePort, int remoteIp) {
+    public Session ensureQuery(Protocol protocol, short localPort, short remotePort, InetAddress remoteIp) {
         Session session = mSessions.get(localPort);
         if (session != null) {
             if (session.protocol != protocol || session.localPort != localPort ||
@@ -90,5 +91,4 @@ public final class SessionProvider {
         }
         return session;
     }
-
 }

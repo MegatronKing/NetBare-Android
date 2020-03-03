@@ -31,17 +31,15 @@
 package com.github.megatronking.netbare.tunnel;
 
 import com.github.megatronking.netbare.NetBareLog;
-import com.github.megatronking.netbare.NetBareUtils;
 import com.github.megatronking.netbare.NetBareVirtualGateway;
 import com.github.megatronking.netbare.gateway.Request;
 import com.github.megatronking.netbare.gateway.Response;
 import com.github.megatronking.netbare.gateway.VirtualGateway;
-import com.github.megatronking.netbare.ip.IpHeader;
-import com.github.megatronking.netbare.ip.UdpHeader;
 import com.github.megatronking.netbare.net.Session;
+import com.github.megatronking.netbare.ip.packet.UdpPacket;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
@@ -56,16 +54,16 @@ public class UdpVATunnel extends VirtualGatewayTunnel implements NioCallback,
         Tunnel {
 
     private final NioTunnel mRemoteTunnel;
-    private final OutputStream mOutput;
+    private final FileOutputStream mOutput;
 
     private final int mMtu;
 
     private Session mSession;
     private VirtualGateway mGateway;
 
-    private UdpHeader mTemplateHeader;
+    private UdpPacket templatePacket;
 
-    public UdpVATunnel(Session session, NioTunnel tunnel, OutputStream output, int mtu) {
+    public UdpVATunnel(Session session, NioTunnel tunnel, FileOutputStream output, int mtu) {
         this.mRemoteTunnel = tunnel;
         this.mOutput = output;
         this.mMtu = mtu;
@@ -116,10 +114,14 @@ public class UdpVATunnel extends VirtualGatewayTunnel implements NioCallback,
     public void onWrite() {
     }
 
-    @Override
-    public void onClosed() {
-        close();
-    }
+	@Override
+	public void onClosed() {
+    	try {
+			close();
+		} catch (IOException e) {
+    		NetBareLog.wtf(e);
+		}
+	}
 
     @Override
     public NioTunnel getTunnel() {
@@ -127,71 +129,68 @@ public class UdpVATunnel extends VirtualGatewayTunnel implements NioCallback,
     }
 
     @Override
-    public void close() {
-        NetBareUtils.closeQuietly(mRemoteTunnel);
+    public void close() throws IOException{
+        mRemoteTunnel.close();
         mGateway.onRequestFinished();
         mGateway.onResponseFinished();
     }
 
-    public void send(UdpHeader header) {
+    public void send(UdpPacket packet) {
         if (mRemoteTunnel.isClosed()) {
             return;
         }
         // Clone a template by the send data.
-        if (mTemplateHeader == null) {
-            mTemplateHeader = createTemplate(header);
+        if (templatePacket == null) {
+            templatePacket = createTemplate(packet);
         }
 
         try {
-            mGateway.onRequest(header.data());
+            mGateway.onRequest(packet.getData());
         } catch (IOException e) {
             NetBareLog.e(e.getMessage());
-            close();
+			try {
+				close();
+			} catch (IOException e1) {
+				NetBareLog.e(e.getMessage());
+			}
         }
     }
 
     @Override
     public void write(ByteBuffer buffer) throws IOException {
-        // Write to vpn.
-        UdpHeader header = mTemplateHeader.copy();
-        ByteBuffer headerBuffer = header.buffer();
-        int headLength = header.getIpHeader().getHeaderLength() + header.getHeaderLength();
-        byte[] packet = new byte[headLength + buffer.remaining()];
-        headerBuffer.get(packet, 0, headLength);
-        buffer.get(packet, headLength, packet.length - headLength);
+		final short headerLength = templatePacket.getHeaderLength();
+        UdpPacket packet = new UdpPacket(ByteBuffer.allocate(
+				headerLength & 0xFFFF
+						+ buffer.remaining()
+		));
 
-        IpHeader ipHeader = new IpHeader(packet, 0);
-        ipHeader.setTotalLength((short) packet.length);
+        templatePacket.getBuffer().get(packet.getBuffer().array(), 0, headerLength);
+        buffer.get(buffer.array(), headerLength, packet.getBuffer().limit() - headerLength & 0xFFFF);
 
-        UdpHeader udpHeader = new UdpHeader(ipHeader, packet, ipHeader.getHeaderLength());
-        udpHeader.setTotalLength((short) (packet.length - ipHeader.getHeaderLength()));
+        packet.getIpHeader().setTotalLength((short) packet.getBuffer().limit());
 
-        ipHeader.updateChecksum();
-        udpHeader.updateChecksum();
+        packet.getUdpHeader().setTotalLength((short) (packet.getBuffer().limit() - packet.getIpHeader().getHeaderLength()));
 
-        mOutput.write(packet, 0, packet.length);
+        packet.updateChecksum();
+        mOutput.write(packet.getBuffer().array(), 0, packet.getBuffer().limit());
 
-        mSession.receiveDataSize += packet.length;
+        mSession.receiveDataSize += packet.getBuffer().limit();
     }
 
     public NioTunnel getRemoteChannel() {
         return mRemoteTunnel;
     }
 
-    private UdpHeader createTemplate(UdpHeader header) {
-        UdpHeader templateUdp = header.copy();
-        IpHeader templateIp = templateUdp.getIpHeader();
+    private UdpPacket createTemplate(UdpPacket packet) {
+    	UdpPacket templatePacket = new UdpPacket(ByteBuffer.allocate(packet.getHeaderLength() & 0xFFFF));
+    	packet.getBuffer().get(templatePacket.getBuffer().array(), 0, templatePacket.getHeaderLength() & 0xFFFF);
         // Swap ip
-        int sourceIp = templateIp.getSourceIp();
-        int destinationIp = templateIp.getDestinationIp();
-        templateIp.setSourceIp(destinationIp);
-        templateIp.setDestinationIp(sourceIp);
+        templatePacket.getIpHeader().setSourceIp(packet.getIpHeader().getDestinationIp());
+        templatePacket.getIpHeader().setDestinationIp(packet.getIpHeader().getSourceIp());
         // Swap port
-        short sourcePort = templateUdp.getSourcePort();
-        short destinationPort = templateUdp.getDestinationPort();
-        templateUdp.setDestinationPort(sourcePort);
-        templateUdp.setSourcePort(destinationPort);
-        return templateUdp;
+		templatePacket.getUdpHeader().setDestinationPort(packet.getUdpHeader().getDestinationPort());
+		templatePacket.getUdpHeader().setSourcePort(packet.getUdpHeader().getSourcePort());
+        return templatePacket;
     }
 
 }

@@ -17,6 +17,8 @@ package com.github.megatronking.netbare.ssl;
 
 import android.support.annotation.Nullable;
 
+import java.net.InetAddress;
+
 import javax.net.ssl.TrustManager;
 
 /**
@@ -36,6 +38,6 @@ public interface SSLTrustManagerProvider {
      * @return The sources of peer authentication trust decisions or null.
      */
     @Nullable
-    TrustManager[] provide(String host, boolean client);
+    TrustManager[] provide(InetAddress host, boolean client);
 
 }

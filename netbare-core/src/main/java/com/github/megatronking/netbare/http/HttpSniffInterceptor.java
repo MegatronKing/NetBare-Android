@@ -51,7 +51,7 @@ import java.nio.ByteBuffer;
     protected void intercept(@NonNull HttpRequestChain chain, @NonNull ByteBuffer buffer,
                              int index) throws IOException {
         if (index == 0) {
-            if (SSLWhiteList.contains(chain.request().ip())) {
+            if (SSLWhiteList.contains(chain.request().ip().getHostAddress())) {
                 mType = TYPE_WHITELIST;
                 NetBareLog.i("detect whitelist ip " + chain.request().ip());
             } else {

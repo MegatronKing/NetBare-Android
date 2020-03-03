@@ -38,6 +38,7 @@ import com.github.megatronking.netbare.http.HttpProtocol;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -500,13 +501,13 @@ import java.util.Map;
             this.mMaxDynamicTableByteCount = DEFAULT_HEADER_TABLE_SIZE_SETTING;
         }
 
-        byte[] writeRequestHeaders(HttpMethod method, String path, String host,
+        byte[] writeRequestHeaders(HttpMethod method, String path, InetAddress host,
                                 Map<String, List<String>> headers) throws IOException {
             mOut = new ByteArrayOutputStream();
             List<Header> hpackHeaders = new ArrayList<>();
             hpackHeaders.add(new Header(Header.TARGET_METHOD, method.name()));
             hpackHeaders.add(new Header(Header.TARGET_PATH, path));
-            hpackHeaders.add(new Header(Header.TARGET_AUTHORITY, host));
+            hpackHeaders.add(new Header(Header.TARGET_AUTHORITY, host.getHostAddress()));
             hpackHeaders.add(new Header(Header.TARGET_SCHEME, "https"));
             for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
                 if (HTTP_2_SKIPPED_REQUEST_HEADERS.contains(entry.getKey().toLowerCase())) {

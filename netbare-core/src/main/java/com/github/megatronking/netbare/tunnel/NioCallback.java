@@ -15,6 +15,7 @@
  */
 package com.github.megatronking.netbare.tunnel;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
@@ -46,10 +47,10 @@ public interface NioCallback {
      */
     void onWrite() throws IOException;
 
-    /**
-     * Invoked when the socket IO is closed.
-     */
-    void onClosed();
+	/**
+	 * Invoked when the socket IO is closed.
+	 */
+	void onClosed();
 
     /**
      * Returns the tunnel using nio attachment.

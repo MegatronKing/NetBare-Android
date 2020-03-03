@@ -67,7 +67,7 @@ public class TcpProxyTunnel extends TcpTunnel {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException{
         mLog.i("Proxy tunnel is closed.");
         super.close();
     }

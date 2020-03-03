@@ -20,6 +20,7 @@ import com.github.megatronking.netbare.http2.Http2Settings;
 import com.github.megatronking.netbare.ip.Protocol;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +74,7 @@ public class HttpRequest extends Request {
     }
 
     @Override
-    public String ip() {
+    public InetAddress ip() {
         return mRequest.ip();
     }
 
@@ -88,7 +89,7 @@ public class HttpRequest extends Request {
     }
 
     @Override
-    public String host() {
+    public InetAddress host() {
         return mRequest.host();
     }
 

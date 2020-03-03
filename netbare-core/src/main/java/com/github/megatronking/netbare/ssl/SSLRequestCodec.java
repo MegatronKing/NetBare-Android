@@ -18,6 +18,7 @@ package com.github.megatronking.netbare.ssl;
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.gateway.Request;
 
+import java.net.InetAddress;
 import java.util.concurrent.ExecutionException;
 
 import javax.net.ssl.SSLEngine;
@@ -55,7 +56,7 @@ public class SSLRequestCodec extends SSLCodec {
     @Override
     protected SSLEngine createEngine(SSLEngineFactory factory) {
         if (mEngine == null) {
-            String host = mRequest.host();
+            InetAddress host = mRequest.host();
             if (host == null) {
                 // Unable to get host.
                 NetBareLog.e("Failed to get SSL host.");

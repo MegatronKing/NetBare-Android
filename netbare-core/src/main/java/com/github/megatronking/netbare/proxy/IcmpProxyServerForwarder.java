@@ -16,36 +16,25 @@
 package com.github.megatronking.netbare.proxy;
 
 import com.github.megatronking.netbare.NetBareLog;
-import com.github.megatronking.netbare.ip.IcmpHeader;
-import com.github.megatronking.netbare.ip.IpHeader;
+import com.github.megatronking.netbare.ip.header.IcmpHeader;
+import com.github.megatronking.netbare.ip.header.IpHeader;
 
+import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 /**
  * Forward the Internet Control Message Protocol (ICMP) to proxy server.
  *
  * @author Megatron King
  * @since 2018-10-09 01:30
- */
-public final class IcmpProxyServerForwarder implements ProxyServerForwarder {
-
-    @Override
-    public void prepare() {
-        // TODO
-    }
-
-    @Override
-    public void forward(byte[] packet, int len, OutputStream output) {
+ */ //TODO
+public final class IcmpProxyServerForwarder  {
+    public void forward(ByteBuffer packet, int len, OutputStream output) {
         IpHeader ipHeader = new IpHeader(packet, 0);
         IcmpHeader icmpHeader = new IcmpHeader(ipHeader, packet, ipHeader.getHeaderLength());
         NetBareLog.v("ICMP type: " + icmpHeader.getType());
         NetBareLog.v("ICMP code: " + icmpHeader.getCode());
         // TODO transfer to proxy server
     }
-
-    @Override
-    public void release() {
-        // TODO
-    }
-
 }

@@ -29,6 +29,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -92,7 +93,7 @@ public final class UidDumper {
         }
         final int port = NetBareUtils.convertPort(session.localPort);
         try {
-            Net net = mNetCaches.get(session.remoteIp, new Callable<Net>() {
+            Net net = mNetCaches.get(new BigInteger(session.remoteIp.getAddress()).intValue(), new Callable<Net>() {
                 @Override
                 public Net call() throws Exception {
                     NetDumper[] dumpers = mDumpers.get(session.protocol);

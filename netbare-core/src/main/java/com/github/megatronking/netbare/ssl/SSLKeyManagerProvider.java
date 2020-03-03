@@ -17,6 +17,8 @@ package com.github.megatronking.netbare.ssl;
 
 import android.support.annotation.Nullable;
 
+import java.net.InetAddress;
+
 import javax.net.ssl.KeyManager;
 
 /**
@@ -36,6 +38,6 @@ public interface SSLKeyManagerProvider {
      * @return The sources of authentication keys or null.
      */
     @Nullable
-    KeyManager[] provide(String host, boolean client);
+    KeyManager[] provide(InetAddress host, boolean client);
 
 }

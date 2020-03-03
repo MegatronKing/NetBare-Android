@@ -19,6 +19,7 @@ import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.gateway.Request;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutionException;
 
@@ -63,7 +64,7 @@ public class SSLResponseCodec extends SSLCodec {
     protected SSLEngine createEngine(SSLEngineFactory factory) {
         if (mEngine == null) {
             try {
-                String host = mRequest.host() != null ? mRequest.host() : mRequest.ip();
+                InetAddress host = mRequest.host() != null ? mRequest.host() : mRequest.ip();
                 mEngine = factory.createClientEngine(host, mRequest.port());
                 mEngine.setUseClientMode(true);
             } catch (ExecutionException e) {

@@ -72,7 +72,7 @@ public abstract class SSLCodecInterceptor<Req extends Request, ReqChain extends 
         mResponseCodec = new SSLResponseCodec(engineFactory);
         mResponseCodec.setRequest(mRequest);
 
-        mLog = new NetBareXLog(request.protocol(), request.ip(), request.port());
+        mLog = new NetBareXLog(request.protocol(), request.ip().getHostAddress(), request.port());
     }
 
     @Override

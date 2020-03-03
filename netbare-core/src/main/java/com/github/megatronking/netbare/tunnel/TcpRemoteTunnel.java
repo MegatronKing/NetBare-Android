@@ -75,7 +75,7 @@ public class TcpRemoteTunnel extends TcpTunnel {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException{
         mLog.i("Remote tunnel is closed.");
         super.close();
     }

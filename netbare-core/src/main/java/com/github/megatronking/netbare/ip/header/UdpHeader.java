@@ -13,10 +13,9 @@
  *  You should have received a copy of the GNU General Public License along with NetBare.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.megatronking.netbare.ip;
+package com.github.megatronking.netbare.ip.header;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Locale;
 
 /**
@@ -46,71 +45,64 @@ public class UdpHeader extends Header {
 
     private static final short OFFSET_SRC_PORT = 0;
     private static final short OFFSET_DEST_PORT = 2;
-    private static final short OFFSET_TLEN = 4;
+    private static final short OFFSET_TOTAL_LENGTH = 4;
     private static final short OFFSET_CRC = 6;
 
-    private IpHeader mIpHeader;
-
-    public UdpHeader(IpHeader header, byte[] packet, int offset) {
+    public UdpHeader(ByteBuffer packet, int offset) {
         super(packet, offset);
-        mIpHeader = header;
-    }
-
-    public IpHeader getIpHeader() {
-        return mIpHeader;
     }
 
     public short getSourcePort() {
-        return readShort(offset + OFFSET_SRC_PORT);
+        return getBuffer().getShort(offset + OFFSET_SRC_PORT);
     }
 
     public void setSourcePort(short port) {
-        writeShort(port, offset + OFFSET_SRC_PORT);
+        getBuffer().putShort(offset + OFFSET_SRC_PORT, port);
     }
 
     public short getDestinationPort() {
-        return readShort(offset + OFFSET_DEST_PORT);
+        return getBuffer().getShort(offset + OFFSET_DEST_PORT);
     }
 
     public void setDestinationPort(short port) {
-        writeShort(port, offset + OFFSET_DEST_PORT);
+        getBuffer().putShort(offset + OFFSET_DEST_PORT, port);
     }
 
     public short getCrc() {
-        return readShort(offset + OFFSET_CRC);
+        return getBuffer().getShort(offset + OFFSET_CRC);
     }
 
     public void setCrc(short crc) {
-        writeShort(crc, offset + OFFSET_CRC);
+        getBuffer().putShort(offset + OFFSET_CRC, crc);
     }
 
-    public int getHeaderLength() {
+    public char getHeaderLength() {
         return 8;
     }
 
-    public int getTotalLength() {
-        return readShort(offset + OFFSET_TLEN) & 0xFFFF;
+    public short getTotalLength() {
+        return getBuffer().getShort(offset + OFFSET_TOTAL_LENGTH);
     }
 
-    public void setTotalLength(short len) {
-        writeShort(len, offset + OFFSET_TLEN);
+    public void setTotalLength(short length) {
+        getBuffer().putShort(offset + OFFSET_TOTAL_LENGTH, length);
     }
 
-    public void updateChecksum() {
+    public void updateChecksum(IpHeader ipHeader) {
         setCrc((short) 0);
-        setCrc(computeChecksum());
+        setCrc(computeChecksum(ipHeader));
     }
 
-    private short computeChecksum() {
+    private short computeChecksum(IpHeader ipHeader) {
         // Sum = Ip Sum(Source Address + Destination Address) + Protocol + UDP Length
         // Checksum is the 16-bit one's complement of the one's complement sum of a
         // pseudo header of information from the IP header, the UDP header, and the
         // data,  padded  with zero octets  at the end (if  necessary)  to  make  a
         // multiple of two octets.
-        int dataLength = mIpHeader.getDataLength();
-        long sum = mIpHeader.getIpSum();
-        sum += mIpHeader.getProtocol() & 0xFF;
-        sum += dataLength;
+        short dataLength = ipHeader.getDataLength();
+        long sum = ipHeader.getIpSum();
+        sum += ipHeader.getProtocol() & 0xFF;
+        sum += dataLength & 0xFFFF;
         sum += getSum(offset, dataLength);
         while ((sum >> 16) > 0) {
             sum = (sum & 0xFFFF) + (sum >> 16);
@@ -123,23 +115,4 @@ public class UdpHeader extends Header {
         return String.format(Locale.getDefault(), "%d -> %d", getSourcePort() & 0xFFFF,
                 getDestinationPort() & 0xFFFF);
     }
-
-    public UdpHeader copy() {
-        byte[] copyArray = Arrays.copyOf(packet, packet.length);
-        IpHeader ipHeader = new IpHeader(copyArray, 0);
-        return new UdpHeader(ipHeader, copyArray, offset);
-    }
-
-    public ByteBuffer data() {
-        int size = mIpHeader.getDataLength() - getHeaderLength();
-        int dataOffset = mIpHeader.getHeaderLength() + getHeaderLength();
-        byte[] data = new byte[size];
-        System.arraycopy(packet, dataOffset, data, 0, size);
-        return ByteBuffer.wrap(data);
-    }
-
-    public ByteBuffer buffer() {
-        return ByteBuffer.wrap(packet, 0, mIpHeader.getTotalLength());
-    }
-
 }

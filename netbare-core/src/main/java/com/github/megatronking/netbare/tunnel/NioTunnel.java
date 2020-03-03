@@ -121,12 +121,12 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
         interestRead();
     }
 
-    @Override
-    public void onClosed() {
-        if (mCallback != null) {
-            mCallback.onClosed();
-        }
-    }
+	@Override
+	public void onClosed() {
+		if (mCallback != null) {
+			mCallback.onClosed();
+		}
+	}
 
     @Override
     public NioTunnel getTunnel() {
@@ -134,7 +134,7 @@ public abstract class NioTunnel<T extends AbstractSelectableChannel, S> implemen
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException{
         mIsClosed = true;
         mPendingBuffers.clear();
         NetBareUtils.closeQuietly(mChannel);

@@ -21,6 +21,7 @@ import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.ip.Protocol;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -38,10 +39,10 @@ public class UdpRemoteTunnel extends UdpTunnel {
     private NetBareXLog mLog;
 
     public UdpRemoteTunnel(VpnService vpnService, DatagramChannel channel, Selector selector,
-                           String remoteIp, short remotePort) {
+						   InetAddress remoteIp, short remotePort) {
         super(channel, selector);
         this.mVpnService = vpnService;
-        this.mLog = new NetBareXLog(Protocol.UDP, remoteIp, remotePort);
+        this.mLog = new NetBareXLog(Protocol.UDP, remoteIp.getHostAddress(), remotePort);
     }
 
     @Override
@@ -68,7 +69,7 @@ public class UdpRemoteTunnel extends UdpTunnel {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException{
         mLog.i("Remote tunnel is closed.");
         super.close();
     }

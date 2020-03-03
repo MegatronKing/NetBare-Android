@@ -15,6 +15,20 @@
  */
 package com.github.megatronking.netbare.proxy;
 
+import android.net.VpnService;
+
+import com.github.megatronking.netbare.NetBareLog;
+import com.github.megatronking.netbare.net.SessionProvider;
+
+import java.io.Closeable;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.Selector;
+
 /**
  * A local proxy server receives net packets from VPN and transfer them to the real remote server.
  * Every local proxy server runs separated threads and handle specific IP protocols like TCP, UDP
@@ -24,44 +38,55 @@ package com.github.megatronking.netbare.proxy;
  * @author Megatron King
  * @since 2018-10-10 00:23
  */
-public abstract class ProxyServer {
+public abstract class ProxyServer extends Thread implements Closeable {
+	private final VpnService vpnService;
 
-    /**
-     * Establish the server and start receive packets.
-     */
-    /* package */ abstract void startServer();
+	private Selector selector;
 
-    /**
-     * Terminate this server.
-     */
-    /* package */ abstract void stopServer();
+	private SessionProvider sessionProvider;
 
-    /**
-     * Returns the proxy server IP.
-     *
-     * @return The proxy server IP.
-     */
-    /* package */ abstract int getIp();
+	private short mtu;
 
-    /**
-     * Returns the proxy server port.
-     *
-     * @return The proxy server port.
-     */
-    /* package */ abstract short getPort();
+	public ProxyServer(VpnService vpnService, SessionProvider sessionProvider, short mtu) throws IOException{
+		this.vpnService = vpnService;
+		this.selector = Selector.open();
+		this.sessionProvider = sessionProvider;
+		this.mtu = mtu;
+	}
 
-    /**
-     * Establish the proxy server.
-     */
-    public final void start() {
-        startServer();
-    }
+	protected abstract void process() throws IOException;
 
-    /**
-     * Terminate the proxy server, release resources and close IOs.
-     */
-    public final void stop() {
-        stopServer();
-    }
+	@Override
+	public void close() throws IOException {
+		getSelector().close();
+	}
 
+	@Override
+	public void run() {
+		while (!isInterrupted()) {
+			try {
+				process();
+			} catch (IOException e) {
+				NetBareLog.e(e.getMessage());
+			}
+		}
+	}
+
+	public VpnService getVpnService() {
+		return vpnService;
+	}
+
+	public Selector getSelector() {
+		return selector;
+	}
+
+	public SessionProvider getSessionProvider() {
+		return sessionProvider;
+	}
+
+	public short getMtu() {
+		return mtu;
+	}
+
+	abstract public void forward(ByteBuffer packet, int len, FileOutputStream output);
 }

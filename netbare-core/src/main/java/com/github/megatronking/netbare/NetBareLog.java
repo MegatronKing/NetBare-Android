@@ -17,6 +17,7 @@ package com.github.megatronking.netbare;
 
 import android.util.Log;
 
+
 /**
  * A static log util using in NetBare, and the tag is 'NetBare';
  *
@@ -111,6 +112,7 @@ public final class NetBareLog {
         if (!sDebug || msg == null) {
             return;
         }
+        new Exception(msg).printStackTrace();
         Log.e(TAG, msg);
     }
 
@@ -133,6 +135,7 @@ public final class NetBareLog {
         if (!sDebug || msg == null) {
             return;
         }
+        new Exception(msg).printStackTrace();
         Log.w(TAG, msg);
     }
 

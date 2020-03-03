@@ -20,6 +20,9 @@ import android.net.VpnService;
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.NetBareUtils;
 import com.github.megatronking.netbare.gateway.VirtualGateway;
+import com.github.megatronking.netbare.ip.header.IpHeader;
+import com.github.megatronking.netbare.ip.Protocol;
+import com.github.megatronking.netbare.ip.header.TcpHeader;
 import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.net.SessionProvider;
 import com.github.megatronking.netbare.ssl.SSLWhiteList;
@@ -32,13 +35,16 @@ import com.github.megatronking.netbare.tunnel.TcpTunnel;
 import com.github.megatronking.netbare.tunnel.TcpVATunnel;
 
 import java.io.EOFException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
@@ -58,68 +64,50 @@ import javax.net.ssl.SSLHandshakeException;
  * @author Megatron King
  * @since 2018-10-11 17:35
  */
-/* package */ class TcpProxyServer extends BaseProxyServer implements Runnable {
+public class TcpProxyServer extends ProxyServer {
+    private final ServerSocketChannel serverSocketChannel;
 
-    private final VpnService mVpnService;
+    private InetAddress ip;
+    private short port;
 
-    private final Selector mSelector;
-    private final ServerSocketChannel mServerSocketChannel;
+    public TcpProxyServer(VpnService vpnService, SessionProvider sessionProvider, InetAddress ip, short mtu) throws IOException {
+    	super(vpnService, sessionProvider, mtu);
+		setName("TcpProxyServer");
+		
+        this.serverSocketChannel = ServerSocketChannel.open();
+        this.serverSocketChannel.configureBlocking(false);
+        this.serverSocketChannel.socket().bind(new InetSocketAddress(0));
+        this.serverSocketChannel.register(getSelector(), SelectionKey.OP_ACCEPT);
 
-    private int mIp;
-    private short mPort;
-    private int mMtu;
+        this.ip = ip;
+        this.port = (short) serverSocketChannel.socket().getLocalPort();
 
-    private SessionProvider mSessionProvider;
-
-    /* package */ TcpProxyServer(VpnService vpnService, String ip, int mtu)
-            throws IOException {
-        super("TcpProxyServer");
-        this.mVpnService = vpnService;
-
-        this.mSelector = Selector.open();
-        this.mServerSocketChannel = ServerSocketChannel.open();
-        this.mServerSocketChannel.configureBlocking(false);
-        this.mServerSocketChannel.socket().bind(new InetSocketAddress(0));
-        this.mServerSocketChannel.register(mSelector, SelectionKey.OP_ACCEPT);
-
-        this.mIp = NetBareUtils.convertIp(ip);
-        this.mPort = (short) mServerSocketChannel.socket().getLocalPort();
-        this.mMtu = mtu;
-
-        NetBareLog.v("[TCP]proxy server: %s:%d", ip, NetBareUtils.convertPort(mPort));
+        NetBareLog.v("[TCP]proxy server: %s:%d", ip, NetBareUtils.convertPort(port));
     }
-
-    void setSessionProvider(SessionProvider sessionProvider) {
-        this.mSessionProvider = sessionProvider;
+    
+    public InetAddress getAddress() {
+        return ip;
     }
-
-
-    @Override
-    int getIp() {
-        return mIp;
-    }
-
-    @Override
-    short getPort() {
-        return mPort;
+    
+    public short getPort() {
+        return port;
     }
 
     @Override
     public void run() {
         NetBareLog.i("[TCP]Server starts running.");
         super.run();
-        NetBareUtils.closeQuietly(mSelector);
-        NetBareUtils.closeQuietly(mServerSocketChannel);
+        NetBareUtils.closeQuietly(serverSocketChannel);
         NetBareLog.i("[TCP]Server stops running.");
     }
 
     @Override
     protected void process() throws IOException {
-        int select = mSelector.select();
+        int select = getSelector().select();
         if (select == 0) {
             return;
         }
-        Set<SelectionKey> selectedKeys = mSelector.selectedKeys();
+        Set<SelectionKey> selectedKeys = getSelector().selectedKeys();
         if (selectedKeys == null) {
             return;
         }
@@ -165,7 +153,7 @@ import javax.net.ssl.SSLHandshakeException;
     }
 
     private void onAccept() throws IOException {
-        SocketChannel clientChannel = mServerSocketChannel.accept();
+        SocketChannel clientChannel = serverSocketChannel.accept();
         Socket clientSocket = clientChannel.socket();
 
         // The client ip is the remote server ip
@@ -175,7 +163,7 @@ import javax.net.ssl.SSLHandshakeException;
 
         // The session should have be saved before the tcp packets be forwarded to proxy server. So
         // we can query it by client port.
-        Session session = mSessionProvider.query((short) port);
+        Session session = getSessionProvider().query((short) port);
         if (session == null) {
             throw new IOException("No session saved with key: " + port);
         }
@@ -186,11 +174,11 @@ import javax.net.ssl.SSLHandshakeException;
         TcpTunnel proxyTunnel = null;
         TcpTunnel remoteTunnel = null;
         try {
-            proxyTunnel = new TcpProxyTunnel(clientChannel, mSelector, remotePort);
-            remoteTunnel = new TcpRemoteTunnel(mVpnService, SocketChannel.open(),
-                    mSelector, ip, remotePort);
+            proxyTunnel = new TcpProxyTunnel(clientChannel, getSelector(), remotePort);
+            remoteTunnel = new TcpRemoteTunnel(getVpnService(), SocketChannel.open(),
+                    getSelector(), ip, remotePort);
             TcpVATunnel gatewayTunnel = new TcpVATunnel(session, proxyTunnel,
-                    remoteTunnel, mMtu);
+                    remoteTunnel, getMtu());
             gatewayTunnel.connect(new InetSocketAddress(ip, remotePort));
         } catch (IOException e){
             NetBareUtils.closeQuietly(proxyTunnel);
@@ -227,4 +215,78 @@ import javax.net.ssl.SSLHandshakeException;
             }
         }
     }
+
+	public void forward(ByteBuffer packet, int len, FileOutputStream output) {
+		IpHeader ipHeader = new IpHeader(packet, 0);
+		TcpHeader tcpHeader = new TcpHeader(packet, ipHeader.getHeaderLength());
+
+		// Src IP & Port
+		InetAddress localIp = ipHeader.getSourceIp();
+		short localPort = tcpHeader.getSourcePort();
+
+		// Dest IP & Port
+		InetAddress remoteIp = ipHeader.getDestinationIp();
+		short remotePort = tcpHeader.getDestinationPort();
+
+		// TCP data size
+		short tcpDataSize = (short) (ipHeader.getDataLength() & 0xFFFF - tcpHeader.getHeaderLength());
+
+		NetBareLog.v("ip: %s:%d -> %s:%d", localIp.getHostAddress(),
+				NetBareUtils.convertPort(localPort), remoteIp.getHostAddress(),
+				NetBareUtils.convertPort(remotePort));
+		NetBareLog.v("tcp: %s, size: %d", tcpHeader.toString(), tcpDataSize & 0xFFFF);
+
+		// Tcp handshakes and proxy forward flow.
+
+		// Client: 10.1.10.1:40988
+		// Server: 182.254.116.117:80
+		// Proxy Server: 10.1.10.1:38283
+
+		// 10.1.10.1:40988 -> 182.254.116.117:80 SYN
+		// Forward: 182.254.116.117:40988 -> 10.1.10.1:38283 SYN
+
+		// 10.1.10.1:38283 -> 182.254.116.117:40988 SYN+ACK
+		// Forward: 182.254.116.117:80 -> 10.1.10.1:40988 SYN+ACK
+
+		// 10.1.10.1:40988 -> 182.254.116.117:80 ACK
+		// Forward: 182.254.116.117:80 -> 10.1.10.1:38283 ACK
+
+		if (localPort != getPort()) {
+			// Client requests to server
+			Session session = getSessionProvider().ensureQuery(Protocol.TCP, localPort, remotePort, remoteIp);
+			session.packetIndex++;
+
+			// Forward client request to proxy server.
+			ipHeader.setSourceIp(remoteIp);
+			ipHeader.setDestinationIp(getAddress());
+			tcpHeader.setDestinationPort(getPort());
+
+			ipHeader.updateChecksum();
+			tcpHeader.updateChecksum(ipHeader);
+
+			session.sendDataSize += tcpDataSize & 0xFFFF;
+		} else {
+			// Proxy server responses forward client request.
+			Session session = getSessionProvider().query(remotePort);
+			if (session == null) {
+				NetBareLog.w("No session saved with key: " + remotePort);
+				return;
+			}
+			// Forward proxy server response to client.
+			ipHeader.setSourceIp(remoteIp);
+			ipHeader.setDestinationIp(getAddress());
+			tcpHeader.setSourcePort(session.remotePort);
+
+			ipHeader.updateChecksum();
+			tcpHeader.updateChecksum(ipHeader);
+
+			session.receiveDataSize += tcpDataSize & 0xFFFF;
+		}
+
+		try {
+			output.write(packet.array(), 0, len);
+		} catch (IOException e) {
+			NetBareLog.e(e.getMessage());
+		}
+	}
 }

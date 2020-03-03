@@ -24,6 +24,8 @@ import com.github.megatronking.netbare.ip.Protocol;
 import com.github.megatronking.netbare.net.Session;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Set;
@@ -159,7 +161,12 @@ public final class NetBareVirtualGateway extends VirtualGateway {
             mPolicy = POLICY_ALLOWED;
             return;
         } else {
-            mSession.host = domain;
+        	try {
+				mSession.host = InetAddress.getByName(domain);
+			} catch (UnknownHostException e) {
+        		NetBareLog.wtf(e);
+			}
+
         }
         NetBareConfig config = NetBare.get().getConfig();
         Set<String> allowedHost = new HashSet<>(config.allowedHosts);
@@ -185,7 +192,7 @@ public final class NetBareVirtualGateway extends VirtualGateway {
             }
             // Check ip hosts.
             for (String host : disallowedHost) {
-                if (host.equals(NetBareUtils.convertIp(mSession.remoteIp))) {
+                if (host.equals(mSession.remoteIp.getHostAddress())) {
                     // Denied host.
                     mPolicy = POLICY_DISALLOWED;
                     return;
@@ -201,7 +208,7 @@ public final class NetBareVirtualGateway extends VirtualGateway {
                 }
             }
             for (String host : allowedHost) {
-                if (host.equals(NetBareUtils.convertIp(mSession.remoteIp))) {
+                if (host.equals(NetBareUtils.convertIp(mSession.remoteIp.getHostAddress()))) {
                     mPolicy = POLICY_ALLOWED;
                     return;
                 }

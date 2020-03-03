@@ -13,35 +13,41 @@
  *  You should have received a copy of the GNU General Public License along with NetBare.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.megatronking.netbare.proxy;
+package com.github.megatronking.netbare.ip.header;
 
-import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 /**
- * An interface needs to be implement by proxy server forwarders.
+ * An abstract header object for ip protocol packets, provides some common apis.
  *
  * @author Megatron King
- * @since 2018-10-09 01:24
+ * @since 2018-10-09 16:28
  */
-public interface ProxyServerForwarder {
+/* package */ abstract class Header {
 
-    /**
-     * Prepare the forwarder.
-     */
-    void prepare();
+    private ByteBuffer buffer;
+    int offset;
 
-    /**
-     * Forward a packet to local proxy server.
-     *
-     * @param packet A data packet, the array length is MTU.
-     * @param len The actual data length in packet array.
-     * @param output An output stream connects VPN file descriptor.
-     */
-    void forward(byte[] packet, int len, OutputStream output);
+    public Header(ByteBuffer packet, int offset) {
+        this.buffer = packet;
+        this.offset = offset;
+    }
 
-    /**
-     * Release the forwarder.
-     */
-    void release();
+    public long getSum(int offset, int len) {
+        long sum = 0;
+        while (len > 1) {
+            sum += getBuffer().getShort(offset) & 0xFFFF;
+            offset += 2;
+            len -= 2;
+        }
 
+        if (len > 0) {
+            sum += (getBuffer().get(offset) & 0xFF) << 8;
+        }
+        return sum;
+    }
+
+	public ByteBuffer getBuffer() {
+		return buffer;
+	}
 }

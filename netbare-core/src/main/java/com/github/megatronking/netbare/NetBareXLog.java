@@ -18,6 +18,8 @@ package com.github.megatronking.netbare;
 import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.ip.Protocol;
 
+import java.net.InetAddress;
+
 /**
  * A log util using in NetBare, it uses the protocol, ip and port as the prefix.
  *
@@ -61,13 +63,17 @@ public final class NetBareXLog {
         this(protocol, NetBareUtils.convertIp(ip), port);
     }
 
+	public NetBareXLog(Protocol protocol, InetAddress ip, int port) {
+		this(protocol, ip.getHostAddress(), port);
+	}
+
     /**
      * Constructs a NetBareXLog instance with the net information.
      *
      * @param session The session contains net information.
      */
     public NetBareXLog(Session session) {
-        this(session.protocol, session.remoteIp, session.remotePort);
+        this(session.protocol, session.remoteIp.getHostAddress(), session.remotePort);
     }
 
     /**

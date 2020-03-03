@@ -43,7 +43,7 @@ public final class NetBareConfig {
 
     String session;
     PendingIntent configureIntent;
-    int mtu;
+    short mtu;
     IpAddress address;
     Set<IpAddress> routes;
     Set<String> dnsServers;
@@ -150,7 +150,7 @@ public final class NetBareConfig {
          * @return this {@link Builder} object to facilitate chaining method calls.
          */
         public Builder setMtu(int mtu) {
-            mConfig.mtu = mtu;
+            mConfig.mtu = (short) Math.max(0, Math.min(0xFFFF, mtu));
             return this;
         }
 

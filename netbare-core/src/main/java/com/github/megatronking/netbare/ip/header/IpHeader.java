@@ -13,7 +13,11 @@
  *  You should have received a copy of the GNU General Public License along with NetBare.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.megatronking.netbare.ip;
+package com.github.megatronking.netbare.ip.header;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 
 /**
  * A summary of the contents of the internet header follows:
@@ -47,63 +51,81 @@ public final class IpHeader extends Header {
     private static final int OFFSET_VER_IHL = 0;
     private static final int OFFSET_SRC_IP = 12;
     private static final int OFFSET_DEST_IP = 16;
-    private static final int OFFSET_TLEN = 2;
+    private static final int OFFSET_TOTAL_LENGTH = 2;
     private static final int OFFSET_CRC = 10;
 
-    public IpHeader(byte[] packet, int offset) {
-        super(packet, offset);
-    }
+    public IpHeader(ByteBuffer packet, int offset) {
+    	super(packet, offset);
+	}
 
     public byte getProtocol() {
-        return packet[offset + OFFSET_PROTOCOL];
+    	return getBuffer().get(offset + OFFSET_PROTOCOL);
     }
 
-    public void setProtocol(byte value) {
-        packet[offset + OFFSET_PROTOCOL] = value;
+    public void setProtocol(byte protocol) {
+        getBuffer().put(offset + OFFSET_PROTOCOL, protocol);
     }
 
-    public int getHeaderLength() {
-        return (packet[offset + OFFSET_VER_IHL] & 0x0F) * 4;
+    public char getHeaderLength() {
+        return (char)((getBuffer().get(offset + OFFSET_VER_IHL) & 0x0F) << 2);
     }
 
-    public void setHeaderLength(int value) {
-        packet[offset + OFFSET_VER_IHL] = (byte) ((4 << 4) | (value / 4));
+    public void setHeaderLength(char length) {
+		getBuffer().put(offset + OFFSET_VER_IHL, (byte) ((getBuffer().get(offset + OFFSET_VER_IHL) & 0xF0) | (length >> 2)));
     }
 
-    public int getSourceIp() {
-        return readInt(offset + OFFSET_SRC_IP);
+    public InetAddress getSourceIp(){
+    	byte[] address = new byte[4];
+    	getBuffer().position(offset + OFFSET_SRC_IP);
+    	getBuffer().get(address);
+    	try {
+			return InetAddress.getByAddress(address);
+		} catch (UnknownHostException e) {
+    		e.printStackTrace();
+		}
+    	return null;
     }
 
-    public void setSourceIp(int ip) {
-        writeInt(ip, offset + OFFSET_SRC_IP);
+    public void setSourceIp(InetAddress inetAddress) {
+    	getBuffer().position(offset + OFFSET_SRC_IP);
+    	getBuffer().put(inetAddress.getAddress());
     }
 
-    public int getDestinationIp() {
-        return readInt(offset + OFFSET_DEST_IP);
+	public InetAddress getDestinationIp() {
+		byte[] address = new byte[4];
+		getBuffer().position(offset + OFFSET_DEST_IP);
+		getBuffer().get(address);
+		try {
+			return InetAddress.getByAddress(address);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public void setDestinationIp(InetAddress inetAddress) {
+		getBuffer().position(offset + OFFSET_DEST_IP);
+		getBuffer().put(inetAddress.getAddress());
+	}
+
+    public short getDataLength() {
+        return (short)(this.getTotalLength() - this.getHeaderLength());
     }
 
-    public void setDestinationIp(int ip) {
-        writeInt(ip, offset + OFFSET_DEST_IP);
+    public short getTotalLength() {
+        return getBuffer().getShort(offset + OFFSET_TOTAL_LENGTH);
     }
 
-    public int getDataLength() {
-        return this.getTotalLength() - this.getHeaderLength();
-    }
-
-    public int getTotalLength() {
-        return readShort(offset + OFFSET_TLEN) & 0xFFFF;
-    }
-
-    public void setTotalLength(short len) {
-        writeShort(len, offset + OFFSET_TLEN);
+    public void setTotalLength(short length) {
+    	getBuffer().putShort(offset + OFFSET_TOTAL_LENGTH, length);
     }
 
     public short getCrc() {
-        return readShort(offset + OFFSET_CRC);
+        return getBuffer().getShort(offset + OFFSET_CRC);
     }
 
     public void setCrc(short crc) {
-        writeShort(crc, offset + OFFSET_CRC);
+        getBuffer().putShort(offset + OFFSET_CRC, crc);
     }
 
     public void updateChecksum() {

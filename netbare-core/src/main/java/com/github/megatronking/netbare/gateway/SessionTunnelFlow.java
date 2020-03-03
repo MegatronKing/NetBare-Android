@@ -20,6 +20,8 @@ import com.github.megatronking.netbare.NetBareUtils;
 import com.github.megatronking.netbare.ip.Protocol;
 import com.github.megatronking.netbare.net.Session;
 
+import java.net.InetAddress;
+
 /**
  * A tunnel flow contains the session information.
  *
@@ -67,8 +69,8 @@ public abstract class SessionTunnelFlow implements TunnelFlow {
      *
      * @return The remote server's IPV4 address.
      */
-    public String ip() {
-        return NetBareUtils.convertIp(mSession.remoteIp);
+    public InetAddress ip() {
+        return mSession.remoteIp;
     }
 
     /**
@@ -76,7 +78,7 @@ public abstract class SessionTunnelFlow implements TunnelFlow {
      *
      * @return The remote server's host name.
      */
-    public String host() {
+    public InetAddress host() {
         return mSession.host;
     }
 

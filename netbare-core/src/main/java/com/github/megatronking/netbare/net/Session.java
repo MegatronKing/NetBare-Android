@@ -17,6 +17,7 @@ package com.github.megatronking.netbare.net;
 
 import com.github.megatronking.netbare.ip.Protocol;
 
+import java.net.InetAddress;
 import java.util.UUID;
 
 /**
@@ -45,7 +46,7 @@ public final class Session {
     /**
      * Remote server IP.
      */
-    public final int remoteIp;
+    public final InetAddress remoteIp;
 
     /**
      * An unique id uses to identify this session.
@@ -60,7 +61,7 @@ public final class Session {
     /**
      * Remote server host.
      */
-    public String host;
+    public InetAddress host;
 
     /**
      * The process id that the session belongs to.
@@ -82,7 +83,7 @@ public final class Session {
      */
     public int receiveDataSize;
 
-    /* package */ Session(Protocol protocol, short localPort, short remotePort, int remoteIp) {
+    /* package */ Session(Protocol protocol, short localPort, short remotePort, InetAddress remoteIp) {
         this.protocol = protocol;
         this.localPort = localPort;
         this.remotePort = remotePort;

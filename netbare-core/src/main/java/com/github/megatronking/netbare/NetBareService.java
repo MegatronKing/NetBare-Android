@@ -23,6 +23,8 @@ import android.support.annotation.NonNull;
 
 import com.github.megatronking.netbare.ssl.SSLEngineFactory;
 
+import java.io.IOException;
+
 /**
  * Base class for NetBare services.
  * <p>
@@ -68,7 +70,7 @@ public abstract class NetBareService extends VpnService {
     @NonNull
     protected abstract Notification createNotification();
 
-    private NetBareThread mNetBareThread;
+    private PacketTransferThread packetTransferThread;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -77,10 +79,10 @@ public abstract class NetBareService extends VpnService {
         }
         String action = intent.getAction();
         if (ACTION_START.equals(action)) {
-            startNetBare();
+            startTransfer();
             startForeground(notificationId(), createNotification());
         } else if (ACTION_STOP.equals(action)) {
-            stopNetBare();
+            stopTransfer();
             stopForeground(true);
             stopSelf();
         } else {
@@ -92,13 +94,13 @@ public abstract class NetBareService extends VpnService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        stopNetBare();
+        stopTransfer();
         stopForeground(true);
     }
 
-    private void startNetBare() {
+    private void startTransfer() {
         // Terminate previous service.
-        stopNetBare();
+        stopTransfer();
 
         NetBareConfig config = NetBare.get().getConfig();
         if (config == null) {
@@ -108,17 +110,22 @@ public abstract class NetBareService extends VpnService {
 
         NetBareLog.i("Start NetBare service!");
         SSLEngineFactory.updateProviders(config.keyManagerProvider, config.trustManagerProvider);
-        mNetBareThread = new NetBareThread(this, config);
-        mNetBareThread.start();
+        packetTransferThread = new PacketTransferThread(this, config);
+        packetTransferThread.start();
     }
 
-    private void stopNetBare() {
-        if (mNetBareThread == null) {
+    private void stopTransfer() {
+        if (packetTransferThread == null) {
             return;
         }
         NetBareLog.i("Stop NetBare service!");
-        mNetBareThread.interrupt();
-        mNetBareThread = null;
+        packetTransferThread.interrupt();
+        try {
+        	packetTransferThread.close();
+		} catch (IOException e) {
+        	NetBareLog.wtf(e);
+		}
+        packetTransferThread = null;
     }
 
 }

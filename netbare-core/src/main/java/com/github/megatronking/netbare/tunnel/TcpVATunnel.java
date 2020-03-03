@@ -95,12 +95,12 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
                 // Do nothing
             }
 
-            @Override
-            public void onClosed() {
-                close();
-            }
+			@Override
+			public void onClosed() {
+				close();
+			}
 
-            @Override
+			@Override
             public NioTunnel getTunnel() {
                 return null;
             }
@@ -139,10 +139,10 @@ public class TcpVATunnel extends VirtualGatewayTunnel {
                 // Do nothing
             }
 
-            @Override
-            public void onClosed() {
-                close();
-            }
+			@Override
+			public void onClosed() {
+				close();
+			}
 
             @Override
             public NioTunnel getTunnel() {

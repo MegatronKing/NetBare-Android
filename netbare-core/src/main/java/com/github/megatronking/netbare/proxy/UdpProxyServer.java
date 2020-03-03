@@ -21,22 +21,23 @@ import android.os.SystemClock;
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.NetBareUtils;
 import com.github.megatronking.netbare.gateway.VirtualGateway;
-import com.github.megatronking.netbare.ip.IpHeader;
-import com.github.megatronking.netbare.ip.UdpHeader;
+import com.github.megatronking.netbare.ip.Protocol;
 import com.github.megatronking.netbare.net.Session;
 import com.github.megatronking.netbare.net.SessionProvider;
+import com.github.megatronking.netbare.ip.packet.UdpPacket;
 import com.github.megatronking.netbare.tunnel.NioCallback;
 import com.github.megatronking.netbare.tunnel.NioTunnel;
 import com.github.megatronking.netbare.tunnel.Tunnel;
 import com.github.megatronking.netbare.tunnel.UdpRemoteTunnel;
 import com.github.megatronking.netbare.tunnel.UdpVATunnel;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -52,64 +53,38 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Megatron King
  * @since 2018-10-11 17:35
  */
-/* package */ class UdpProxyServer extends BaseProxyServer {
+public class UdpProxyServer extends ProxyServer {
 
     private static final int SELECTOR_WAIT_TIME = 50;
 
-    private final VpnService mVpnService;
+    private final Map<Short, UdpVATunnel> tunnels;
 
-    private int mMtu;
+    public UdpProxyServer(VpnService vpnService, SessionProvider sessionProvider, short mtu) throws IOException {
+    	super(vpnService, sessionProvider, mtu);
+        super.setName("UdpProxyServer");
 
-    private final Selector mSelector;
-    private final Map<Short, UdpVATunnel> mTunnels;
-
-    private SessionProvider mSessionProvider;
-
-    /* package */ UdpProxyServer(VpnService vpnService, int mtu) throws IOException {
-        super("UdpProxyServer");
-        this.mVpnService = vpnService;
-
-        this.mMtu = mtu;
-
-        this.mSelector = Selector.open();
-        this.mTunnels = new ConcurrentHashMap<>();
+        this.tunnels = new ConcurrentHashMap<>();
     }
 
-    @Override
-    int getIp() {
-        return 0;
-    }
-
-    @Override
-    short getPort() {
-        return 0;
-    }
-
-    void setSessionProvider(SessionProvider sessionProvider) {
-        this.mSessionProvider = sessionProvider;
-    }
-
-    void send(UdpHeader header, OutputStream output) throws IOException {
-        short localPort = header.getSourcePort();
-        UdpVATunnel tunnel = mTunnels.get(localPort);
+    void send(UdpPacket packet, FileOutputStream output) throws IOException {
+        short localPort = packet.getUdpHeader().getSourcePort();
+        UdpVATunnel tunnel = tunnels.get(localPort);
         try {
             if (tunnel == null) {
-                Session session = mSessionProvider.query(localPort);
+                Session session = getSessionProvider().query(localPort);
                 if (session == null) {
                     throw new IOException("No session saved with key: " + localPort);
                 }
-
-                IpHeader ipHeader = header.getIpHeader();
-                NioTunnel remoteTunnel = new UdpRemoteTunnel(mVpnService, DatagramChannel.open(),
-                        mSelector, NetBareUtils.convertIp(session.remoteIp), session.remotePort);
-                tunnel = new UdpVATunnel(session, remoteTunnel, output, mMtu);
-                tunnel.connect(new InetSocketAddress(NetBareUtils.convertIp(ipHeader.getDestinationIp()),
-                        NetBareUtils.convertPort(header.getDestinationPort())));
-                mTunnels.put(header.getSourcePort(), tunnel);
+                NioTunnel remoteTunnel = new UdpRemoteTunnel(getVpnService(), DatagramChannel.open(),
+                        getSelector(), session.remoteIp, session.remotePort);
+                tunnel = new UdpVATunnel(session, remoteTunnel, output, getMtu());
+                tunnel.connect(new InetSocketAddress(packet.getIpHeader().getDestinationIp(),
+                        NetBareUtils.convertPort(packet.getUdpHeader().getDestinationPort())));
+                tunnels.put(packet.getUdpHeader().getSourcePort(), tunnel);
             }
-            tunnel.send(header);
+            tunnel.send(packet);
         } catch (IOException e) {
-            mTunnels.remove(localPort);
+            tunnels.remove(localPort);
             NetBareUtils.closeQuietly(tunnel);
             throw e;
         }
@@ -119,19 +94,19 @@ import java.util.concurrent.ConcurrentHashMap;
     public void run() {
         NetBareLog.i("[UDP]Server starts running.");
         super.run();
-        NetBareUtils.closeQuietly(mSelector);
+        NetBareUtils.closeQuietly(getSelector());
         NetBareLog.i("[UDP]Server stops running.");
     }
 
     @Override
     protected void process() throws IOException {
-        int select = mSelector.select();
+        int select = getSelector().select();
         if (select == 0) {
             // Wait a short time to let the selector register or interest.
             SystemClock.sleep(SELECTOR_WAIT_TIME);
             return;
         }
-        Set<SelectionKey> selectedKeys = mSelector.selectedKeys();
+        Set<SelectionKey> selectedKeys = getSelector().selectedKeys();
         if (selectedKeys == null) {
             return;
         }
@@ -160,21 +135,52 @@ import java.util.concurrent.ConcurrentHashMap;
         }
     }
 
-    @Override
-    void stopServer() {
-        super.stopServer();
-        for (UdpVATunnel tunnel : mTunnels.values()) {
-            NetBareUtils.closeQuietly(tunnel);
-        }
-    }
+	@Override
+	public void interrupt() {
+		for (UdpVATunnel tunnel : tunnels.values()) {
+			NetBareUtils.closeQuietly(tunnel);
+		}
+		super.interrupt();
+	}
 
     private void removeTunnel(Tunnel tunnel) {
-        Map<Short, UdpVATunnel> tunnels = new HashMap<>(mTunnels);
+        Map<Short, UdpVATunnel> tunnels = new HashMap<>(this.tunnels);
         for (short key : tunnels.keySet()) {
             if (tunnels.get(key).getRemoteChannel() == tunnel) {
-                mTunnels.remove(key);
+                this.tunnels.remove(key);
             }
         }
     }
+
+	@Override
+	public void forward(ByteBuffer buffer, int len, FileOutputStream output) {
+		UdpPacket packet = new UdpPacket(buffer);
+
+		// Src IP & Port
+		InetAddress localIp = packet.getIpHeader().getSourceIp();
+		short localPort = packet.getUdpHeader().getSourcePort();
+
+		// Dest IP & Port
+		InetAddress remoteIp = packet.getIpHeader().getDestinationIp();
+		short remotePort = packet.getUdpHeader().getDestinationPort();
+
+		// UDP data size
+		short udpDataSize = (short) (packet.getIpHeader().getDataLength() & 0xFFFF - packet.getUdpHeader().getHeaderLength());
+
+		NetBareLog.v("ip: %s:%d -> %s:%d", localIp.getHostAddress(),
+				NetBareUtils.convertPort(localPort), remoteIp.getHostAddress(),
+				NetBareUtils.convertPort(remotePort));
+		NetBareLog.v("udp: %s, size: %d", packet.getUdpHeader().toString(), udpDataSize & 0xFFFF);
+
+		Session session = getSessionProvider().ensureQuery(Protocol.UDP, localPort, remotePort, remoteIp);
+		session.packetIndex++;
+
+		try {
+			send(packet, output);
+			session.sendDataSize += udpDataSize & 0xFFFF;
+		} catch (IOException e) {
+			NetBareLog.e(e.getMessage());
+		}
+	}
 
 }

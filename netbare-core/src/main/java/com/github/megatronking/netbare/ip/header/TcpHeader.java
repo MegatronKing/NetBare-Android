@@ -13,8 +13,9 @@
  *  You should have received a copy of the GNU General Public License along with NetBare.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.megatronking.netbare.ip;
+package com.github.megatronking.netbare.ip.header;
 
+import java.nio.ByteBuffer;
 import java.util.Locale;
 
 /**
@@ -67,71 +68,68 @@ public class TcpHeader extends Header {
     private static final int ACK = 16;
     private static final int URG = 32;
 
-    private IpHeader mIpHeader;
+    public TcpHeader(ByteBuffer packet, int offset) {
+    	super(packet, offset);
+	}
 
-    public TcpHeader(IpHeader header, byte[] packet, int offset) {
-        super(packet, offset);
-        mIpHeader = header;
-    }
-
-    public void updateOffset(int offset) {
+    public void setOffset(int offset) {
         this.offset = offset;
     }
 
     public short getSourcePort() {
-        return readShort(offset + OFFSET_SRC_PORT);
+        return getBuffer().getShort(offset + OFFSET_SRC_PORT);
     }
 
     public void setSourcePort(short port) {
-        writeShort(port, offset + OFFSET_SRC_PORT);
+        getBuffer().putShort(offset + OFFSET_SRC_PORT, port);
     }
 
     public short getDestinationPort() {
-        return readShort(offset + OFFSET_DEST_PORT);
+        return getBuffer().getShort(offset + OFFSET_DEST_PORT);
     }
 
     public void setDestinationPort(short port) {
-        writeShort(port, offset + OFFSET_DEST_PORT);
+        getBuffer().putShort(offset + OFFSET_DEST_PORT, port);
     }
 
-    public int getHeaderLength() {
-        int lenres = packet[offset + OFFSET_LENRES] & 0xFF;
-        return (lenres >> 4) * 4;
+    public char getHeaderLength() {
+        char length = getBuffer().getChar(offset + OFFSET_LENRES);
+        return (char) (length >> 4 << 2);
     }
 
     public short getCrc() {
-        return readShort(offset + OFFSET_CRC);
+        return getBuffer().getShort(offset + OFFSET_CRC);
     }
 
     public void setCrc(short crc) {
-        writeShort(crc, offset + OFFSET_CRC);
+        getBuffer().putShort(offset + OFFSET_CRC, crc);
     }
 
     public byte getFlag() {
-        return packet[offset + OFFSET_FLAG];
+        return getBuffer().get(OFFSET_FLAG);
     }
 
     public int getSeqID() {
-        return readInt(offset + OFFSET_SEQ);
+        return getBuffer().getInt(offset + OFFSET_SEQ);
     }
 
     public int getAckID() {
-        return readInt(offset + OFFSET_ACK);
+        return getBuffer().getInt(offset + OFFSET_ACK);
     }
 
-    public void updateChecksum() {
+    public void updateChecksum(IpHeader ipHeader) {
         setCrc((short) 0);
-        setCrc(computeChecksum());
+        setCrc(computeChecksum(ipHeader));
     }
 
-    private short computeChecksum() {
+    private short computeChecksum(IpHeader ipHeader) {
         // Sum = Ip Sum(Source Address + Destination Address) + Protocol + TCP Length
         // The checksum field is the 16 bit one's complement of the one's complement sum of all 16
         // bit words in the header and text.
-        int dataLength = mIpHeader.getDataLength();
-        long sum = mIpHeader.getIpSum();
-        sum += mIpHeader.getProtocol() & 0xFF;
-        sum += dataLength;
+        short dataLength = ipHeader.getDataLength();
+        long sum = ipHeader.getIpSum();
+        sum += ipHeader.getProtocol() & 0xFF;
+        sum += dataLength & 0xFFFF;
         sum += getSum(offset, dataLength);
         while ((sum >> 16) > 0) {
             sum = (sum & 0xFFFF) + (sum >> 16);
