@@ -29,7 +29,7 @@ public class PacketTransferThread extends Thread implements Closeable{
 
 	private ParcelFileDescriptor vpnDescriptor;
 	private ParcelFileDescriptor.AutoCloseInputStream input;
-	private FileOutputStream output;
+	private ParcelFileDescriptor.AutoCloseOutputStream output;
 
 	private VpnService.Builder builder;
 
@@ -127,7 +127,7 @@ public class PacketTransferThread extends Thread implements Closeable{
 			return;
 		}
 		input = new ParcelFileDescriptor.AutoCloseInputStream(vpnDescriptor);
-		output = new FileOutputStream(descriptor);
+		output = new ParcelFileDescriptor.AutoCloseOutputStream(vpnDescriptor);
 
 		for (ProxyServer proxyServer : proxyServerRegistry.values()) {
 			proxyServer.start();
