@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

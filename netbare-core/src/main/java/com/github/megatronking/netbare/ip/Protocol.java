@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.ip;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * The enum defines all supported IP protocols.

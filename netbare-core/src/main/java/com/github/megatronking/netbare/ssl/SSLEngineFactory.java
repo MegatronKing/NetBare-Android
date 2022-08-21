@@ -16,7 +16,7 @@
 package com.github.megatronking.netbare.ssl;
 
 import android.os.Build;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.github.megatronking.netbare.NetBareLog;
 import com.github.megatronking.netbare.NetBareUtils;

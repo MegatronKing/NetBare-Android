@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Http protocols that NetBare defined.

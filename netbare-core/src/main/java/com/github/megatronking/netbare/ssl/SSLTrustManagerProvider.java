@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.ssl;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import javax.net.ssl.TrustManager;
 

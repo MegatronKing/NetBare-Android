@@ -19,7 +19,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Intent;
 import android.net.VpnService;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.github.megatronking.netbare.ssl.SSLEngineFactory;
 

@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.http2;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * This specification defines a number of frame types, each identified by a unique 8-bit type code.

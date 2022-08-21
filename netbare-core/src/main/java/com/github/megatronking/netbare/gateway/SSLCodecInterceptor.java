@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.gateway;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.github.megatronking.netbare.NetBareXLog;
 import com.github.megatronking.netbare.ssl.SSLCodec;

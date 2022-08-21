@@ -16,7 +16,7 @@
 package com.github.megatronking.netbare;
 
 import android.app.PendingIntent;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.github.megatronking.netbare.gateway.VirtualGatewayFactory;
 import com.github.megatronking.netbare.http.HttpInterceptorFactory;

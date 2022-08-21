@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.github.megatronking.netbare.NetBareUtils;
 import com.github.megatronking.netbare.NetBareXLog;

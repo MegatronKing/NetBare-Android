@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.http;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * HTTP defines a set of request methods to indicate the desired action to be performed for a given

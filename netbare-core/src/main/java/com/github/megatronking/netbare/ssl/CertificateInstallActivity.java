@@ -20,7 +20,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
 import android.security.KeyChain;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.github.megatronking.netbare.NetBareLog;
 

@@ -17,7 +17,7 @@ package com.github.megatronking.netbare.http;
 
 import android.net.Uri;
 import android.os.Process;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.github.megatronking.netbare.injector.HttpInjector;
 

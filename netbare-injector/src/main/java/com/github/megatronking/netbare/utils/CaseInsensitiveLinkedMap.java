@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.utils;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;

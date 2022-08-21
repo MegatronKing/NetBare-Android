@@ -19,8 +19,8 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Intent;
 import android.net.VpnService;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 import com.github.megatronking.netbare.gateway.DefaultVirtualGatewayFactory;
 import com.github.megatronking.netbare.gateway.VirtualGatewayFactory;

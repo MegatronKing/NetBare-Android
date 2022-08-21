@@ -15,7 +15,7 @@
  */
 package com.github.megatronking.netbare.injector;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.github.megatronking.netbare.http.HttpBody;
 import com.github.megatronking.netbare.http.HttpRequest;
